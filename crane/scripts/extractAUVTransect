@@ -1,0 +1,116 @@
+#!/usr/bin/env python
+"""
+A script for extracting AUV transects.
+
+Examples:
+
+extractAUVTransect -r run29 -d ~pturner/db29/run29/outputs/ -v salt,hvel -s 2012-5-1 -e 2012-5-18
+
+Tuomas Karna 2012-12-02
+"""
+
+import numpy as np
+import os
+import sys
+import datetime
+
+from data.extractTransect import *
+from data.extractSlab import *
+
+from plotting.plotBase import createDirectory
+
+from data.auvInterface import alongTrBPFile, eastTrBPFile, westTrBPFile, ETMStationFile, transectFilesBaseDir
+
+#-------------------------------------------------------------------------------
+# Functions
+#-------------------------------------------------------------------------------
+
+def extractAUVTransects( dataDir, varList, startTime, endTime, outDir,
+                         modelCoordSys='spcs', baseDir=None ) :
+
+  if not baseDir :
+    baseDir = transectFilesBaseDir
+
+  tranOutDir = createDirectory( os.path.join(outDir,'transect') )
+  slabOutDir = createDirectory( os.path.join(outDir,'slab') )
+  
+  # extract transects
+  for bpFile,name in zip([alongTrBPFile, eastTrBPFile, westTrBPFile],
+                         ['ncAUValong','ncAUVeast','ncAUVwest']) :
+    bpFile = os.path.join( baseDir, bpFile )
+    print 'processing transect:',bpFile
+    extractTransectForBPFile( bpFile, dataDir, varList, startTime, endTime,
+                              tranOutDir, name, modelCoordSys=modelCoordSys )
+
+  # extract slab
+  # bottom
+  print 'processing slab:','bottom'
+  extractSlabForLevel( dataDir, varList, startTime, endTime,
+                       slabOutDir, name='slab', kLevel=1,
+                       modelCoordSys=modelCoordSys )
+
+#-------------------------------------------------------------------------------
+# Main: Commandline interface
+#-------------------------------------------------------------------------------
+def parseCommandLine() :
+  from optparse import OptionParser
+
+  parser = OptionParser()
+  parser.add_option('-d', '--dataDirectory', action='store', type='string',
+                      dest='dataDir', help='directory where model outputs are stored')
+  parser.add_option('-v', '--variable', action='store', type='string',
+                      dest='varList', help='variable to extract: elev, temp, salt, ...')
+  parser.add_option('-c', '--modelCoordSys', action='store', type='string',
+                      dest='modelCoordSys', default='spcs',
+                      help='horizontal coordinate system used in model: '
+                           'spcs or utm (Default: %default)')
+  #parser.add_option('-o', '--outDirectory', action='store', type='string',
+                      #dest='outDir', help='directory where netCDF files '
+                                                #'are saved')
+  parser.add_option('-r', '--runID', action='store', type='string',
+                      dest='runTag', help='Run ID, used in the directory structure and as a label in post-proc.')
+  parser.add_option('-s', '--start', action='store', type='string',
+                      dest='startStr', help='Date to start processing')
+  parser.add_option('-e', '--end', action='store', type='string',
+                      dest='endStr', help='Date to end processing')
+  parser.add_option('-b', '--baseDir', action='store', type='string',
+                      dest='baseDir', help='directory where sta and bp files are located')
+
+  (options, args) = parser.parse_args()
+
+  dataDir       = options.dataDir
+  varList       = options.varList.split(',') if options.varList else None
+  modelCoordSys = options.modelCoordSys
+  #outDir        = options.outDir
+  runTag = options.runTag
+  startStr      = options.startStr
+  endStr        = options.endStr
+  baseDir       = options.baseDir
+
+  if runTag == None:
+    parser.print_help()
+    parser.error('runTag undefined')
+  if not dataDir :
+    parser.print_help()
+    parser.error('dataDir  undefined')
+  if not varList :
+    parser.print_help()
+    parser.error('variable undefined')
+  #if not outDir :
+    #parser.print_help()
+    #parser.error('outDir   undefined')
+  if not startStr :
+    parser.print_help()
+    parser.error('startStr undefined')
+  if not endStr :
+    parser.print_help()
+    parser.error('endStr   undefined')
+
+  outDir = os.path.join(runTag,'data')
+  startTime = datetime.datetime.strptime( startStr ,'%Y-%m-%d')
+  endTime = datetime.datetime.strptime( endStr ,'%Y-%m-%d')
+
+  extractAUVTransects( dataDir, varList, startTime, endTime, outDir, modelCoordSys, baseDir )
+
+if __name__=='__main__' :
+  parseCommandLine()

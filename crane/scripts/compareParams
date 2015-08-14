@@ -1,0 +1,152 @@
+#!/usr/bin/env python
+"""
+Simple script for comparing param.in files.
+
+Example
+compareParams.py -t db22,run29 param.in.db22 param.in.run29
+
+Tuomas Karna 2012-09-28
+"""
+
+import sys
+from files.paramParser import ParamParser
+
+# human readable explanation
+explanation = { 'ics':'coord sys: 1=cartesian 2=latlon',
+                'cpp_lat':'f-plane coordinates',
+                'cpp_lon':'f-plane coordinates',
+                'drampbc':'baroclinic ramp-up period',
+                'dramp':'ramp-up period',
+                'drampwind':'ramp-up period',
+                'nrampbc':'baroclinic ramp-up flag',
+                'nramp':'ramp-up flag',
+                'nrampwind':'ramp-up flag',
+                'dt':'time step',
+                'flag_model':'tracer model type',
+                'h0':'wetting-drying threshold',
+                'hotout_write':'hotstart spool',
+                'ic_elev':'elev init condition (cold start)',
+                'icst':'T,S init condition (cold start)',
+                'ihfskip':'stack spool',
+                'ihot':'hotstart option: 0=cold 1,2=hot',
+                'mxitn':'JCG solver max iterations',
+                'nspool':'output step spool',
+                'ntracers':'number of tracers',
+                'rnday':'total run time in days',
+                'thetai':'implicitness factor',
+                'velmin_btrack':'min. vel for invoking btrack',
+                'vnf1':'T,S nudge vertical relax',
+                'vnf2':'T,S nudge vertical relax',
+                'wtiminc':'time step for atmos. forcing',
+                'nadv':'Advection (ELM) option',
+                'rmaxvel':'Max. horizontal velocity magnitude',
+                'bfric':'Bottom friction. 0:drag, 1:roughness',
+                'iwind_form':'wind stress formulation',
+                'flag_ic':'tracer init. condition type',
+                'btrack_nudge':'Nudging for btrack start point',
+                'ihconsv':'heat exchange option',
+                'isconsv':'evaporation/precipitation model',
+                'nws':'atmospheric option',
+                'dtb_max':'max backtraking time step',
+                'dtb_min':'min backtraking time step',
+                'inu_st':'temp, salt nudging option',
+                'flag_ic':'tracer initial conditions',
+                'ncor':'Coriolis option',
+                'hotout':'option output hotstart',
+                'hotout_write':'interval for hotstart outputs',
+              }
+
+def printParams( p, keys ) :
+  """Prints all parameter values that are listed in keys"""
+  dlmStr = '\t'
+  sys.stdout.write( '%20s'%('var') )
+  for t in sorted(p.keys()) :
+    sys.stdout.write( dlmStr+'%5s'%(t) )
+  sys.stdout.write( '\n' )
+  for k in sorted(keys) :
+    sys.stdout.write( '%20s'%(k) )
+    for t in sorted(p.keys()) :
+      sys.stdout.write( dlmStr+'%5s'%( p[t].get(k,' ') ) )
+    sys.stdout.write( dlmStr+'"%s"'%(explanation.get( k,'' ) ) )
+    sys.stdout.write( '\n' )
+
+
+def compareParamFiles( files ) :
+  # a dictionary of all param files
+  # each entry is a dictionary of parameters and values
+  p = dict()
+  for tag in files :
+    p[tag] = ParamParser( files[tag] )._dict
+
+  #p['run29_29'] = ParamParser('param.in.run29')._dict
+  #p['db14'] = ParamParser('param.in.db14')._dict
+  #p['db16'] = ParamParser('param.in.db16')._dict
+  #p['db22'] = ParamParser('param.in.db22')._dict
+  #p['db26'] = ParamParser('param.in.db26')._dict
+
+  # all params
+  allParams = set()
+  for t in p :
+    allParams = allParams.union( set( p[t].keys() ) )
+  allParams = list(allParams)
+  print '*** all params ***'
+  printParams( p, allParams )
+
+  # exclude output params xxxx.xx
+  goodParams = []
+  exclude = ['sim_year','sim_month','sim_day']
+  for k in allParams :
+    parts = k.split('.')
+    if not (len(parts)==2 and len(parts[0])==4 and len(parts[1])==2) and not k in exclude :
+      goodParams.append( k )
+
+  # params that are present in both
+  commonParams = set(goodParams)
+  for t in p :
+    commonParams = commonParams.intersection( set( p[t].keys() ) )
+  commonParams = list( commonParams )
+  print '*** common params ***'
+  printParams( p, commonParams )
+
+  # orphan parameters, only present in one
+  orphanParams = set(goodParams) - set(commonParams)
+  print '*** orphan params ***'
+  printParams( p, orphanParams )
+
+
+  # different
+  diffParams = []
+  for k in commonParams :
+    vals = [ p[t][k] for t in p ]
+    match = True
+    for i in range(len(vals)-1) :
+      match = match and vals[i] == vals[i+1]
+    if not match :
+      diffParams.append( k )
+
+  print '*** different values ***'
+  printParams( p, diffParams )
+
+if __name__ == '__main__' :
+
+  from optparse import OptionParser
+  usage = ('Usage: %prog -t tag1,tag2,... param.in1 param.in2 ...\n')
+
+  parser = OptionParser(usage=usage)
+  parser.add_option('-t', '--tags', action='store', type='string',
+                      dest='tags', help='list of tags to identify param.in files')
+  (options, args) = parser.parse_args()
+
+  tags = options.tags.split(',') if options.tags else None
+  filenames = args
+
+  if tags == None :
+    parser.print_help()
+    parser.error('tags not defined')
+  if len(tags) != len(filenames) :
+    parser.print_help()
+    parser.error('number of tags and filenames do not match')
+
+  files = dict(zip(tags,filenames))
+  compareParamFiles( files )
+

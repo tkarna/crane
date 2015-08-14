@@ -1,0 +1,16 @@
+#!/usr/bin/env python
+"""
+Main script for generating slab images.
+
+Examples:
+
+makeSlabPlots -o run29/images/slab/ -r run29 -b [326000,352000,284000,302000] -t nc_tran_stations.sta -a nchannel_fine.bp run29/data/slab/slab_salt_slev1_2012-05-01_2012-05-11.nc
+
+Tuomas Karna 2012-12-02
+"""
+
+# just a wrapper to parseCommandLine method
+from data.makeSlabPlots import *
+
+if __name__=='__main__' :
+  parseCommandLine()

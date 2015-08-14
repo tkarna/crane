@@ -1,0 +1,14 @@
+#!/usr/bin/env python
+"""
+Computes plume volume metrics from SELFE outputs.
+
+Reads *_salt.53.nc files. Only netcdf output files are supported.
+
+Tuomas Karna 2013-11-08
+"""
+
+# just a wrapper to parseCommandLine method
+from data.computePlumeMetrics import *
+
+if __name__=='__main__' :
+  parseCommandLine()

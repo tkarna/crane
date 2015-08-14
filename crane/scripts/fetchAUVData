@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+"""
+Fetches AUV data from netcdf cache.
+
+Examples:
+
+# get salt for AUV mission 46, stores data in ./AUV/data/
+fetchAUVData -v salt -i 46
+
+Tuomas Karna 2012-11-29
+"""
+
+# just a wrapper to parseCommandLine method
+from data.auvInterface import *
+
+if __name__=='__main__' :
+  parseCommandLine()

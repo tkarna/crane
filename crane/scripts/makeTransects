@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+"""
+Main script for generating transect images.
+
+Examples:
+
+# generate image for all time steps, -o outputDir, -r adds a string in the title
+makeTransects -o run29/images/transect/nchannel -r run29 run29/transect/nchannel_salt_tran_2012-05-01_2012-05-18.nc
+
+# plot 3 variables, including along-channel velocity (in the given order from top to bottom)
+makeTransects -o run29/images/transect/nchannel -r run29 run29/transect/nchannel_salt_tran_2012-05-01_2012-05-18.nc run29/transect/nchannel_hvel_tran_2012-05-01_2012-05-18.nc run29/transect/nchannel_kine_tran_2012-05-01_2012-05-18.nc run29/transect/nchannel_vdff_tran_2012-05-01_2012-05-18.nc
+
+# generate images for every 3rd time step, -k 3
+makeTransects -o run29/images/transect/nchannel -r run29 -k 3 run29/transect/nchannel_salt_tran_2012-05-01_2012-05-18.nc run29/transect/nchannel_hvel_tran_2012-05-01_2012-05-18.nc run29/transect/nchannel_kine_tran_2012-05-01_2012-05-18.nc run29/transect/nchannel_vdff_tran_2012-05-01_2012-05-18.nc
+
+# restrict time range with start/end time, -s -e
+makeTransects -o run29/images/transect/nchannel -r run29 -s 2012-5-2 -e 2012-5-5-12-22-42 run29/transect/nchannel_salt_tran_2012-05-01_2012-05-18.nc run29/transect/nchannel_hvel_tran_2012-05-01_2012-05-18.nc run29/transect/nchannel_kine_tran_2012-05-01_2012-05-18.nc run29/transect/nchannel_vdff_tran_2012-05-01_2012-05-18.nc
+
+# generate a frame for a specific time (interpolated, can be between time stamps), -s == -e
+makeTransects -o run29/images/transect/nchannel -r run29 -s 2012-5-5-12-22-42 -e 2012-5-5-12-22-42 run29/transect/nchannel_salt_tran_2012-05-01_2012-05-18.nc run29/transect/nchannel_hvel_tran_2012-05-01_2012-05-18.nc run29/transect/nchannel_kine_tran_2012-05-01_2012-05-18.nc run29/transect/nchannel_vdff_tran_2012-05-01_2012-05-18.nc
+
+Tuomas Karna 2012-11-11
+"""
+
+# just a wrapper to parseCommandLine method
+from data.makeTransects import *
+
+if __name__=='__main__' :
+  parseCommandLine()

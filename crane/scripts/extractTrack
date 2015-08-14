@@ -1,0 +1,15 @@
+#!/usr/bin/env python
+"""
+Extract transect data using the efficient SELFE extract_mod python module.
+
+Examples:
+
+
+Tuomas Karna 2012-11-29
+"""
+
+# just a wrapper to parseCommandLine method
+from data.extractTrack import *
+
+if __name__=='__main__' :
+  parseCommandLine()

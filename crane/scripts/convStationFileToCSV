@@ -1,0 +1,55 @@
+#!/usr/bin/python
+"""
+Converts SELFE *.sta station file to comma separated value (*.csv) format.
+
+Tuomas Karna 2013-11-10
+"""
+from files.stationFile import *
+from files.csvStationFile import *
+from optparse import OptionParser
+
+def convert( inputStaFile, outputCSVFile ):
+  """Do conversion and save to disk"""
+  
+  # read legacy station file
+  print 'Reading',inputStaFile
+  staFile = StationFile()
+  staFile.readFileFromDisk(inputStaFile)
+  
+  # csv
+  csvFile = csvStationFile()
+  for sta in staFile.stations :
+    x,y = staFile.getLocation(sta)
+    csvFile.addSample( location=sta, x=x, y=y )
+  print 'Writing to',outputCSVFile
+  csvFile.writeToDisk( outputCSVFile )
+
+#-------------------------------------------------------------------------------
+# Main: Commandline interface
+#-------------------------------------------------------------------------------
+def parseCommandLine() :
+
+  usage = ('Usage: %prog -i input.sta -o output.csv\n')
+
+  parser = OptionParser(usage=usage)
+  parser.add_option('-i', '--input-file', action='store', type='string',
+                      dest='inFile', help='Legacy *.sta station file to convert')
+  parser.add_option('-o', '--output-file', action='store', type='string',
+                      dest='outFile', help='Output *.csv file')
+
+  (options, args) = parser.parse_args()
+
+  inFile = options.inFile
+  outFile = options.outFile
+
+  if inFile == None:
+    parser.print_help()
+    parser.error('inFile undefined')
+  if outFile == None:
+    parser.print_help()
+    parser.error('outFile undefined')
+  
+  convert(inFile,outFile)
+  
+if __name__=='__main__' :
+  parseCommandLine()

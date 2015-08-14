@@ -1,0 +1,13 @@
+#!/usr/bin/env python
+"""
+Plots error in time series versus tidal range (x) and river discharge (y).
+
+Tuomas Karna 2013-11-08
+
+"""
+
+# just a wrapper to parseCommandLine method
+from plotting.ribbonPlot import *
+
+if __name__=='__main__' :
+  parseCommandLine()

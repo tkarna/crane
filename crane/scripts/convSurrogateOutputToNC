@@ -1,0 +1,14 @@
+#!/usr/bin/env python
+"""
+A script for extracting data from Matlab surrogate model profile time series,
+and storing it in netCDF format.
+
+Tuomas Karna 2013-11-06
+
+"""
+
+# just a wrapper to parseCommandLine method
+from data.convSurrogateOutputToNC import *
+
+if __name__=='__main__' :
+  parseCommandLine()

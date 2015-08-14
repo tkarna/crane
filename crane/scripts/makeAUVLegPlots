@@ -1,0 +1,712 @@
+#!/usr/bin/env python
+"""
+A script for generating AUV vs. model plots for each AUV "leg"
+(unidirectional passage).
+
+Tuomas Karna 2012-11-28
+"""
+import os
+import numpy as np
+import datetime
+import sys
+from optparse import OptionParser
+import glob
+from scipy.interpolate import interp1d, griddata, splev, splrep
+import matplotlib.gridspec as gridspec
+
+from data.dataContainer import dataContainer
+from data.meshContainer import meshContainer
+from data.timeArray import *
+from files.stationFile import StationFile
+from files.buildPoints import BuildPoint
+
+from plotting.plot import VARS,UNITS
+from plotting.timeSeriesPlot import *
+from plotting.transectPlot import *
+from plotting.trackPlot import *
+from plotting.slabPlot import *
+from plotting.plotBase import *
+
+from data.auvInterface import alongTrBPFile, eastTrBPFile, westTrBPFile, ETMStationFile, transectFilesBaseDir
+
+#-------------------------------------------------------------------------------
+# Functions
+#-------------------------------------------------------------------------------
+
+def cmap_discretize(cmap, N):
+  """Return a discrete colormap from the continuous colormap cmap.
+
+      cmap: colormap instance, eg. cm.jet.
+      N: number of colors.
+
+  Example
+      x = resize(arange(100), (5,100))
+      djet = cmap_discretize(cm.jet, 5)
+      imshow(x, cmap=djet)
+  """
+
+  if type(cmap) == str:
+    cmap = get_cmap(cmap)
+  colors_i = np.concatenate((np.linspace(0, 1., N), (0.,0.,0.,0.)))
+  colors_rgba = cmap(colors_i)
+  indices = np.linspace(0, 1., N+1)
+  cdict = {}
+  for ki,key in enumerate(('red','green','blue')):
+    cdict[key] = [ (indices[i], colors_rgba[i-1,ki], colors_rgba[i,ki]) for i in xrange(N+1) ]
+  # Return colormap object
+  return matplotlib.colors.LinearSegmentedColormap(cmap.name + "_%d"%N, cdict, 1024)
+
+def alongTrackDistance(x,y) :
+  Xdiff = np.diff(x)
+  Ydiff = np.diff(y)
+  Xdelta = np.hstack( ( np.zeros((1,)), Xdiff ) )
+  Ydelta = np.hstack( ( np.zeros((1,)), Ydiff ) )
+  Xalong = np.sqrt( Xdelta**2 + Ydelta**2 )
+  Xalong = np.cumsum( Xalong )
+  return Xalong
+
+def redistributePoints( tx, ty, reso ) :
+  p = alongTrackDistance(tx,ty)
+  # build x,y interpolation objects
+  interpX = interp1d( p, tx )
+  interpY = interp1d( p, ty )
+  # generate new along point distribution
+  N = np.ceil(abs(p[0]-p[-1])/reso)
+  newAlong = np.linspace(p[0],p[-1],N )
+  # interpolate
+  nx = interpX( newAlong )
+  ny = interpY( newAlong )
+  return nx,ny
+
+def smoothPathWithSpline(x,y,Npoints) :
+  kSpl = 3
+  p = alongTrackDistance(x,y)
+  w = np.ones_like(p)
+  w[0] = 100
+  w[-1] = 100
+  w = w/np.sum(w)
+  smooth = 0.1
+  for iSmooth in range(40) :
+    if iSmooth == 20 :
+      smooth = 0.1
+      kSpl = 2
+    splx = splrep(p,x,k=kSpl,w=w,s=smooth)
+    sply = splrep(p,y,k=kSpl,w=w,s=smooth)
+    p2 = np.linspace(p[0],p[-1],Npoints)
+    tx = splev(p2,splx,der=0)
+    ty = splev(p2,sply,der=0)
+
+    # compute direction
+    reverseDir = False
+    for j in range(len(tx)-1) :
+      vect1 = [ tx[j+1]-tx[j], ty[j+1]-ty[j] ]
+      vect2 = [ tx[-1 ]-tx[0], ty[ -1]-ty[0] ]
+      vect1 /= np.sqrt( vect1[0]**2+vect1[1]**2 )
+      vect2 /= np.sqrt( vect2[0]**2+vect2[1]**2 )
+      dot = vect1[0]*vect2[0] + vect1[1]*vect2[1]
+      if dot < 0 :
+        # reverse direction
+        reverseDir = True
+        break
+    for j in range(len(tx)-2) :
+      vect1 = [tx[j+1]-tx[j  ],ty[j+1]-ty[j  ]]
+      vect2 = [tx[j+2]-tx[j+1],ty[j+2]-ty[j+1]]
+      vect1 /= np.sqrt( vect1[0]**2+vect1[1]**2 )
+      vect2 /= np.sqrt( vect2[0]**2+vect2[1]**2 )
+      dot = vect1[0]*vect2[0] + vect1[1]*vect2[1]
+      angle = np.arccos(dot)
+      if abs(angle)>np.pi/4 :
+        reverseDir = True
+        break
+    if reverseDir :
+      smooth *= 2
+      print iSmooth, 'smooth',smooth
+    else :
+      break
+  return tx,ty
+
+def simplifyPath(x,y,tolerance) :
+  XY = np.vstack((x,y,z)).T
+  simpleXY = np.array( rdp( XY.tolist(), tolerance ) )
+  tx,ty,tz = simpleXY.T
+  return tx,ty,tz
+
+def simplifyPath3D(x,y,z,tolerance) :
+  XY = np.vstack((x,y,z)).T
+  simpleXY = np.array( rdp( XY.tolist(), tolerance, is3d=True ) )
+  tx,ty,tz = simpleXY.T
+  return tx,ty,tz
+
+def distance(a, b):
+  return  np.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
+
+def point_line_distance(point, start, end):
+  if (start == end):
+    return distance(point, start)
+  else:
+    n = abs(
+        (end[0] - start[0]) * (start[1] - point[1]) - (start[0] - point[0]) * (end[1] - start[1])
+    )
+    d = np.sqrt( (end[0] - start[0]) ** 2 + (end[1] - start[1]) ** 2 )
+    return n / d
+
+def distance3d(a, b):
+  return  np.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2)
+
+def point_line_distance3d(point, start, end):
+  if (start == end):
+    return distance3d(point, start)
+  else:
+    # | (p-start) x (p-end) | / | end-start |
+    # | a x b | / | c |
+    a = [ point[i]-start[i] for i in range(3) ]
+    b = [ point[i]-end[i] for i in range(3) ]
+    c = [ end[i]-start[i] for i in range(3) ]
+    cross = [ a[1]*b[2]-a[2]*b[1],
+              a[2]*b[0]-a[0]*b[2],
+              a[0]*b[1]-a[1]*b[0] ]
+    return np.sqrt( cross[0]**2+cross[1]**2+cross[2]**2 ) / np.sqrt( c[0]**2+c[1]**2+c[2]**2 )
+
+"""
+The Ramer-Douglas-Peucker algorithm roughly ported from the pseudo-code provided
+by http://en.wikipedia.org/wiki/Ramer-Douglas-Peucker_algorithm
+"""
+def rdp(points, epsilon,is3d=False):
+    """
+    Reduces a series of points to a simplified version that loses detail, but
+    maintains the general shape of the series.
+    """
+    dmax = 0.0
+    index = 0
+    for i in range(1, len(points) - 1):
+        if is3d :
+          d = point_line_distance3d(points[i], points[0], points[-1])
+        else :
+          d = point_line_distance(points[i], points[0], points[-1])
+        if d > dmax:
+            index = i
+            dmax = d
+    if dmax >= epsilon:
+        results = ( rdp(points[:index+1], epsilon,is3d)[:-1]
+                  + rdp(points[index:], epsilon, is3d) )
+    else:
+        results = [points[0], points[-1]]
+    return results
+
+#-------------------------------------------------------------------------------
+# Main routine
+#-------------------------------------------------------------------------------
+
+def generateAUVLegPlots( runTag, AUVid, var, dataDir, imgDir, baseDir=None,
+                forceExtract=False, userClim={}, cmapStr=None, useNetCDF=False ) :
+
+  AUVname = 'AUV'+str(AUVid)
+  outDir = None
+  imgDir = createDirectory( imgDir )
+  fPrefix = 'nc_auv'
+  filetype = 'png'
+  #ncbbox = [342000,350000,287000,294000]
+  #ncbbox = [343000,350000,288000,293000]
+  ncbbox = [343500,349900,289000,293000]
+  cmap = plt.get_cmap(cmapStr)
+  Ncontours = 35
+  cmapN = cmap_discretize(cmap,Ncontours)
+
+  if not baseDir :
+    baseDir = transectFilesBaseDir
+
+  # read stations
+  staFilePath = os.path.join(baseDir, ETMStationFile )
+  stationFile = StationFile( staFilePath )
+  stationFile.readFileFromDisk()
+  alongSta = ['OC1','OC2','SAT01','BN','SP','WP6','WP4','WP3','WP1','WP5']
+  westSta = ['WP13','WP5','WP18']
+  eastSta = ['WP7','WP12']
+  slabSta = ['OC1','OC2','SAT01','BN','SP',
+       'WP6','WP4','WP3','WP1','WP13','WP18','WP7','WP12','WP5',
+       'TA','TB','TC','TD']
+  staSymbols = {'OC1':'D',
+                'OC2':'D',
+                'SAT01':'s',
+                'TA':'^',
+                'TB':'^',
+                'TC':'^',
+                'TD':'^',
+                'BN':'s',
+                'SP':'s',
+                }
+  staColors =  {'OC1':'DimGray',
+                'OC2':'k',
+                'SAT01':'r',
+                'TA':'g',
+                'TB':'g',
+                'TC':'g',
+                'TD':'g',
+                'BN':'c',
+                'SP':'m',
+                }
+
+  # logScale flag
+  logScaleVars = ['kine','vdff']
+  # color range
+  clim = { 'salt':[0,35],
+           'temp':[5,20],
+           'kine':[-6,-0.5],
+           'vdff':[-6,-0.5],
+           'hvel':[-3.0,3.0]}
+  clim.update( userClim )
+  # number of contour lines
+  nCLines = { 'salt':71,
+              'temp':31,
+              'kine':45,
+              'vdff':45,
+              'hvel':61}
+
+
+  # read input data from disk
+  import data.dirTreeManager as dtm
+  oldRule = dtm.oldTreeRule()
+  defRule = dtm.defaultTreeRule()
+
+  tra = dtm.netcdfTreeTraverser( rule=oldRule )
+  tra2 = dtm.netcdfTreeTraverser( rule=defRule )
+
+  # AUV track
+  dcs,_,_ = tra.readFiles( location=AUVname, tag='AUV', dataType='track',variable=var )
+  if len(dcs) == 0 :
+    raise Exception('could not load AUV track for '+'AUV'+', '+AUVname)
+  auvTrack = dcs[0]
+  dt = np.mean(np.diff(auvTrack.time.array))
+  time = auvTrack.time.array
+  x = auvTrack.x.flatten()
+  y = auvTrack.y.flatten()
+  z = auvTrack.z.flatten()
+  auvStart = auvTrack.time.getDatetime(0)
+  auvEnd = auvTrack.time.getDatetime(-1)
+  etmCruise = 1 if auvStart.month==5 else 2
+  if etmCruise==1:
+    cruiseStart = datetime.datetime(2012,5,1)
+    cruiseEnd = datetime.datetime(2012,5,19)
+  else :
+    cruiseStart = datetime.datetime(2012,10,25)
+    cruiseEnd = datetime.datetime(2012,11,4)
+
+  # read model AUV track
+  dcs,_,_ = tra.readFiles( location=AUVname, tag=runTag, dataType='track',variable=var )
+  if len(dcs) == 0 :
+    raise Exception('could not load model AUV track for '+runTag+', '+AUVname)
+  modTrack = dcs[0]
+
+  # read slab
+  offset = datetime.timedelta(seconds=30*60)
+  dcs,_,_ = tra.readFiles( tag=runTag, dataType='slab',variable=var,  slevel=1, startTime=auvStart-offset, endTime=auvEnd+offset )
+  if len(dcs) == 0 :
+    raise Exception('could not load slab file for '+runTag)
+  slabData = dcs[0]
+  # crop slab to save memory and time
+  slabData = slabData.cropGrid(ncbbox)
+
+  # read tidal range
+  dcs,_,_ = tra2.readFiles( location='tpoin', tag='obs',
+                            dataType='timeseries',variable='tidal_range' )
+  if len(dcs) == 0 :
+    raise Exception('could not load tidal range')
+  tidalRangeDC = dcs[0]
+  tidalRangeDC = tidalRangeDC.timeWindow( cruiseStart, cruiseEnd )
+
+  # read tpoin elevation
+  dcs,_,_ = tra2.readFiles( location='tpoin', tag='obs',
+                            dataType='timeseries',variable='elev' )
+  if len(dcs) == 0 :
+    raise Exception('could not load tpoin elevation')
+  elevDC = dcs[0]
+  elevDC = elevDC.timeWindow( cruiseStart, cruiseEnd )
+
+  sx,sy,st = simplifyPath3D( x,y,time, 500 )
+
+  # make 2D plot of the track and legs
+  plt.scatter(x,y,c=np.linspace(0,1,len(x)),edgecolors='None')
+  plt.plot(sx,sy,'kx-')
+  plt.gca().set_aspect('equal')
+  plt.title(AUVname)
+  # save to disk
+  file = '_'.join([AUVname,'split_track'])
+  saveFigure( imgDir,file,filetype,verbose=True, dpi=100 )
+  plt.close()
+  #plt.show()
+
+  # find time indices for each leg
+  ix = []
+  for i in range(len(sx)) :
+    ii = np.nonzero( np.logical_and( x == sx[i], y == sy[i] ) )[0][0]
+    ix.append( ii )
+  ix = np.array( ix, dtype=int )
+  legTime = time[ix]
+
+  # split track to legs
+  legs = []
+  for i in range(len(legTime)-1) :
+    auvLeg = auvTrack.timeWindow( epochToDatetime(legTime[i]),epochToDatetime(legTime[i+1]) )
+    name = auvLeg.getMetaData('location')+'-leg{0:d}'.format(i+1)
+    var = auvLeg.getMetaData('variable')
+    legStart = auvLeg.time.getDatetime(0)
+    legEnd = auvLeg.time.getDatetime(-1)
+    meanTime = legStart + ( legEnd-legStart )/2
+    time = auvLeg.time.array
+    x = auvLeg.x.flatten()
+    y = auvLeg.y.flatten()
+    z = auvLeg.z.flatten()
+    c = auvLeg.data.flatten()
+
+    modLeg = modTrack.timeWindow( epochToDatetime(legTime[i]),
+                                  epochToDatetime(legTime[i+1]) )
+    cmod = modLeg.data.flatten()
+
+    # ensure that all legs have same orientation (flip reverse legs)
+    x1 = sx[i]
+    x2 = sx[i+1]
+    y1 = sy[i]
+    y2 = sy[i+1]
+    z1 = z[0]
+    z2 = z[-1]
+    reverseTrack = sx[i]+0.3*sy[i] > sx[i+1]+0.3*sy[i+1]
+    if reverseTrack :
+      # backward orientation
+      x1 = sx[i+1]
+      x2 = sx[i]
+      y1 = sy[i+1]
+      y2 = sy[i]
+    ## along track
+    Xalong = alongTrackDistance(x,y)
+    legLen = Xalong[-1]
+
+    # along leg coordinates
+    leg_dx = x2 - x1
+    leg_dy = y2 - y1
+    mag = np.sqrt(leg_dx**2+leg_dy**2)
+    leg_dx = leg_dx/mag
+    leg_dy = leg_dy/mag
+    Xline = x*leg_dx + y*leg_dy
+    #XlineOff = Xline[0]
+    XlineOff = x1*leg_dx+y1*leg_dy
+    #XlineOff = Xline.min()
+    Xline = Xline-XlineOff
+    def xyToLine(x,y) :
+      return x*leg_dx + y*leg_dy-XlineOff
+
+    # generate transect
+    reso = 25
+
+    ## transect along AUV path
+    #tx = x
+    #ty = y
+
+    ## transect along leg line (straight line)
+    #N = np.ceil(np.sqrt((x1-x2)**2+(y1-y2)**2)/reso)
+    #tx = np.linspace( x1,x2,N )
+    #ty = np.linspace( y1,y2,N )
+
+    ## transect along simplified AUV path
+    #tx,ty,tt = simplifyPath3D(x,y,time,50)
+
+    # transect along smoothed spline
+    tx,ty = smoothPathWithSpline(x,y,30)
+
+    # redistribute points
+    tx,ty = redistributePoints(tx,ty,reso)
+
+    #fig = plt.figure(figsize=(10,10))
+    #ax=fig.add_subplot(1,1,1)
+    #ax.set_title(name)
+    #ax.plot(x,y,'k--')
+    ##ax.plot(tx,ty,'r')
+    #ax.plot(tx,ty,'b.-')
+    #ax.set_aspect('equal')
+    #plt.show()
+
+    # to keep correct transect orientation
+    if reverseTrack :
+      tx = tx[::-1]
+      ty = ty[::-1]
+
+    #plt.scatter(x,y,c=np.linspace(0,1,len(x)),edgecolors='None')
+    #plt.scatter(tx,ty,c=np.linspace(0,1,len(tx)),edgecolors='None')
+    #plt.show()
+    #print 'x',x.min(),x.max()
+    #print 'y',y.min(),y.max()
+    #print 'tx',tx.min(),tx.max()
+    #print 'ty',ty.min(),ty.max()
+
+    if forceExtract :
+      # extract transect
+      if useNetCDF :
+        from data.ncExtract import extractTransectForCoords
+      else :
+        from data.extractTransect import extractTransectForCoords
+      dcs = extractTransectForCoords(tx,ty,dataDir,[var],legStart,legEnd,name)
+      for dc in dcs :
+        dc.setMetaData( 'tag', runTag )
+      #rule = dtm.defaultTreeRule()
+      dtm.saveDataContainerInTree( dcs, path=outDir, rule=oldRule, dtype=np.float32,
+                                  overwrite=True  )
+    # load model transect
+    # run130/data/transect/AUV49-leg10_salt_0_2012-05-06_2012-05-07.nc
+    tra = dtm.netcdfTreeTraverser( rule=oldRule )
+    dcs,_,_ = tra.readFiles( location=name, tag=runTag, dataType='transect',variable=var )
+
+    modTransect = dcs[0]
+    # project transect coords on the leg line
+    modAlong = xyToLine(modTransect.x, modTransect.y)
+    modTransect.x = modAlong
+    modTransect.y.fill( 0 )
+
+    # create axes
+    fig = plt.figure( figsize=(17,10) )
+    Grid = gridspec.GridSpec(15, 12)
+    ax1 = fig.add_subplot(Grid[:3, 5:])
+    ax2 = fig.add_subplot(Grid[3:6, 5:],sharex=ax1)
+    ax3 = fig.add_subplot(Grid[6:9, 5:],sharex=ax1)
+    ax4 = fig.add_subplot(Grid[9:12, 5:],sharex=ax1)
+    ax5 = fig.add_subplot(Grid[12:, 5:],sharex=ax1)
+    axL = fig.add_subplot(Grid[:6, :5])
+    axTS1 = fig.add_subplot(Grid[8:11, :5])
+    axTS2 = fig.add_subplot(Grid[12:15, :5])
+    Grid.tight_layout(fig,w_pad=0.01,h_pad=0.0,rect=[-0.005,0.025,0.97,0.99])
+
+    legTRangeStr = legStart.strftime('%Y-%d-%m %H:%M')+' -> '+legEnd.strftime('%H:%M')
+
+    # plot AUV track
+    dia = trackTimeSeriesPlot(clabel='Salinity',unit='psu',clim=[0,34], ylim=[-20,0],ylabel='Depth',cmap=cmapN, xIsTime=False, xlabel='Distance', xunit='km')
+    dia.setAxes( ax1 )
+    dia.addSample( Xline/1000, -z, c, s=30 )
+    dia.showColorBar( )
+    dia.addTitle( 'observation '+legTRangeStr )
+    ax1.plot(xyToLine(sx[i],sy[i])/1000,-z1, marker='o',markersize=14,
+                   markeredgecolor='g',markerfacecolor='None',markeredgewidth=2)
+    ax1.plot(xyToLine(sx[i+1],sy[i+1])/1000,-z2, marker='o',markersize=14,
+                   markeredgecolor='r',markerfacecolor='None',markeredgewidth=2)
+    dia.ax.text(0.0, 1.02, 'b)', fontsize=14,
+            verticalalignment='bottom', horizontalalignment='left',
+            transform=dia.ax.transAxes)
+
+    # plot model track
+    dia = trackTimeSeriesPlot(clabel='Salinity',unit='psu',clim=[0,34], ylim=[-20,0],ylabel='Depth',cmap=cmapN ,xIsTime=False ,xlabel='Distance', xunit='km')
+    dia.setAxes( ax2 )
+    dia.addSample( Xline/1000, -z, cmod, s=30 )
+    dia.showColorBar( )
+    dia.addTitle( runTag+' '+legTRangeStr )
+    ax1.plot(xyToLine(sx[i],sy[i])/1000,-z1, marker='o',markersize=14,
+                   markeredgecolor='g',markerfacecolor='None',markeredgewidth=2)
+    ax1.plot(xyToLine(sx[i+1],sy[i+1])/1000,-z2, marker='o',markersize=14,
+                   markeredgecolor='r',markerfacecolor='None',markeredgewidth=2)
+    dia.ax.text(0.0, 1.02, 'c)', fontsize=14,
+            verticalalignment='bottom', horizontalalignment='left',
+            transform=dia.ax.transAxes)
+
+    # plot model transect
+    dia = transectSnapshot(clabel='Salinity',unit='psu', clim=[0,34],cmap=cmap)
+    dia.setAxes( ax5 )
+    X, Z, C, _, _ = generateTransectFromDataContainer( modTransect, meanTime )
+    # replace mask with nans for plotting
+    C = C.filled( np.nan )
+    Z = Z.filled( -1e4 )
+    # convert Z to depth below free surface
+    for iP in range(Z.shape[1]) :
+      eta = Z[-1,iP]
+      Z[:,iP] -= eta
+    dia.addSample( X, Z, C, N=Ncontours )
+    dia.addTitle( runTag+' transect '+meanTime.strftime('%Y-%d-%m %H:%M') )
+    dia.showColorBar( )
+    dia.ax.text(0.0, 1.02, 'f)', fontsize=14,
+            verticalalignment='bottom', horizontalalignment='left',
+            transform=dia.ax.transAxes)
+
+    # plot interpolated AUV track
+    dia = transectSnapshot(clabel='Salinity',unit='psu', clim=[0,34],cmap=cmap)
+    dia.setAxes( ax3 )
+    # interpolate AUV track on transect grid
+    Cauv = griddata((Xline/1000,-z),c,(X.flatten()/1000,Z.flatten()),method='linear')
+    Cauv = np.reshape( Cauv, Z.shape )
+    dia.addSample( X, Z, Cauv, N=Ncontours )
+    dia.addTitle( 'interpolated observation '+legTRangeStr )
+    dia.showColorBar( )
+    dia.ax.text(0.0, 1.02, 'd)', fontsize=14,
+            verticalalignment='bottom', horizontalalignment='left',
+            transform=dia.ax.transAxes)
+
+    # plot interpolated model track
+    dia = transectSnapshot(clabel='Salinity',unit='psu', clim=[0,34],cmap=cmap)
+    dia.setAxes( ax4 )
+    # interpolate AUV track on transect grid
+    Cmod = griddata((Xline/1000,-z),cmod,(X.flatten()/1000,Z.flatten()),method='linear')
+    Cmod = np.reshape( Cmod, Z.shape )
+    dia.addSample( X, Z, Cmod, N=Ncontours )
+    dia.addTitle( 'interpolated '+runTag+' '+legTRangeStr )
+    dia.showColorBar( )
+    dia.ax.text(0.0, 1.02, 'e)', fontsize=14,
+            verticalalignment='bottom', horizontalalignment='left',
+            transform=dia.ax.transAxes)
+
+    # unify axes
+    ylim = ax5.get_ylim()
+    for ax in [ax1,ax2,ax3,ax4] :
+      ax.set_ylim(ylim)
+      ax.set_xlabel('')
+      #ax.set_ylabel('')
+      plt.setp( ax.get_xticklabels(), visible=False)
+    ax3.set_ylabel('')
+    ax4.set_ylabel('')
+    ax5.set_ylabel('')
+    #ax4.set_ylim(ylim)
+
+    # plot slab
+    dia = slabSnapshotDC(clabel='Salinity',unit='psu', clim=clim[var], cmap=cmap)
+    dia.setAxes( axL )
+    dia.addSample( slabData, timeStamp=meanTime, plotType='contourf', bbox=ncbbox,N=nCLines[var])
+    dia.addTitle(runTag+' '+name)
+    dia.ax.set_xlabel('')
+    #dia.showColorBar()
+    dia.ax.text(0.97, 0.98, 'Bottom salinity', fontsize=14,
+            verticalalignment='top', horizontalalignment='right',
+            transform=dia.ax.transAxes)
+    # add transect markers
+    dia.addTransectMarker(tx,ty,color='white',linewidth=3)
+    dia.addTransectMarker(tx,ty,color='k',linestyle='dashed')
+    dia.addTransectMarker(x,y,color='white',linewidth=3)
+    dia.addTransectMarker(x,y,color='k')
+    # addStationMarker
+    for sta in slabSta :
+      xSta,ySta = stationFile.getLocation( sta )
+      printLabel = True if sta[:2] == 'WP' else False
+      markersize = 12 if sta[:2] == 'WP' else 9
+      dia.addStationMarker( xSta, ySta, printLabel=printLabel,
+                            label=sta.replace('saturn','sat'),
+                            color=staColors.get(sta,'DimGray'),
+                            marker=staSymbols.get(sta,'.'),
+                            markeredgecolor='white', markeredgewidth=1.3,
+                            markersize=markersize)
+    dia.addStationLegend(bbox_to_anchor=(0.76,-0.05),ncol=4)
+    dia.ax.text(0.0, 1.02, 'a)', fontsize=14,
+            verticalalignment='bottom', horizontalalignment='left',
+            transform=dia.ax.transAxes)
+
+    # plot tidal range
+    dia = timeSeriesPlotDC2(xlabel='')
+    dia.setAxes( axTS1 )
+    dia.addShadedRange( auvStart, auvEnd, facecolor='Lavender')
+    dia.addShadedRange( legStart, legEnd, facecolor='IndianRed')
+    dia.addSample(tidalRangeDC, label='obs', color='k')
+    dia.ax.text(0.97, 0.98, 'Tidal range [m]', fontsize=14,
+            verticalalignment='top', horizontalalignment='right',
+            transform=dia.ax.transAxes)
+    dia.ax.text(0.0, 1.02, 'g)', fontsize=14,
+            verticalalignment='bottom', horizontalalignment='left',
+            transform=dia.ax.transAxes)
+
+    # plot elevation
+    dia = timeSeriesPlotDC2(xlabel=legStart.strftime('%b %d'),ylim=[-1.5,2.5])
+    dia.setAxes( axTS2 )
+    dia.addShadedRange( auvStart, auvEnd, facecolor='Lavender')
+    dia.addShadedRange( legStart, legEnd, facecolor='IndianRed')
+    dayStart = datetime.datetime(auvStart.year,auvStart.month,auvStart.day,0,0,0)
+    dayEnd = dayStart + datetime.timedelta(days=1)
+    dia.addSample(elevDC.timeWindow( dayStart, dayEnd ), label='obs',color='k')
+    dia.ax.text(0.97, 0.98, 'tpoin elevation [m]', fontsize=14,
+            verticalalignment='top', horizontalalignment='right',
+            transform=dia.ax.transAxes)
+    dia.ax.text(0.0, 1.02, 'h)', fontsize=14,
+            verticalalignment='bottom', horizontalalignment='left',
+            transform=dia.ax.transAxes)
+
+
+    dateStr = meanTime.strftime( '%Y-%m-%d %H:%M' )
+    titleStr = dateStr+' (PST)'
+    # save to disk
+    dateStr = dateStr.replace(' ','_').replace(':','-')
+    file = '_'.join([runTag,AUVname+'-leg{0:02d}'.format(i+1),var])
+    saveFigure( imgDir,file,filetype,verbose=True, dpi=100 )
+    plt.close()
+    #plt.show()
+
+#-------------------------------------------------------------------------------
+# Command line interface
+#-------------------------------------------------------------------------------
+def parseCommandLine() :
+
+  from optparse import OptionParser
+  usage = 'Usage: %prog [options]'
+  parser = OptionParser(usage=usage)
+  parser.add_option('-r', '--runID', action='store', type='string',
+                      dest='runTag', help='Run ID, used in the directory structure and as a label in post-proc.')
+  parser.add_option('-d', '--dataDirectory', action='store', type='string',
+                      dest='dataDir', help='directory where model outputs are stored')
+  parser.add_option('-v', '--variable', action='store', type='string',
+                      dest='var', help='variable to extract: elev, temp, salt, ...')
+  parser.add_option('-o', '--imageDirectory', action='store', type='string',
+                      dest='imgDir', help='directory where generated images are stored')
+  parser.add_option('-c', '--clim', action='store', type='string',
+                      dest='climStr', help='Custom limits for color bar, a string like salt:0:30,kine:-6:-2')
+  parser.add_option('-M', '--colormap', action='store', type='string',
+                      dest='cmapStr', help='name of matplotlib colormap to use')
+  parser.add_option('-f', '--force-extract', action='store_true',
+                      dest='forceExtract', help='force extraction of model transects')
+  parser.add_option('-C', '--read-netcdf', action='store_true',
+                    dest='readNetcdf',
+                    help='Extract from SELFE netcdf output files instead of SELFE binary files (default %default)',default=False)
+  parser.add_option('-i', '--missionNB', action='store', type='int',
+                      dest='missionNB', help='mission ID number, e.g. 46')
+
+  (options, args) = parser.parse_args()
+
+  runTag        = options.runTag
+  dataDir       = options.dataDir
+  var       = options.var
+  imgDir  = options.imgDir
+  climStr = options.climStr
+  cmapStr = options.cmapStr
+  forceExtract = options.forceExtract
+  readNetcdf = options.readNetcdf
+  missionNB     = options.missionNB
+
+  if forceExtract and not dataDir :
+    parser.print_help()
+    parser.error('dataDir  undefined')
+  if runTag == None:
+    parser.print_help()
+    parser.error('runTag undefined')
+  if not var :
+    parser.print_help()
+    parser.error('variable undefined')
+  if not imgDir :
+    parser.print_help()
+    parser.error('imgDir   undefined')
+  if not missionNB :
+    parser.print_help()
+    parser.error('missionNB undefined')
+  
+  clim = {}
+  if climStr :
+    for entry in climStr.split(',') :
+      var,vmin,vmax = entry.split(':')
+      clim[var] = [float(vmin),float(vmax)]
+
+  print 'Parsed options:'
+  print ' - run ID',runTag
+  print ' - AUV mission ID ', missionNB
+  print ' - variable ', var
+  print ' - output dir',imgDir
+  if clim :
+    print ' - using color limits',clim
+  if cmapStr :
+    print ' - using color map',cmapStr
+  if forceExtract :
+    print ' - extracting model transects'
+    print ' - dataDir',dataDir
+    print ' - SELFE output format:','netCDF' if readNetcdf else 'binary'
+
+  generateAUVLegPlots( runTag, missionNB, var, dataDir, imgDir, baseDir='.',
+                       forceExtract=forceExtract, userClim=clim,
+                       cmapStr=cmapStr, useNetCDF=readNetcdf )
+
+if __name__=='__main__' :
+  parseCommandLine()

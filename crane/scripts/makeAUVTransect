@@ -1,0 +1,347 @@
+#!/usr/bin/env python
+"""
+A script for generating north channel AUV transects
+
+Example:
+
+makeAUVTransect -r run29 -v salt -o run29/images/ncAUVtransect/
+
+Tuomas Karna 2012-11-28
+"""
+import os
+import numpy as np
+import datetime
+import sys
+from optparse import OptionParser
+import glob
+
+from data.dataContainer import dataContainer
+from data.meshContainer import meshContainer
+from data.timeArray import *
+from files.stationFile import StationFile
+from files.buildPoints import BuildPoint
+
+from plotting.plot import VARS,UNITS
+from plotting.transectPlot import *
+from plotting.slabPlot import *
+from plotting.plotBase import *
+
+from data.auvInterface import alongTrBPFile, eastTrBPFile, westTrBPFile, ETMStationFile, transectFilesBaseDir
+
+#-------------------------------------------------------------------------------
+# Functions
+#-------------------------------------------------------------------------------
+
+def findFiles( pattern ) :
+  res = glob.glob( pattern )
+  if not res :
+    raise Exception( 'Could not find file: '+pattern )
+  return res
+  
+#-------------------------------------------------------------------------------
+# Main routine
+#-------------------------------------------------------------------------------
+
+def generateAUVTransectPlots( runTag, var, imgDir, startTime=None, endTime=None, baseDir=None, userClim={}, cmapStr=None ) :
+
+  if not baseDir :
+    baseDir = transectFilesBaseDir
+    
+  tranOutDir = os.path.join(runTag,'data','transect')
+  slabOutDir = os.path.join(runTag,'data','slab')
+  
+  #imgDir = 'ETM2'
+  imgDir = createDirectory( imgDir )
+  fPrefix = 'nc_auv'
+  filetype = 'png'
+  #var = 'salt'
+  ncbbox = [342000,350000,287000,294000]
+  cmap = plt.get_cmap(cmapStr)
+
+  # data files
+  # run130/data/transect/ncAUValong_salt_0_2012-05-01_2012-05-19.nc
+  # run29/data/transect/ncAUValong_salt_tran_2012-05-01_2012-05-19.nc
+  pattern = os.path.join( tranOutDir,'ncAUValong_'+var+'_*' )
+  alongFile = findFiles( pattern )[0]
+  pattern = os.path.join( tranOutDir,'ncAUVwest_'+var+'_*' )
+  westFile = findFiles( pattern )[0]
+  pattern = os.path.join( tranOutDir,'ncAUVeast_'+var+'_*' )
+  eastFile = findFiles( pattern )[0]
+  # run29/data/slab/slab_salt_slev1_2012-05-01_2012-05-11.nc
+  #pattern = os.path.join( slabOutDir,'slab_'+var+'_slev1_*' )
+  pattern = os.path.join( slabOutDir,'slab_'+var+'_s1_*' )
+  slabFile = findFiles( pattern )[0]
+
+  alongTrFile = os.path.join(baseDir, alongTrBPFile )
+  westTrFile  = os.path.join(baseDir, westTrBPFile )
+  eastTrFile  = os.path.join(baseDir, eastTrBPFile )
+  
+  alongTrBP = BuildPoint()
+  alongTrBP.readFileFromDisk(alongTrFile)
+  westTrBP = BuildPoint()
+  westTrBP.readFileFromDisk(westTrFile)
+  eastTrBP = BuildPoint()
+  eastTrBP.readFileFromDisk(eastTrFile)
+
+  alongData = dataContainer.loadFromNetCDF(alongFile,startTime,endTime,includeEnd=True)
+  westData = dataContainer.loadFromNetCDF(westFile,startTime,endTime,includeEnd=True)
+  eastData = dataContainer.loadFromNetCDF(eastFile,startTime,endTime,includeEnd=True)
+  slabData = meshContainer.loadFromNetCDF(slabFile,startTime,endTime,includeEnd=True)
+  if startTime and endTime :
+    # crop time
+    alongData = alongData.timeWindow( startTime, endTime )
+    westData = westData.timeWindow( startTime, endTime )
+    eastData = eastData.timeWindow( startTime, endTime )
+    slabData = slabData.timeWindow( startTime, endTime )
+  # crop slab to save memory and time
+  slabData = slabData.cropGrid(ncbbox)
+
+  # read stations
+  staFilePath = os.path.join(baseDir, ETMStationFile )
+  stationFile = StationFile( staFilePath )
+  stationFile.readFileFromDisk()
+  alongSta = ['OC1','OC2','SAT01','BN','SP','WP6','WP4','WP3','WP1','WP5']
+  westSta = ['WP13','WP5','WP18']
+  eastSta = ['WP7','WP12']
+  slabSta = ['OC1','OC2','SAT01','BN','SP',
+       'WP6','WP4','WP3','WP1','WP13','WP18','WP7','WP12','WP5',
+       'TA','TB','TC','TD']
+  staSymbols = {'OC1':'D',
+                'OC2':'D',
+                'SAT01':'s',
+                'TA':'^',
+                'TB':'^',
+                'TC':'^',
+                'TD':'^',
+                'BN':'s',
+                'SP':'s',
+                }
+  staColors =  {'OC1':'DimGray',
+                'OC2':'w',
+                'SAT01':'r',
+                'TA':'g',
+                'TB':'g',
+                'TC':'g',
+                'TD':'g',
+                'BN':'c',
+                'SP':'m',
+                }
+
+  # logScale flag
+  logScaleVars = ['kine','vdff']
+  # color range
+  clim = { 'salt':[0,35],
+           'temp':[5,20],
+           'kine':[-6,-0.5],
+           'vdff':[-6,-0.5],
+           'hvel':[-3.0,3.0]}
+  clim.update( userClim )
+  # number of contour lines
+  nCLines = { 'salt':71,
+              'temp':31,
+              'kine':45,
+              'vdff':45,
+              'hvel':61}
+
+
+  #ax1 = fig.add_subplot( 2,3,[1,2] )
+  #ax2 = fig.add_subplot( 2,3, 3 )
+  
+  #from mpl_toolkits.axes_grid1 import AxesGrid
+  #topgrid = AxesGrid(fig, 211, # similar to subplot(122)
+                  #nrows_ncols = (1, 2),
+                  #axes_pad = 0.1,
+                  #label_mode = 'all',
+                  #aspect=False,
+                  ##share_all = True,
+                  ##cbar_location="top",
+                  ##cbar_mode="each",
+                  ##cbar_size="7%",
+                  ##cbar_pad="2%",
+                  #)
+  #ax1 = topgrid[0]
+  #ax2 = topgrid[1]
+
+  import matplotlib.gridspec as gridspec
+  #fig = plt.figure( figsize=(10,6) )
+  #G = gridspec.GridSpec(2, 6, wspace=0.1,hspace=0.2)
+  #ax1 = fig.add_subplot(G[0, :4])
+  #ax2 = fig.add_subplot(G[0, 4:])
+  #ax3 = fig.add_subplot(G[1, :3])
+  #ax4 = fig.add_subplot(G[1, 3:],sharey=ax3)
+
+
+  for it in range(len(slabData.time)) :
+  #for it in [0] :
+
+    fig = plt.figure( figsize=(10,10) )
+    Grid = gridspec.GridSpec(4, 6)
+    ax1 = fig.add_subplot(Grid[2, :])
+    ax2 = fig.add_subplot(Grid[:2, :])
+    ax3 = fig.add_subplot(Grid[3, :3],sharey=ax1)
+    ax4 = fig.add_subplot(Grid[3, 3:],sharey=ax1)
+    Grid.tight_layout(fig,w_pad=0.01,h_pad=0.01,rect=[0.02,0.01,1,0.99])
+
+    # west transect
+    dia = transectSnapshotDC(clabel='Salinity',unit='psu', clim=clim[var], cmap=cmap)
+    dia.setAxes( ax3 )
+    dia.addSample( westData, timeStamp=it, N=nCLines[var] )
+    dia.addTitle('')
+    #dia.showColorBar( )
+    ax3.text(0.03, 0.05, 'West cross channel', fontsize=14,
+            verticalalignment='bottom', horizontalalignment='left',
+            transform=ax3.transAxes)
+    # add station markers
+    for sta in westSta :
+      xSta,ySta = stationFile.getLocation( sta )
+      dia.addStationMarker( xSta, ySta,
+                            label=sta.replace('saturn','sat'), color='DimGray',
+                            linewidth=1.0 )
+
+    # east transect
+    dia = transectSnapshotDC(clabel='Salinity',unit='psu', clim=clim[var], cmap=cmap)
+    dia.setAxes( ax4 )
+    dia.addSample( eastData, timeStamp=it, N=nCLines[var] )
+    dia.addTitle('')
+    #dia.showColorBar( )
+    ax4.set_ylabel('')
+    plt.setp( ax4.get_yticklabels(), visible=False)
+    ax4.text(0.03, 0.05, 'East cross channel', fontsize=14,
+            verticalalignment='bottom', horizontalalignment='left',
+            transform=ax4.transAxes)
+    # add station markers
+    for sta in eastSta :
+      xSta,ySta = stationFile.getLocation( sta )
+      dia.addStationMarker( xSta, ySta,
+                            label=sta.replace('saturn','sat'), color='DimGray',
+                            linewidth=1.0 )
+
+    # along transect
+    dia = transectSnapshotDC(clabel='Salinity',unit='psu', clim=clim[var], cmap=cmap)
+    dia.setAxes( ax1 )
+    dia.addSample( alongData, timeStamp=it, N=nCLines[var] )
+    dia.addTitle('')
+    ax1.set_xlabel('')
+    #dia.showColorBar( )
+    ax1.text(0.03, 0.12, 'Along channel', fontsize=14,
+            verticalalignment='bottom', horizontalalignment='left',
+            transform=ax1.transAxes)
+    # add station markers
+    for sta in alongSta :
+      xSta,ySta = stationFile.getLocation( sta )
+      dia.addStationMarker( xSta, ySta,
+                            label=sta.replace('saturn','sat'), color='DimGray',
+                            linewidth=1.0 )
+
+    # slab
+    dia = slabSnapshotDC(clabel='Salinity',unit='psu', clim=clim[var], cmap=cmap)
+    dia.setAxes( ax2 )
+    dia.addSample( slabData, timeStamp=it, plotType='contourf', bbox=ncbbox,N=nCLines[var])
+    #dia.addSample( slabData, timeStamp=90, plotType='color' )
+    #dia.addTitle('')
+    #ax2.set_ylabel('')
+    #ax2.set_yticklabels([])
+    dia.ax.set_xlabel('')
+    dia.showColorBar()
+    dia.ax.text(0.97, 0.98, 'Bottom', fontsize=14,
+            verticalalignment='top', horizontalalignment='right',
+            transform=dia.ax.transAxes)
+    # add transect markers
+    dia.addTransectMarker(alongTrBP.getX(),alongTrBP.getY(),color='DimGray')
+    dia.addTransectMarker(westTrBP.getX(),westTrBP.getY(),color='DimGray')
+    dia.addTransectMarker(eastTrBP.getX(),eastTrBP.getY(),color='DimGray')
+    # addStationMarker
+    for sta in slabSta :
+      xSta,ySta = stationFile.getLocation( sta )
+      printLabel = True if sta[:2] == 'WP' else False
+      dia.addStationMarker( xSta, ySta, printLabel=printLabel,
+                            label=sta.replace('saturn','sat'),
+                            color=staColors.get(sta,'DimGray'),
+                            marker=staSymbols.get(sta,'.') )
+    dia.addStationLegend(bbox_to_anchor=(-0.1, 1.0))
+
+    #dateStr = alongData.time.getDatetime(it).strftime( '%Y-%m-%d %H:%M:%S' )
+    dateStr = alongData.time.getDatetime(it).strftime( '%Y-%m-%d %H:%M' )
+    titleStr = dateStr+' (PST)'
+    #fig.suptitle(titleStr, fontsize=16)
+    ax2.set_title(titleStr, fontsize=16)
+
+    # save to disk
+    dateStr = dateStr.replace(' ','_').replace(':','-')
+    file = '_'.join([fPrefix,var,dateStr])
+    #print file
+    saveFigure( imgDir,file,filetype,verbose=True, dpi=100 )
+    plt.close()
+
+#-------------------------------------------------------------------------------
+# Command line interface
+#-------------------------------------------------------------------------------
+def parseCommandLine() :
+
+  from optparse import OptionParser
+
+  parser = OptionParser()
+  parser.add_option('-r', '--runID', action='store', type='string',
+                      dest='runTag', help='Run ID, used in the directory structure and as a label in post-proc.')
+  parser.add_option('-v', '--variable', action='store', type='string',
+                      dest='varList', help='variable to extract: elev, temp, salt, ...')
+  parser.add_option('-o', '--imageDirectory', action='store', type='string',
+                      dest='imgDir', help='directory where generated images are stored')
+  parser.add_option('-s', '--start', action='store', type='string',
+                      dest='startStr', help='Date to start processing')
+  parser.add_option('-e', '--end', action='store', type='string',
+                      dest='endStr', help='Date to end processing')
+  parser.add_option('-b', '--baseDir', action='store', type='string',
+                      dest='baseDir', help='directory where sta and bp files are located')
+  parser.add_option('-c', '--clim', action='store', type='string',
+                      dest='climStr', help='Custom limits for color bar, a string like salt:0:30,kine:-6:-2')
+  parser.add_option('-M', '--colormap', action='store', type='string',
+                      dest='cmapStr', help='name of matplotlib colormap to use')
+
+  (options, args) = parser.parse_args()
+
+  runTag        = options.runTag
+  varList       = options.varList.split(',') if options.varList else None
+  imgDir        = options.imgDir
+  startStr      = options.startStr
+  endStr        = options.endStr
+  baseDir       = options.baseDir
+  climStr = options.climStr
+  cmapStr = options.cmapStr
+
+  if runTag == None:
+    parser.print_help()
+    parser.error('runTag undefined')
+  if not varList :
+    parser.print_help()
+    parser.error('variable undefined')
+  if not imgDir :
+    parser.print_help()
+    parser.error('imgDir   undefined')
+
+  startTime = datetime.datetime.strptime( startStr ,'%Y-%m-%d') if startStr else None
+  endTime = datetime.datetime.strptime( endStr ,'%Y-%m-%d') if endStr else None
+
+  clim = {}
+  if climStr :
+    for entry in climStr.split(',') :
+      var,vmin,vmax = entry.split(':')
+      clim[var] = [float(vmin),float(vmax)]
+
+  print 'Parsed options:'
+  print ' - run ID',runTag
+  print ' - variables ', varList
+  print ' - output dir',imgDir
+  if startTime :
+    print ' - time range:',str(startTime),'->', str(endTime)
+  if clim :
+    print ' - using color limits',clim
+  if cmapStr :
+    print ' - using color map',cmapStr
+
+  for var in varList :
+    generateAUVTransectPlots( runTag, var, imgDir, startTime, endTime, baseDir,
+                              userClim=clim, cmapStr=cmapStr )
+
+if __name__=='__main__' :
+  parseCommandLine()

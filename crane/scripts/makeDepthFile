@@ -1,0 +1,14 @@
+#!/usr/bin/env python
+"""
+Create bed_flux.61.nc files.
+
+Examples:
+
+jesse.e.lopez 2014-09-28
+"""
+
+# just a wrapper to parseCommandLine method
+from files import makeDepthFile as mdf
+
+if __name__ == '__main__':
+    mdf.parseCommandLine()
