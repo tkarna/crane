@@ -29,7 +29,7 @@ import matplotlib
 import matplotlib.dates
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from data.timeArray import *
+from crane.data import timeArray as ta
 
 #-------------------------------------------------------------------------------
 # Constants

@@ -8,10 +8,11 @@ data manipulation methods.
 Tuomas Karna 2012-08-15
 """
 
-import numpy as np
-from data.timeArray import *
 import os
-from data.netcdfIO import netcdfIO
+import numpy as np
+
+from crane.data import timeArray
+from crane.data.netcdfIO import netcdfIO
 
 class dataContainer(object) :
   """

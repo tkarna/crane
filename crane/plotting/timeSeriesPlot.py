@@ -6,16 +6,24 @@ Uses stackplot routine for plotting.
 
 Tuomas Karna 2012-08-20
 """
-import numpy as np
 import sys
-from data.dataContainer import dataContainer
-from plotting.plotBase import *
 
-#try: 
+import numpy as np
+import matplotlib.pyplot as plt
+
+from crane.data.dataContainer import dataContainer
+from crane.data.timeArray import (timeArray, datetimeToCorieTime,
+                                  datetimeToEpochTime,
+                                  generateSimulationTimeArray)
+from crane.plotting.plotBase import (plotBase, stackPlotBase,
+                                     convertEpochToPlotTime)
+# for machines where cmop pylib is not present
+from crane.plotting import stackplot as wp
+
+#try:
   #import cmop.webproduct as wp
-#except ImportError: 
+#except ImportError:
   #import stackplot as wp # for machines where cmop pylib is not present
-import stackplot as wp # for machines where cmop pylib is not present
 
 class timeSeriesPlot2(plotBase) :
 
@@ -97,7 +105,7 @@ class stackTimeSeriesPlot(stackPlotBase) :
     kw = self.defArgs
     kw.update(kwargs)
     plot = timeSeriesPlot2(**kw)
-    #plot.updateXAxis( [ convertEpochToPlotTime( 0.0 ), convertEpochToPlotTime( 365*86400 )] )
+    #plot.updateXAxis( [ pb.convertEpochToPlotTime( 0.0 ), pb.convertEpochToPlotTime( 365*86400 )] )
     stackPlotBase.addPlot(self,plot,tag)
 
   def addSample( self, tag, *args, **kwargs ) :
@@ -121,7 +129,7 @@ class stackTimeSeriesPlotDC(stackTimeSeriesPlot) :
     """Add data from dataContainer to subplot identified with tag.
     If given tag does not exist, new subplot is appended.
     """
-    t = convertEpochToPlotTime( dc.time.asEpoch().array )
+    t = pb.convertEpochToPlotTime( dc.time.asEpoch().array )
     data = dc.data.flatten()
     label = kwargs.pop('label',dc.getMetaData('tag'))
     stackTimeSeriesPlot.addSample( self, tag, label,t,data, **kwargs )
@@ -395,8 +403,8 @@ if __name__=='__main__':
   startTime = datetime(2010,1,12,0,0,0)
   endTime = datetime(2010,2,13,3,30,0)
   dt = 900.0
-  ta = generateSimulationTimeArray(startTime,endTime,dt).asEpoch()
-  t = ta.array
+  sta = generateSimulationTimeArray(startTime,endTime,dt).asEpoch()
+  t = sta.array
   
   T = 44714
   ref = np.sin(t/T) + 0.95*np.sin(0.95*t/T)

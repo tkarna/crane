@@ -12,7 +12,7 @@ import os
 import numpy as np
 from netCDF4 import Dataset as NetCDFFile
 
-from data.timeArray import *
+from crane.data import timeArray
 
 #-------------------------------------------------------------------------------
 # Constants
