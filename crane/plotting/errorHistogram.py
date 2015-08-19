@@ -8,13 +8,14 @@ Uses matplotlib hist plotting routine.
 Tuomas Karna 2012-09-14
 """
 import numpy as np
-from data.dataContainer import dataContainer
-from plotting.plotBase import *
 import traceback
 import sys
 import matplotlib
 from matplotlib.ticker import FuncFormatter
-import data.statistics as statMod
+# TODO import only modules
+from crane.data.dataContainer import dataContainer
+from crane.plotting.plotBase import *
+import crane.data.statistics as statMod
 
 def tickLabelToPercent(y, position):
   # Ignore the passed in position. This has the effect of scaling the default
@@ -356,7 +357,7 @@ class stackHistogramDC(stackHistogram) :
 
 if __name__=='__main__':
 
-  from data.timeArray import *
+  from crane.data import timeArray
   from datetime import datetime
 
   ### examples with numpy array inputs
@@ -364,7 +365,7 @@ if __name__=='__main__':
   startTime = datetime(2010,1,12,0,0,0)
   endTime = datetime(2010,2,13,3,30,0)
   dt = 900.0
-  ta = generateSimulationTimeArray(startTime,endTime,dt).asEpoch()
+  ta = timeArray.generateSimulationTimeArray(startTime,endTime,dt).asEpoch()
   t = ta.array
   
   T = 44714
@@ -400,23 +401,23 @@ if __name__=='__main__':
   # generate data
   np.random.seed(int(3411))
   startTime = datetime(2010,1,12,0,0,0)
-  startCorie = datetimeToCorieTime(startTime)
+  startCorie = timeArray.datetimeToCorieTime(startTime)
   #t0 = np.hstack( ( np.linspace(0,12,20), np.linspace(15.33,30,15) ) ) + startCorie
   t0 = np.linspace(0,12,20) + startCorie
   m0 = np.sin(t0)
-  ta0 = timeArray(t0,'corie')
+  ta0 = timeArray.timeArray(t0,'corie')
   
   t1 = np.linspace(-10,34,100) + startCorie
   m1 = 0.8*np.sin(t1) + 0.03*np.random.randn(len(t1))
-  ta1 = timeArray(t1,'corie')
+  ta1 = timeArray.timeArray(t1,'corie')
   
   t2 = np.linspace(-9,31.7,65) + startCorie
   m2 = 0.95*np.sin(t2) + 0.12*np.random.randn(len(t2))
-  ta2 = timeArray(t2,'corie')
+  ta2 = timeArray.timeArray(t2,'corie')
   
   t3 = np.linspace(-9,32.2,100) + startCorie
   m3 = np.sin(t3-0.12) - 0.05*np.random.randn(len(t3))-3.0
-  ta3 = timeArray(t3,'corie')
+  ta3 = timeArray.timeArray(t3,'corie')
   
   d0 = dataContainer.fromTimeSeries( 'Observation', ta0, m0, ['elev'] )
   d1 = dataContainer.fromTimeSeries( 'model Eins', ta1, m1, ['elev'] )

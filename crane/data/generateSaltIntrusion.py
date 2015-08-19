@@ -11,8 +11,8 @@ import numpy as np
 from scipy.interpolate import interp1d
 import time as timeMod
 
-from data.timeArray import *
-from data.dataContainer import dataContainer
+from crane.data import timeArray
+from crane.data import dataContainer
 from data.dirTreeManager import netcdfTree, oldTreeRule, defaultTreeRule
 from plotting.transectPlot import generateTransectFromDataContainer
 
@@ -60,7 +60,7 @@ def computeSaltIntrusion( transectDC, salt_threshold_list ) :
     meta['dataType'] = 'sil'
     meta['tag'] = transectDC.getMetaData('tag')
     data = sil[i][None,None,:]
-    silDC = dataContainer( '', transectDC.time, 0,0,0, data,
+    silDC = dataContainer.dataContainer( '', transectDC.time, 0,0,0, data,
                             [meta['variable']], coordSys='',metaData=meta)
     # compute daily max
     dailyMax = []
@@ -80,14 +80,14 @@ def computeSaltIntrusion( transectDC, salt_threshold_list ) :
         print e
       dayBegin = dayEnd
     data = np.array( dailyMax )[None,None,:]
-    ta = timeArray( np.array(dailyTime), 'epoch' )
+    ta = timeArray.timeArray( np.array(dailyTime), 'epoch' )
     meta = {}
     meta['location'] = transectDC.getMetaData('location')
     meta['instrument'] = 'model'
     meta['variable'] = '''max_sil_%d''' % (salt_threshold,)
     meta['dataType'] = 'sil'
     meta['tag'] = transectDC.getMetaData('tag')
-    dailyMaxDC = dataContainer( '', ta, 0,0,0, data,
+    dailyMaxDC = dataContainer.dataContainer( '', ta, 0,0,0, data,
                             [meta['variable']], coordSys='',metaData=meta)
     output_dc_list.append(silDC)
     output_dc_list.append(dailyMaxDC)

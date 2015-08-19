@@ -43,11 +43,14 @@ from crane.data import timeArray
 from crane.data import loadHindcastStations
 from crane.files import csvStationFile
 
-import extract_mod
+# TODO extracting legacy selfe format is now obsolete?
+#import extract_mod
 
 #------------------------------------------------------------------------------
 # Constants
 #------------------------------------------------------------------------------
+
+VALID_MIN = -89
 
 # use consistent field names throughout the skill assessment package
 fieldNameToFilename = { 'temp':'temp.63',
@@ -295,14 +298,14 @@ def extractForXYZ( dataDir, var, stationFile, startTime, endTime, profile=False,
   """
 
   if profile:
-    csvReader = csvStationFile()
+    csvReader = csvStationFile.csvStationFile()
     csvReader.readFromFile(stationFile)
     tuples = csvReader.getTuples() # all entries (loc,x,y)
     stationNames = [ t[0] for t in tuples ]
     x = np.array([ t[1] for t in tuples ])
     y = np.array([ t[2] for t in tuples ])
   else:
-    csvReader = csvStationFileWithDepth()
+    csvReader = csvStationFile.csvStationFileWithDepth()
     csvReader.readFromFile(stationFile)
     tuples = csvReader.getTuples() # all entries (loc,x,y,z,zType,var)
     stationNames = [ t[0] for t in tuples ]
@@ -379,7 +382,7 @@ def extractForOfferings( dataDir, var, offerings, startTime, endTime, profile=Fa
   """
 
   # read station file
-  staReader = csvStationFile()
+  staReader = csvStationFile.csvStationFile()
   staReader.readFromFile(stationFile)
 
   # screen possible duplicates in the offerings (e.g. instrument can be ignored)
@@ -812,7 +815,7 @@ class extractStation(extractBase) :
     t,d = self.extractor.extract(stacks)
     if t == []:
       return []
-    ta = timeArray(t, 'simulation', self.extractor.startTime).asEpoch()
+    ta = timeArray.timeArray(t, 'simulation', self.extractor.startTime).asEpoch()
     var = self.fieldName
     dcList = []
     if not self.profile :
@@ -821,7 +824,9 @@ class extractStation(extractBase) :
       # Reshaping is determined by data type (scalar vs. vector & time series vs. transect)
       nComponents = self.extractor.getNumberOfComponents()
       if not self.profile :
-        ti,di = excludeNaNs( t, d[i,:] )
+        goodIx = np.isfinite(t) * np.isfinite(d[i, :])
+        ti = t[goodIx]
+        di = d[i, goodIx]
         if len(ti) == 0 :
           print 'all bad data',station,len(t)
           continue
@@ -861,7 +866,7 @@ class extractStation(extractBase) :
         datai = datai.swapaxes(0,1) # from (dim,xyz,time) to (xyz,dim,time)
         msldepth = 'prof'
 
-      tai = timeArray(ti, 'simulation', self.extractor.startTime).asEpoch()
+      tai = timeArray.timeArray(ti, 'simulation', self.extractor.startTime).asEpoch()
       # if suspected bad values, print warning
       hasBadValues = np.isnan(datai).any() or np.isinf(datai).any() or np.any( datai < VALID_MIN )
       if hasBadValues :
@@ -878,7 +883,7 @@ class extractStation(extractBase) :
         meta['bracket'] = 'F' if self.zRelativeToSurf else 'A'
         meta['msldepth'] = msldepth
         meta['dataType'] = 'timeseries'
-      dc = dataContainer('', tai, x,y,z, datai, fieldNameList[var],
+      dc = dataContainer.dataContainer('', tai, x,y,z, datai, fieldNameList[var],
                          coordSys='spcs',metaData=meta)
 
       dcList.append( dc )

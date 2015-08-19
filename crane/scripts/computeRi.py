@@ -3,8 +3,8 @@ A script for computing gradient Richardson number from Winched Profiler track.
 """
 
 import numpy as np
-from data.dataContainer import *
-from data.timeArray import *
+from crane.data import dataContainer
+from crane.data import timeArray
 from data.stationCollection import *
 import data.dirTreeManager as dtm
 from data.pca import *
@@ -82,10 +82,10 @@ def binOnGrid( dc, T, Z, tScale, zScale ) :
 
 def interpolateOnGridDC( dc, T, Z ) :
   vals = interpolateOnGrid(dc,T,Z)
-  ta = timeArray(T.ravel(),'epoch',acceptDuplicates=True)
+  ta = timeArray.timeArray(T.ravel(),'epoch',acceptDuplicates=True)
   meta = dc.getMetaData()
   fn = dc.fieldNames[:1]
-  dc2 = dataContainer('',ta, dc.x, dc.y, Z.ravel()[None,:], vals.ravel()[None,None,:],fn,metaData=meta, acceptNaNs=True)
+  dc2 = dataContainer.dataContainer('',ta, dc.x, dc.y, Z.ravel()[None,:], vals.ravel()[None,None,:],fn,metaData=meta, acceptNaNs=True)
   return dc2
 
 # not needed
@@ -112,11 +112,11 @@ def runningX( dc, T=None, operator=computeRunningMean ) :
   if len(tRes) == 0 :
     print 'Running mean could not be computed, skipping (time series too short?)'
     return
-  ta = timeArray( tRes, 'epoch' )
+  ta = timeArray.timeArray( tRes, 'epoch' )
   data = xRes.reshape( (1,1,-1) )
   z = zRes[None,:]
   meta = dc.getMetaData()
-  dc2 = dataContainer( '', ta, dc.x,dc.y,z, data,
+  dc2 = dataContainer.dataContainer( '', ta, dc.x,dc.y,z, data,
                             dc.fieldNames[:1], coordSys=dc.coordSys,metaData=meta)
   return dc2
 
@@ -290,8 +290,8 @@ def computeRi( tag, loc ) :
     y = y*np.ones((nZ,))
     z = Z.T
     data = C.T[:,None,:]
-    ta = timeArray(T[:,0],'epoch')
-    dc = dataContainer('', ta, x,y,z, data, fieldNames,
+    ta = timeArray.timeArray(T[:,0],'epoch')
+    dc = dataContainer.dataContainer('', ta, x,y,z, data, fieldNames,
                         coordSys='spcs',metaData=meta,acceptNaNs=True)
     return dc
 

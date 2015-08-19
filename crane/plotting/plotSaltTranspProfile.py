@@ -6,8 +6,8 @@ Tuomas Karna 2013-11-08
 """
 
 import numpy as np
-from data.dataContainer import *
-from data.timeArray import *
+from crane.data import dataContainer
+from crane.data import timeArray
 from data.stationCollection import *
 import data.dirTreeManager as dtm
 from data.pca import *
@@ -56,7 +56,7 @@ def computeMeanProfile( dc ) :
   dc2.data = dc2.data.mean(axis=2)[:,:,None]
   dc2.z = dc2.z.mean(axis=1)
   dc2.zDependsOnTime = False
-  dc2.time = timeArray(np.array([dc.time.array.mean()]),'epoch')
+  dc2.time = timeArray.timeArray(np.array([dc.time.array.mean()]),'epoch')
   return dc2
 
 def getTidalSaltTransport( salt, hvel ) :

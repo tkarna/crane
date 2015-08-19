@@ -10,8 +10,8 @@ import os
 import sys
 import traceback
 import numpy as np
-from data.timeArray import *
-from data.dataContainer import *
+from crane.data import timeArray
+from crane.data import dataContainer
 import glob
 from scipy.io.matlab import loadmat
 import datetime
@@ -52,7 +52,7 @@ def read_mat_sil_files( path, fn ) :
   time = datenumPSTToEpoch(t)
   # round to nearest minute
   time = np.round(time/60.)*60.
-  print 'Loaded data for range:\n ',str(epochToDatetime(time[0])),' -> ',  str(epochToDatetime(time[-1]))
+  print 'Loaded data for range:\n ',str(timeArray.epochToDatetime(time[0])),' -> ',  str(timeArray.epochToDatetime(time[-1]))
   return time,data
 
 def genSILDC( path,fn,runTag ) :
@@ -69,7 +69,7 @@ def genSILDC( path,fn,runTag ) :
   meta['variable'] = var
   meta['tag'] = runTag
   goodIx = np.logical_and( np.isfinite(time), np.any(np.isfinite(vals),axis=0) )
-  ta = timeArray(time[goodIx],'epoch')
+  ta = timeArray.timeArray(time[goodIx],'epoch')
   data = vals[goodIx][None,None,:] / 1000.0
   nReg = 1
   xx = np.zeros((nReg,))
@@ -77,7 +77,7 @@ def genSILDC( path,fn,runTag ) :
   zz = np.zeros((nReg,))
   fieldNames = [var]
   
-  dc = dataContainer('', ta, xx,yy,zz, data, fieldNames, coordSys='spcs',metaData=meta,acceptNaNs=True)
+  dc = dataContainer.dataContainer('', ta, xx,yy,zz, data, fieldNames, coordSys='spcs',metaData=meta,acceptNaNs=True)
   return dc
 
 def read_mat_sho_files( path, fn ) :
@@ -94,7 +94,7 @@ def read_mat_sho_files( path, fn ) :
   time = datenumPSTToEpoch(t)
   # round to nearest minute
   time = np.round(time/60.)*60.
-  print 'Loaded data for range:\n ',str(epochToDatetime(time[0])),' -> ',  str(epochToDatetime(time[-1]))
+  print 'Loaded data for range:\n ',str(timeArray.epochToDatetime(time[0])),' -> ',  str(timeArray.epochToDatetime(time[-1]))
   
   return time,data,indData
   
@@ -111,7 +111,7 @@ def genSHODC( path,fn,runTag ) :
   meta['variable'] = 'shov1'
   meta['tag'] = runTag
   goodIx = np.logical_and( np.isfinite(time), np.any(np.isfinite(vals),axis=0) )
-  ta = timeArray(time[goodIx],'epoch')
+  ta = timeArray.timeArray(time[goodIx],'epoch')
   data = vals[:,goodIx][:,None,:]
   indd = indData[:,:,goodIx]
   data = np.concatenate( (data,indd), axis=1 )
@@ -121,7 +121,7 @@ def genSHODC( path,fn,runTag ) :
   zz = np.zeros((nReg,))
   fieldNames = ['sho','sho_t','sho_s','sho_d','sho_v']
   
-  dc = dataContainer('', ta, xx,yy,zz, data, fieldNames, coordSys='spcs',metaData=meta,acceptNaNs=True)
+  dc = dataContainer.dataContainer('', ta, xx,yy,zz, data, fieldNames, coordSys='spcs',metaData=meta,acceptNaNs=True)
   return dc
 
 def read_mat_profile_files( path,loc,var,dataSetName='test',dataSetType='ms' ) :
@@ -142,7 +142,7 @@ def read_mat_profile_files( path,loc,var,dataSetName='test',dataSetType='ms' ) :
   time = datenumPSTToEpoch(t)
   # round to nearest minute
   time = np.round(time/60.)*60.
-  print '  Loaded data range: ',str(epochToDatetime(time[0])),' -> ',  str(epochToDatetime(time[-1]))
+  print '  Loaded data range: ',str(timeArray.epochToDatetime(time[0])),' -> ',  str(timeArray.epochToDatetime(time[-1]))
   return time,z,data
 
 def genProfileDC(dataDir,runTag,location,var,x,y,
@@ -176,7 +176,7 @@ def genProfileDC(dataDir,runTag,location,var,x,y,
   if var != 'elev' :
     goodIx = np.logical_and( goodIx, np.any(np.isfinite(z),axis=0) )
   #print goodIx.shape
-  ta = timeArray(time[goodIx],'epoch')
+  ta = timeArray.timeArray(time[goodIx],'epoch')
   data = vals[:,goodIx][:,None,:]
   zz = z[:,goodIx]
   if var == 'elev' :
@@ -187,7 +187,7 @@ def genProfileDC(dataDir,runTag,location,var,x,y,
     data = data[goodZ,:]
   xx = np.tile( x, (zz.shape[0],) )
   yy = np.tile( y, (zz.shape[0],) )
-  dc = dataContainer('', ta, xx,yy,zz, data, fieldNames, coordSys='spcs',metaData=meta,acceptNaNs=True)
+  dc = dataContainer.dataContainer('', ta, xx,yy,zz, data, fieldNames, coordSys='spcs',metaData=meta,acceptNaNs=True)
   return dc
 
 def interpolateInVertical(Z,V,z=None,k=None,zRelToSurf=False):
@@ -292,7 +292,7 @@ def getTSFromProfile(runTag, location, var, z=None, k=None,
   data = v[None,:,:]
   x = prof.x[0]
   y = prof.y[0]
-  dc = dataContainer('', prof.time, x,y,z, data, prof.fieldNames, coordSys=prof.coordSys,metaData=meta)
+  dc = dataContainer.dataContainer('', prof.time, x,y,z, data, prof.fieldNames, coordSys=prof.coordSys,metaData=meta)
   return dc
 
 def read_mat_plume_file( path,var,saltThreshold ) :
@@ -311,7 +311,7 @@ def read_mat_plume_file( path,var,saltThreshold ) :
   time = datenumPSTToEpoch(t)
   # round to nearest minute
   time = np.round(time/60.)*60.
-  print '  Loaded data range: ',str(epochToDatetime(time[0])),' -> ',  str(epochToDatetime(time[-1]))
+  print '  Loaded data range: ',str(timeArray.epochToDatetime(time[0])),' -> ',  str(timeArray.epochToDatetime(time[-1]))
   return time,data
 
 def getPlumeDC(runTag,dataDir,saltThreshold):
@@ -336,7 +336,7 @@ def getPlumeDC(runTag,dataDir,saltThreshold):
   for i,var in enumerate(varNames):
     sthSuffix = '_{0:d}'.format(int(saltThreshold))
     data = np.swapaxes(values[:,fieldIndices[i]],0,1)[None,:,:] # (1,nStats,nTime)
-    ta = timeArray( time, 'epoch' )
+    ta = timeArray.timeArray( time, 'epoch' )
     meta = {}
     meta['tag'] = runTag
     meta['location'] = 'plume'
@@ -346,7 +346,7 @@ def getPlumeDC(runTag,dataDir,saltThreshold):
     meta['saltThreshold'] = str(saltThreshold)
     x = y = z = 0
     fNames = [ fn+sthSuffix for fn in fieldNames.get(var,[var]) ]
-    dc = dataContainer('', ta, x,y,z, data, fNames,
+    dc = dataContainer.dataContainer('', ta, x,y,z, data, fNames,
                         coordSys='spcs',metaData=meta)
     dcs.append(dc)
   return dcs

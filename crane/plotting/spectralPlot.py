@@ -7,9 +7,10 @@ A class for plotting signals in frequency domain.
 Tuomas Karna 2012-10-04 17:17:23
 """
 import numpy as np
-from data.dataContainer import dataContainer
-from data.periodogram import *
-from plotting.plotBase import *
+# TODO import only modules
+from crane.data.dataContainer import dataContainer
+from crane.data.periodogram import *
+from crane.plotting.plotBase import *
 
 # TODO create a comprehensive class or use TAPPY
 class tidalConstituents(object) :
@@ -287,7 +288,7 @@ class stackSpectralPlotDC(stackSpectralPlot) :
 
 if __name__=='__main__':
 
-  from data.timeArray import *
+  from crane.data import timeArray
   from datetime import datetime
 
   ### examples with numpy array inputs
@@ -295,12 +296,12 @@ if __name__=='__main__':
   startTime = datetime(2010,1,12,0,0,0)
   endTime = datetime(2010,2,13,3,30,0)
   dt = 90.0
-  ta = generateSimulationTimeArray(startTime,endTime,dt).asEpoch()
+  ta = timeArray.generateSimulationTimeArray(startTime,endTime,dt).asEpoch()
   t = ta.array
   # Randomly select a fraction of an array with timesteps:
   frac_points = 0.6 # Fraction of points to discard
   t = t[ np.random.rand(len(t)) >= frac_points ]
-  ta = timeArray(t, 'epoch')
+  ta = timeArray.timeArray(t, 'epoch')
 
   tcs = tidalConstituents()
   TM2 = tcs.getPeriod('M2')

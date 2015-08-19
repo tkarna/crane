@@ -11,8 +11,8 @@ from netCDF4 import Dataset as NetCDFFile
 from glob import glob
 import time as timeMod
 
-from data.timeArray import *
-from data.dataContainer import *
+from crane.data import timeArray
+from crane.data import dataContainer
 from data.meshContainer import meshContainer
 from data.selfeGridUtils import verticalCoordinates
 from files.buildPoints import BuildPoint
@@ -470,7 +470,7 @@ class selfeNCFile(object) :
     """Returns time stamps from given netCDF file in epoch format."""
     startTime = ' '.join(self.ncfile.variables['time'].base_date.split()[2:4])
     startTime = datetime.datetime.strptime( startTime, '%Y-%m-%d %H:%M:%S' )
-    time = simulationToEpochTime( self.ncfile.variables['time'][:], startTime )
+    time = timeArray.simulationToEpochTime( self.ncfile.variables['time'][:], startTime )
     return time
 
   def getStacks( self, startTime, endTime, wholeDays=False ) :
@@ -1049,8 +1049,8 @@ class selfeExtractBase(object) :
 
     # figure out correct stacks
     if stacks is None:
-        stacks = self.dataFile.getStacks(epochToDatetime(T0[0]),
-                                         epochToDatetime(T0[-1]),
+        stacks = self.dataFile.getStacks(timeArray.epochToDatetime(T0[0]),
+                                         timeArray.epochToDatetime(T0[-1]),
                                          wholeDays=False)
     # get profiles for all x,y locations (nPoints,nVert,nTime)
     time,vals,zcor,is3d = self.getVerticalProfileForStacks(stacks,varStr,X0,Y0)
@@ -1066,14 +1066,14 @@ class selfeExtractBase(object) :
     if time[0] > T[0] or time[-1] < T[-1] :
       print 'Extracted time range does not cover query range: cropping'
       if time[0] > T[0] :
-        print 'start',epochToDatetime(time[0]), '>', epochToDatetime(T[0])
+        print 'start',timeArray.epochToDatetime(time[0]), '>', timeArray.epochToDatetime(T[0])
       if time[-1] < T[-1] :
-        print 'end',epochToDatetime(time[-1]), '<', epochToDatetime(T[-1])
+        print 'end',timeArray.epochToDatetime(time[-1]), '<', timeArray.epochToDatetime(T[-1])
       goodTimeIx = np.logical_and( T >= time[0], T <= time[-1] )
       print goodTimeIx
       if not np.any(goodTimeIx):
-        print 'extracted time range:', epochToDatetime(time[0]), '->', epochToDatetime(time[0])
-        print 'query time range:', epochToDatetime(T[0]), '->', epochToDatetime(T[0])
+        print 'extracted time range:', timeArray.epochToDatetime(time[0]), '->', timeArray.epochToDatetime(time[0])
+        print 'query time range:', timeArray.epochToDatetime(T[0]), '->', timeArray.epochToDatetime(T[0])
         raise Exception('Time arrays do not overlap - cannot extract')
       X = X[goodTimeIx]
       Y = Y[goodTimeIx]
@@ -1191,7 +1191,7 @@ class selfeExtract(selfeExtractBase) :
       data = np.reshape( np.array(data[goodIx]), (1,1,-1) )
       t = np.array(time[goodIx])
 
-      ta = timeArray( t, 'epoch' )
+      ta = timeArray.timeArray( t, 'epoch' )
       meta = {}
       meta['location'] = stationNames[iSta]
       meta['instrument'] = 'model'
@@ -1209,7 +1209,7 @@ class selfeExtract(selfeExtractBase) :
       z = np.mean(actualZ[iSta,:])
       x = staX[iSta]
       y = staY[iSta]
-      dc = dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
+      dc = dataContainer.dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
                           coordSys='spcs',metaData=meta)
       dcs.append(dc)
     return dcs
@@ -1280,7 +1280,7 @@ class selfeExtract(selfeExtractBase) :
         raise Exception('bad values remain: '+staStr)
       # to (nGoodVert,1,nTime)
       data = v[:,None,:]
-      ta = timeArray( np.array(t), 'epoch' )
+      ta = timeArray.timeArray( np.array(t), 'epoch' )
       # to (nGoodVert,nTime)
       nZ = z.shape[0]
       x = staX[iSta]*np.ones((nZ,))
@@ -1291,7 +1291,7 @@ class selfeExtract(selfeExtractBase) :
       meta['bracket'] = 'A'
       meta['variable'] = varStr
       meta['dataType'] = 'profile'
-      dc = dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
+      dc = dataContainer.dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
                           coordSys='spcs',metaData=meta)
       dcs.append(dc)
     return dcs
@@ -1360,14 +1360,14 @@ class selfeExtract(selfeExtractBase) :
     data = data[:,None,:]
     
     # build dataContainer
-    ta = timeArray( time, 'epoch' )
+    ta = timeArray.timeArray( time, 'epoch' )
     meta = {}
     meta['location'] = transName
     meta['instrument'] = 'model'
     meta['bracket'] = 'A'
     meta['variable'] = varStr
     meta['dataType'] = 'transect'
-    dc = dataContainer('', ta, X,Y,Z, data, fieldNameList.get(varStr,[varStr]),
+    dc = dataContainer.dataContainer('', ta, X,Y,Z, data, fieldNameList.get(varStr,[varStr]),
                        coordSys='spcs', metaData=meta, acceptNaNs=True)
     return dc
 
@@ -1392,7 +1392,7 @@ class selfeExtract(selfeExtractBase) :
     XX,YY,ZZ,TT,actualZ,data = self.getXYZT(varStr, X, Y, Z, T,zRelToSurf, stacks)
 
     # create dataContainer
-    ta = timeArray(TT, 'epoch', acceptDuplicates=True)
+    ta = timeArray.timeArray(TT, 'epoch', acceptDuplicates=True)
     data = data[None,None,:]
     if not zRelToSurf :
       # export the actual z coordinate where data was extracted
@@ -1406,7 +1406,7 @@ class selfeExtract(selfeExtractBase) :
     meta['instrument'] = 'model'
     meta['bracket'] = 'F' if zRelToSurf else 'A'
     meta['variable'] = varStr
-    dc = dataContainer('', ta, XX[None,:],YY[None,:],z, data,
+    dc = dataContainer.dataContainer('', ta, XX[None,:],YY[None,:],z, data,
                        fieldNameList.get(varStr,[varStr]),
                        coordSys='spcs',metaData=meta,acceptNaNs=True)
 
@@ -1433,7 +1433,7 @@ class selfeExtract(selfeExtractBase) :
     if stacks is None:
         stacks = self.dataFile.getStacks(startTime,endTime,wholeDays=wholeDays)
     time,vals,zcoords = self.getSlabForStacks(stacks, varStr, z, k, zRelToSurf)
-    ta = timeArray( time, 'epoch' )
+    ta = timeArray.timeArray( time, 'epoch' )
     vals = vals.filled(np.nan)
     data = vals[:,None,:]
     zcoords = zcoords.filled(np.nan)

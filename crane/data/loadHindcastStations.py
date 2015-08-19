@@ -8,6 +8,7 @@ from scipy.interpolate import interp1d
 from crane.data import dataContainer
 from crane.data import timeArray
 
+
 #-------------------------------------------------------------------------------
 # Constants
 #-------------------------------------------------------------------------------
@@ -260,7 +261,7 @@ def readDateRange(baseDir, tagStr, station, keys, startTime, endTime, stationX=0
     ti,di = excludeNaNs( time, data[(var,zCoord,bracket)] )
     if len(ti) == 0 :
       continue
-    ta = timeArray(ti,'corie').asEpoch()
+    ta = timeArray.timeArray(ti,'corie').asEpoch()
     di = di.reshape( (1,1,-1) )
 
     meta = {}
@@ -270,7 +271,7 @@ def readDateRange(baseDir, tagStr, station, keys, startTime, endTime, stationX=0
     meta['msldepth'] = str(int(round(-zCoord*100)))
     meta['dataType'] = 'timeseries'
     meta['variable'] = var
-    dc = dataContainer('',ta,stationX,stationY,zCoord,di,[var],coordSys,meta)
+    dc = dataContainer.dataContainer('',ta,stationX,stationY,zCoord,di,[var],coordSys,meta)
     dcList.append( dc )
     # if suspected bad values, print warning
     badValues = np.any( di < VALID_MIN )

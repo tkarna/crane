@@ -15,8 +15,8 @@ import sys
 import datetime
 import subprocess as sub
 
-from data.dataContainer import dataContainer
-from data.timeArray import timeArray
+from crane.data import dataContainer
+from crane.data import timeArray
 from data.loadHindcastStations import excludeNaNs,VALID_MIN
 from data.extractStation import *
 
@@ -111,7 +111,7 @@ class extractTrack(extractBase) :
     meta['instrument'] = 'model'
     meta['bracket'] = 'F' if self.zRelativeToSurf else 'A'
     meta['variable'] = var
-    dc = dataContainer('', self.time, x,y,z, data, fieldNameList[var], coordSys='spcs',metaData=meta,acceptNaNs=True)
+    dc = dataContainer.dataContainer('', self.time, x,y,z, data, fieldNameList[var], coordSys='spcs',metaData=meta,acceptNaNs=True)
     return dc
 
 #-------------------------------------------------------------------------------
@@ -125,11 +125,12 @@ def test() :
   y = 50*np.sin(x)+500
   z = np.linspace( -8, -2, 100 )
 
-  from data.timeArray import timeArray, datetimeToEpochTime
+  from crane.data import timeArray
   startTime = datetime.datetime(2010,1,1,2,30,0)
   endTime = datetime.datetime(2010,1,1,12,45,0)
-  t = np.linspace( datetimeToEpochTime( startTime ), datetimeToEpochTime( endTime ), 100 )
-  ta = timeArray( t, 'epoch' )
+  t = np.linspace(timeArray.datetimeToEpochTime(startTime),
+                  timeArray.datetimeToEpochTime(endTime), 100)
+  ta = timeArray.timeArray( t, 'epoch' )
 
   ee = extractTrack( dataDir, var )
   ee.setTrack( 'snake',x,y,z,ta )

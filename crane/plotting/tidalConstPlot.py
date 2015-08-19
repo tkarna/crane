@@ -8,7 +8,8 @@ Uses matplotlib bar plotting routine.
 Tuomas Karna 2012-09-17
 """
 import numpy as np
-from plotting.plotBase import *
+# TODO import only modules
+from crane.plotting.plotBase import *
 
 # class that takes the data (error time series) and plots the histogram
 class barPlotBase(plotBase) :

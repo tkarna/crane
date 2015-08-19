@@ -5,8 +5,8 @@ Tuomas Karna 2013-01-17
 """
 import numpy as np
 from scipy.interpolate import interp1d
-from data.dataContainer import dataContainer
-from data.timeArray import timeArray
+from crane.data import dataContainer
+from crane.data import timeArray
 
 def generateSat01ProfilerModData( obsWProfilerDC, modProfileDC ) :
 
@@ -26,9 +26,9 @@ def generateSat01ProfilerModData( obsWProfilerDC, modProfileDC ) :
   ix[-1,1] = len(to)
 
   # align times
-  tix = m.time.getAlignedTimeIndices( timeArray(tArr,'epoch') )
+  tix = m.time.getAlignedTimeIndices( timeArray.timeArray(tArr,'epoch') )
   tArr = tArr[tix]
-  ta = timeArray( tArr, 'epoch' )
+  ta = timeArray.timeArray( tArr, 'epoch' )
   m = m.interpolateInTime( ta, acceptNaNs=True )
 
   if not np.array_equal( tArr, m.time.array ) :
@@ -65,7 +65,7 @@ def generateSat01ProfilerModData( obsWProfilerDC, modProfileDC ) :
   znew = np.concatenate( tuple(znew) )
   vnew = np.concatenate( tuple(vnew) )
   tnew = np.concatenate( tuple(tnew) )
-  ta = timeArray( tnew, 'epoch',acceptDuplicates=True )
+  ta = timeArray.timeArray( tnew, 'epoch',acceptDuplicates=True )
 
   # create dataContainer
   z = znew[None,:]
@@ -73,7 +73,7 @@ def generateSat01ProfilerModData( obsWProfilerDC, modProfileDC ) :
   meta = m.getMetaData()
   meta['dataType'] = 'profiler'
   #meta.pop( 'msldepth', None ) # TODO
-  dc = dataContainer('', ta, m.x[0],m.y[0],z,data,o.fieldNames,
+  dc = dataContainer.dataContainer('', ta, m.x[0],m.y[0],z,data,o.fieldNames,
                      m.coordSys,meta,acceptNaNs=True)
   return dc
 
@@ -153,14 +153,14 @@ def generateSat01ProfilerObsData( depDC, varDC ) :
   zNew = np.concatenate( tuple(zNew) )
   varNew = np.concatenate( tuple(varNew) )
   # create new dataContainer
-  tNew = timeArray(tNew,'epoch',acceptDuplicates=True)
+  tNew = timeArray.timeArray(tNew,'epoch',acceptDuplicates=True)
   z = np.reshape(zNew,(1,-1))
   data = np.reshape(varNew,(1,1,-1))
   var = varDC.fieldNames[0]
   meta = varDC.getMetaData()
   #meta.pop( 'msldepth', None ) # TODO
   meta['dataType'] = 'profiler'
-  dc = dataContainer('',tNew,
+  dc = dataContainer.dataContainer('',tNew,
                         varDC.x,varDC.y,z,
                         data,[var],varDC.coordSys,metaData=meta)
   return dc

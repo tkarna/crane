@@ -12,9 +12,10 @@ Tuomas Karna 2012-08-15
 from scipy import *
 import sys
 
-from data import statistics
-from data.dataContainer import dataContainer
-from plotting.plotBase import *
+# TODO import only modules
+from crane.data import statistics
+from crane.data.dataContainer import dataContainer
+from crane.plotting.plotBase import *
 
 class diagramBase(object) :
   """Base class for statistics diagrams"""
@@ -562,12 +563,15 @@ class normalizedStatisticsDiagram(object) :
     if 'label' not in kwargs.keys() :
       raise Exception( 'keyword argument label must be provided' )
     l = kwargs['label']
-    corr, stddev, bias, ioa, mur, crmse, nmse = self.stats[tag].addSample(sample, l, reference=reference)
+    stats = self.stats[tag].addSample(sample, l, reference=reference)
+    bias = stats['bias']
+    nmse = stats['nmse']
     if self.normalizeBias :
       # divide bias by std of the reference
       bias = bias/self.taylorDiags[tag].refStd
-    l1 = self.taylorDiags[tag].plotSample(corr,stddev, **kwargs)
-    l2 = self.biasDiags[tag].plotSample(bias,nmse, **kwargs)
+    l1 = self.taylorDiags[tag].plotSample(stats['corr'], stats['stddev'],
+                                          **kwargs)
+    l2 = self.biasDiags[tag].plotSample(bias, nmse, **kwargs)
     self.murphyLim[0] = 0.0 #min(self.murphyLim[0], nmse*1.05)
     self.murphyLim[1] = max(self.murphyLim[1], nmse*1.05)
     self.biasAx.set_ylim(self.murphyLim)
@@ -742,23 +746,23 @@ if __name__=='__main__':
 
   # -- examples with dataContainer objects --
   # generate data
-  from data.timeArray import timeArray
+  from crane.data import timeArray
   random.seed(int(3411))
   t0 = hstack( ( linspace(0,2,20), linspace(2.33,6,15) ) ) + 2193
   m0 = sin(t0)
-  ta0 = timeArray(t0,'corie')
+  ta0 = timeArray.timeArray(t0,'corie')
   
   t1 = linspace(-10,10,100) + 2193
   m1 = 0.8*sin(t1) + 0.03*random.randn(len(t1))
-  ta1 = timeArray(t1,'corie')
+  ta1 = timeArray.timeArray(t1,'corie')
   
   t2 = linspace(-9,17.7,65) + 2193
   m2 = 0.95*sin(t2) + 0.12*random.randn(len(t2))
-  ta2 = timeArray(t2,'corie')
+  ta2 = timeArray.timeArray(t2,'corie')
   
   t3 = linspace(-9,12.2,100) + 2193
   m3 = sin(t3-0.12) - 0.05*random.randn(len(t3))
-  ta3 = timeArray(t3,'corie')
+  ta3 = timeArray.timeArray(t3,'corie')
   
   d0 = dataContainer.fromTimeSeries( 'Observation', ta0, m0, ['elev'] )
   d1 = dataContainer.fromTimeSeries( 'model Eins', ta1, m1, ['elev'] )

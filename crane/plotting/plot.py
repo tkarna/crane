@@ -4,17 +4,21 @@ High-level class to create timeseries and Taylor Diagrams.
 #-------------------------------------------------------------------------------
 # Imports
 #-------------------------------------------------------------------------------
-from data.timeArray import *
-from plotting.timeSeriesPlot import *
-from plotting.taylorDiagram import *
-from plotting.stationExtremaPlot import *
-from plotting.errorHistogram import *
-from plotting.spectralPlot import *
-from plotting.tidalConstPlot import *
-from plotting.profilePlot import *
-from plotting.trackPlot import *
-from files.stationFile import StationFile
-from plotting.plotBase import *
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+
+from crane.data import timeArray
+from crane.plotting import plotBase
+from crane.plotting import timeSeriesPlot
+from crane.plotting import taylorDiagram
+from crane.plotting import stationExtremaPlot
+from crane.plotting import errorHistogram
+from crane.plotting import spectralPlot
+from crane.plotting import tidalConstPlot
+from crane.plotting import profilePlot
+from crane.plotting import trackPlot
+from crane.files import stationFile
 
 #-------------------------------------------------------------------------------
 # Constants
@@ -378,7 +382,7 @@ class Plots(object):
     kw = dict(kwargs)
     kw.setdefault('verbose', True)
     kw.setdefault('bbox_tight', True)
-    saveFigure(self.path, filename, extensions, **kw)
+    plotBase.saveFigure(self.path, filename, extensions, **kw)
 
   def makeSaltIntrusion(self, filetype='png', fPrefix='sil', varPrefix=None, ylim=None, err_ylim=None, **kwargs) :
     """Creates timeseries of salt intrusion length and saves to image directory.
@@ -408,7 +412,7 @@ class Plots(object):
         kw['title'] = ('%s %s\n %s - %s (PST)' %
                             (location, varTitle, sT, eT))
       fig = plt.figure(figsize=(7.5,3))
-      dia=timeSeriesPlotDC(varTitle, unit=UNITS[var], ylim=ylim, **kw)
+      dia = timeSeriesPlot.timeSeriesPlotDC(varTitle, unit=UNITS[var], ylim=ylim, **kw)
 
       for modKey in keys :
         m = self.coll.getSample( **modKey )
@@ -464,10 +468,10 @@ class Plots(object):
 
       # ----- Make image -----
       if obsKey :
-        dia=timeSeriesComboPlotDC(varTitle, o, 'Obs', unit=UNITS[var], ylim=yl, err_ylim=erryl, **kw)
+        dia=timeSeriesPlot.timeSeriesComboPlotDC(varTitle, o, 'Obs', unit=UNITS[var], ylim=yl, err_ylim=erryl, **kw)
       else :
         fig = plt.figure(figsize=(7.5,3))
-        dia=timeSeriesPlotDC(varTitle, unit=UNITS[var], ylim=yl, **kw)
+        dia=timeSeriesPlot.timeSeriesPlotDC(varTitle, unit=UNITS[var], ylim=yl, **kw)
       for modKey in modKeys :
         m = self.coll.getSample( **modKey )
         dia.addSample(m, color=modelColors[modKey['tag']], label=modKey['tag'])
@@ -488,7 +492,7 @@ class Plots(object):
       titleStr = ' '.join([ varTitle, sT+' - '+eT])
       if 'title' not in kwargs :
         kwargs['title'] = titleStr
-      dia = timeSeriesStackPlotDC(**kwargs)
+      dia = timeSeriesPlot.timeSeriesStackPlotDC(**kwargs)
       stations = list( set( self.coll.getAttributes( 'location', variable=var ) ).intersection( set( stationX.keys() ) ) )
       orderedSta = sorted( stations, key = lambda k: stationX[k] )
       for sta in orderedSta :
@@ -547,7 +551,7 @@ class Plots(object):
         stationCoords[station] = x
 
     for var in self.coll.getAttributes('variable') :
-      dia = stationExtremaPlotDC(VARS[var], stationCoords, unit=UNITS[var], **kwargs)
+      dia = stationExtremaPlot.stationExtremaPlotDC(VARS[var], stationCoords, unit=UNITS[var], **kwargs)
       comKeys = self.coll.getComparableKeys(dataType='timeseries', requireObs=False)
       for entry, obsKey, modKeys in comKeys :
         station,var,msldepth = entry
@@ -587,7 +591,7 @@ class Plots(object):
         continue
 
       # ----- Make plot -----
-      dia = errorHistogramDC(o, unit=UNITS[var], label='Obs', **kwargs)
+      dia = errorHistogram.errorHistogramDC(o, unit=UNITS[var], label='Obs', **kwargs)
       for modKey in modKeys :
         m = self.coll.getSample( **modKey )
         dia.addSample(m, label=modKey['tag'], color=modelColors[modKey['tag']])
@@ -611,7 +615,7 @@ class Plots(object):
     modelColors = self.makeColorsForModels()
 
     for var in self.coll.getAttributes('variable',dataType='timeseries') :
-      dia = stackHistogramDC(unit=UNITS[var],**kwargs)
+      dia = errorHistogram.stackHistogramDC(unit=UNITS[var],**kwargs)
       stations = list( set( self.coll.getAttributes( 'location', variable=var ) ).intersection( set( stationX.keys() ) ) )
 #      stations = self.coll.getAttributes( 'location',variable=var )
       orderedSta = sorted( stations, key = lambda k: stationX[k] )
@@ -659,7 +663,7 @@ class Plots(object):
         continue
 
       # ----- Make plot -----
-      dia = spectralPlotDC(xunit='hours')
+      dia = spectralPlot.spectralPlotDC(xunit='hours')
       for modKey in modKeys :
         m = self.coll.getSample( **modKey )
         try :
@@ -690,7 +694,7 @@ class Plots(object):
     #constsToPlot = ['M2','S2','N2','L2','K2','K1','O1','P1','M4','M6','M8','Mf','Mm']
     constsToPlot = ['M2','S2','N2','L2','K2','K1','O1','P1','J1','NO1','OO1','M4','M6','M8','Mf','Mm','MSf']
     for var in self.coll.getAttributes('variable',dataType='timeseries') :
-      dia = stackAmplitudePhasePlot(unit=UNITS[var],**kwargs)
+      dia = tidalConstPlot.stackAmplitudePhasePlot(unit=UNITS[var],**kwargs)
 #      stations = self.coll.getAttributes( 'location',variable=var)
       stations = list( set( self.coll.getAttributes( 'location', variable=var ) ).intersection( set( stationX.keys() ) ) )
       orderedSta = sorted( stations, key = lambda k: stationX[k] )
@@ -725,7 +729,7 @@ class Plots(object):
     modelColors = self.makeColorsForModels()
     constsToPlot = ['M2','M4','M6','S2','K1','O1','MSf']
     for var in self.coll.getAttributes('variable',dataType='timeseries') :
-      dia = stackAmplitudePhasePlot(unit=UNITS[var],**kwargs)
+      dia = tidalConstPlot.stackAmplitudePhasePlot(unit=UNITS[var],**kwargs)
       #stations = self.coll.getAttributes( 'location',variable=var)
       stations = list( set( self.coll.getAttributes( 'location', variable=var ) ).intersection( set( stationX.keys() ) ) )
       orderedSta = sorted( stations, key = lambda k: stationX[k] )
@@ -763,7 +767,7 @@ class Plots(object):
     modelColors = self.makeColorsForModels()
 
     for var in self.coll.getAttributes('variable',dataType='timeseries') :
-      dia = stackSpectralPlotDC(xunit='hours',**kwargs)
+      dia = spectralPlot.stackSpectralPlotDC(xunit='hours',**kwargs)
       #stations = self.coll.getAttributes( 'location',variable=var)
       stations = list( set( self.coll.getAttributes( 'location', variable=var ) ).intersection( set( stationX.keys() ) ) )
       orderedSta = sorted( stations, key = lambda k: stationX[k] )
@@ -824,7 +828,7 @@ class Plots(object):
         continue
 
       # ----- Make plot -----
-      dia = statisticsDiagramDC(o, 'Obs', unit=UNITS[var], **kwargs)
+      dia = taylorDiagram.statisticsDiagramDC(o, 'Obs', unit=UNITS[var], **kwargs)
       for modKey in modKeys :
         m = self.coll.getSample( **modKey )
         dia.plotSample(m, label=modKey['tag'], color=modelColors[modKey['tag']])
@@ -855,7 +859,7 @@ class Plots(object):
     markers, colors = self.makeMarkersForTaylor()
     
     for var in self.coll.getAttributes('variable',dataType='timeseries') :
-      dia = normalizedStatisticsDiagramDC(figsize=(9,6))
+      dia = taylorDiagram.normalizedStatisticsDiagramDC(figsize=(9,6))
       for sta in self.coll.getAttributes( 'location', variable=var ) :
         comKeys = self.coll.getComparableKeys( dataType='timeseries',variable=var, location=sta, requireObs=True )
         for entry, obsKey, modKeys in comKeys :
@@ -915,7 +919,7 @@ class Plots(object):
       varTitle,varStr,sT,eT = self.getAnnotationStrings(var,varPrefix)
       logScale = True if var in ['kine','vdff','tdff','bed_stress'] else False
       climIsLog = True if var in ['kine','vdff','tdff','bed_stress'] else False
-      dia = stackProfileTimeSeriesDC(clabel=varTitle,unit=UNITS[var], clim=climVar, logScale=logScale,climIsLog=climIsLog,**kwargs)
+      dia = profilePlot.stackProfileTimeSeriesDC(clabel=varTitle,unit=UNITS[var], clim=climVar, logScale=logScale,climIsLog=climIsLog,**kwargs)
       for modKey in modKeys :
         # add model(s)
         m = self.coll.getSample( **modKey ).copy()
@@ -959,7 +963,7 @@ class Plots(object):
       else :
         climVar=None
       kwargs.setdefault( 'ylabel', 'depth below surface' )
-      dia = stackTrackPlotDC(clabel=varTitle,unit=UNITS[var],clim=climVar, **kwargs)
+      dia = trackPlot.stackTrackPlotDC(clabel=varTitle,unit=UNITS[var],clim=climVar, **kwargs)
       for key in keys :
         sample = self.coll.getSample( **key )
         dia.addPlot( key['tag'] )
@@ -997,7 +1001,7 @@ class Plots(object):
       varTitle,varStr,sT,eT = self.getAnnotationStrings('discharge','')
       title = ('Dates: %s - %s (PST)' % (sT, eT))
       kwargs['title'] = ('Dates: %s - %s (PST)' % (sT, eT))
-    dia = timeSeriesStackPlotDC(**kwargs)
+    dia = timeSeriesPlot.timeSeriesStackPlotDC(**kwargs)
     # discharge
     if discharge :
       station = discharge.getMetaData('location')

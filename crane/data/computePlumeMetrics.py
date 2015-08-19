@@ -201,7 +201,7 @@ class plumeStatsComputer(selfeNCFile) :
     for i,var in enumerate(varNames):
       sthSuffix = '_{0:d}'.format(int(self.saltThreshold))
       data = np.swapaxes(values[:,fieldIndices[i]],0,1)[None,:,:] # (1,nStats,nTime)
-      ta = timeArray( time, 'epoch' )
+      ta = timeArray.timeArray( time, 'epoch' )
       meta = {}
       meta['location'] = 'plume'
       meta['instrument'] = 'model'
@@ -210,7 +210,7 @@ class plumeStatsComputer(selfeNCFile) :
       meta['saltThreshold'] = str(self.saltThreshold)
       x = y = z = 0
       fNames = [ fn+sthSuffix for fn in fieldNames.get(var,[var]) ]
-      dc = dataContainer('', ta, x,y,z, data, fNames,
+      dc = dataContainer.dataContainer('', ta, x,y,z, data, fNames,
                           coordSys='spcs',metaData=meta)
       dcs.append(dc)
     return dcs

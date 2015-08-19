@@ -14,7 +14,7 @@ import sys
 from optparse import OptionParser
 
 from data.meshContainer import meshContainer
-from data.timeArray import *
+from crane.data import timeArray
 from data.collection import uniqueList
 from files.stationFile import StationFile
 from files.buildPoints import BuildPoint
@@ -217,7 +217,8 @@ def makeSlabPlots(netCDFFiles, imgDir, runTag=None, startTime=None,
   if startTime or endTime :
     if startTime == endTime :
       # interpolate to given time stamp
-      newTime = timeArray( np.array([datetimeToEpochTime(startTime)]), 'epoch' )
+      t0 = timeArray.datetimeToEpochTime(startTime)
+      newTime = timeArray.timeArray( np.array([t0]), 'epoch' )
       for i in range(len(dcs)) :
         dcs[i] = dcs[i].interpolateInTime( newTime )
     else :

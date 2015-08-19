@@ -20,7 +20,7 @@ import numpy as np
 import numpy.linalg
 import files.gr3Interface as gr3Interface
 from data.ncExtract import selfeNCFile, selfeExtractBase, getNCVariableName
-from data.dataContainer import *
+from crane.data import dataContainer
 from data.meshContainer import *
 from data.gridUtils import meshSearch2d, constructEdgeNodeArray
 from extractStation import addTracers, fieldNameToFilename
@@ -175,7 +175,7 @@ def makeFluxDataContainer(times, volFlux, location, runTag,
     """
     Creates a single dataContainer that contains all the flux time series
     """
-    ta = timeArray(times, 'epoch')
+    ta = timeArray.timeArray(times, 'epoch')
     x = np.array([0])
     y = np.array([0])
     z = np.array([0])
@@ -192,7 +192,7 @@ def makeFluxDataContainer(times, volFlux, location, runTag,
     meta['dataType'] = 'flux'
     meta['tag'] = runTag
 
-    dc = dataContainer('', ta, x, y, z, data, fieldNames, coordSys='spcs',
+    dc = dataContainer.dataContainer('', ta, x, y, z, data, fieldNames, coordSys='spcs',
                        metaData=meta)
     return dc
 
@@ -201,7 +201,7 @@ def makeVolumeDataContainer(times, volume, location, runTag,
     """
     Creates a single dataContainer that contains all the volume time series
     """
-    ta = timeArray(times, 'epoch')
+    ta = timeArray.timeArray(times, 'epoch')
     x = np.array([0])
     y = np.array([0])
     z = np.array([0])
@@ -218,7 +218,7 @@ def makeVolumeDataContainer(times, volume, location, runTag,
     meta['dataType'] = 'flux'
     meta['tag'] = runTag
 
-    dc = dataContainer('', ta, x, y, z, data, fieldNames, coordSys='spcs',
+    dc = dataContainer.dataContainer('', ta, x, y, z, data, fieldNames, coordSys='spcs',
                        metaData=meta)
     return dc
 
@@ -403,7 +403,7 @@ def computeSelfeFluxes(path, regionFile, location, runTag, stacks=None,
 
     vCoords = dihvReader.dataFile.vCoords
     bathymetry = dihvReader.dataFile.bath
-    bathMC = meshContainer('', timeArray(np.array([0]),'epoch'),
+    bathMC = meshContainer('', timeArray.timeArray(np.array([0]),'epoch'),
                         dihvReader.dataFile.nodeX,
                         dihvReader.dataFile.nodeY,
                         np.zeros_like(dihvReader.dataFile.nodeX),

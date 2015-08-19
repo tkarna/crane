@@ -9,7 +9,7 @@ Tuomas Karna 2012-11-16
 import numpy as np
 from data.dataContainer import dataContainer
 import datetime
-from data.timeArray import *
+from crane.data import timeArray
 from plotting.plotBase import *
 
 STA_MIN_DIST = 800
@@ -174,8 +174,8 @@ def generateTransectFromDataContainer( dc, timeStamp, flipDirection=False ) :
   # TODO optimize
   if isinstance( timeStamp, datetime.datetime ) :
     # interpolate to correct time
-    timeStamp = datetimeToEpochTime( timeStamp )
-    newTime = timeArray( np.array( [timeStamp] ), 'epoch' )
+    timeStamp = timeArray.datetimeToEpochTime( timeStamp )
+    newTime = timeArray.timeArray( np.array( [timeStamp] ), 'epoch' )
     dc = dc.interpolateInTime( newTime, acceptNaNs=True )
     x = dc.x.flatten()
     y = dc.y.flatten()

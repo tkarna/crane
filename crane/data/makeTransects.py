@@ -5,8 +5,8 @@ from optparse import OptionParser
 
 import data.stationCollection as StationCollection
 from data.loadHindcastStations import readDateRange
-from data.dataContainer import dataContainer
-from data.timeArray import *
+from crane.data import dataContainer
+from crane.data import timeArray
 from data.collection import uniqueList
 from files.stationFile import StationFile
 from files.csvStationFile import csvStationFile
@@ -66,7 +66,7 @@ def processFrame(dcs, logScaleVars, xlim, ylim, nCLines, defaultNCLines, clim, d
       else :
         cmap = plt.get_cmap(cmapDict)
       dateEpoch = round(dc.time.asEpoch()[it]/60)*60
-      dateStr = epochToDatetime(dateEpoch).strftime('%Y-%m-%d %H:%M')
+      dateStr = timeArray.epochToDatetime(dateEpoch).strftime('%Y-%m-%d %H:%M')
       titleStr = tag+' '+transectName+' '+dateStr+' (PST)'
       if it==0:
         dia.addSample(pltTag, dc,it, N=nCLines.get(var,defaultNCLines),
@@ -219,7 +219,8 @@ def makeTransects(netCDFFiles, imgDir, startTime=None, endTime=None, skip=1,
   if startTime or endTime :
     if startTime == endTime :
       # interpolate to given time stamp
-      newTime = timeArray( np.array([datetimeToEpochTime(startTime)]), 'epoch' )
+      t0 = timeArray.datetimeToEpochTime(startTime)
+      newTime = timeArray.timeArray( np.array([t0]), 'epoch' )
       for i in range(len(dcs)) :
         dcs[i] = dcs[i].interpolateInTime( newTime )
     else :

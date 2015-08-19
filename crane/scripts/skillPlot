@@ -16,13 +16,13 @@ import datetime
 import sys
 from optparse import OptionParser
 
-import data.stationCollection as StationCollection
-from data.loadHindcastStations import readDateRange
-from files.stationFile import StationFile
+import crane.data.stationCollection as StationCollection
+from crane.data.loadHindcastStations import readDateRange
+from crane.files.stationFile import StationFile
 
-from plotting.plot import Plots
-from plotting.plotBase import createDirectory
-from data.extractStation import tracerModelObsVariables
+from crane.plotting.plot import Plots
+from crane.plotting.plotBase import createDirectory
+from crane.data.extractStation import tracerModelObsVariables
 
 #-------------------------------------------------------------------------------
 # Main routine

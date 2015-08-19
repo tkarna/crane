@@ -11,8 +11,8 @@ import sys
 import datetime
 
 import data.netcdfCacheInterface as netcdfCacheInterface
-from data.dataContainer import dataContainer
-from data.timeArray import *
+from crane.data import dataContainer
+from crane.data import timeArray
 #-------------------------------------------------------------------------------
 # Constants
 #-------------------------------------------------------------------------------
@@ -81,7 +81,7 @@ def getAUVData( missionNB, var ) :
   z = dep[None,:] # z coordinate versus free surface
   data = np.reshape( v, (1,1,-1) )
  
-  ta = timeArray( t, 'epoch' )
+  ta = timeArray.timeArray( t, 'epoch' )
   
   print 'AUV mission',missionNB, ta.getDatetime(0),'->', ta.getDatetime(-1)
 
@@ -91,7 +91,7 @@ def getAUVData( missionNB, var ) :
   meta['instrument'] = 'AUV'
   meta['bracket'] = 'F'
   meta['variable'] = var
-  dc = dataContainer( '', ta,x,y,z,data,[var],coordSys='spcs', metaData=meta )
+  dc = dataContainer.dataContainer( '', ta,x,y,z,data,[var],coordSys='spcs', metaData=meta )
 
   return dc
 

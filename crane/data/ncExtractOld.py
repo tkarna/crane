@@ -9,8 +9,8 @@ from scipy.interpolate import interp1d
 from glob import glob
 import time as timeMod
 
-from data.timeArray import *
-from data.dataContainer import *
+from crane.data import timeArray
+from crane.data import dataContainer
 from data.meshContainer import meshContainer
 from data.extractStation import fieldNameList, fieldNameToFilename
 from data.selfeGridUtils import *
@@ -286,7 +286,7 @@ class ncExtractBase(object) :
     nTime = len(ncfile.dimensions['time'])
     startTime = ' '.join(ncfile.variables['time'].base_date.split()[2:4])
     startTime = datetime.datetime.strptime( startTime, '%Y-%m-%d %H:%M:%S' )
-    time = simulationToEpochTime( ncfile.variables['time'][:], startTime )
+    time = timeArray.simulationToEpochTime( ncfile.variables['time'][:], startTime )
     return time
 
   def getVProf(self, ncfile, varStr, staX, staY, iTri, u, nix) :
@@ -744,7 +744,7 @@ class ncExtractStation(ncExtractBase) :
       data = np.reshape( np.array(data[goodIx]), (1,1,-1) )
       t = np.array(times[goodIx])
 
-      ta = timeArray( t, 'epoch' )
+      ta = timeArray.timeArray( t, 'epoch' )
       zSign = 1 if zRelativeToSurf else -1 # zRelToSurf => depth below surface
       msldepth = str(int(round(zSign*staZ[iSta]*100)))
       meta = {}
@@ -757,7 +757,7 @@ class ncExtractStation(ncExtractBase) :
       z = actualZ[iSta] if not np.isnan(actualZ[iSta]) else staZ[iSta]
       x = staX[iSta]
       y = staY[iSta]
-      dc = dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
+      dc = dataContainer.dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
                           coordSys='spcs',metaData=meta)
       dcs.append(dc)
     return dcs
@@ -818,7 +818,7 @@ class ncExtractProfile(ncExtractBase) :
         raise Exception('bad values remain '+stationNames[iSta])
       # to (nGoodVert,1,nTime)
       data = np.swapaxes(np.array(v),0,1)[:,None,:]
-      ta = timeArray( np.array(t), 'epoch' )
+      ta = timeArray.timeArray( np.array(t), 'epoch' )
       # to (nGoodVert,nTime)
       z = np.swapaxes(np.array(z),0,1)
       nZ = z.shape[0]
@@ -830,7 +830,7 @@ class ncExtractProfile(ncExtractBase) :
       meta['bracket'] = 'A'
       meta['variable'] = varStr
       meta['dataType'] = 'profile'
-      dc = dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
+      dc = dataContainer.dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
                           coordSys='spcs',metaData=meta)
       dcs.append(dc)
     return dcs
@@ -921,14 +921,14 @@ class ncExtractTransect(ncExtractBase) :
     Z = np.swapaxes( Z,0,1 )[:,:]
     
     # build dataContainer
-    ta = timeArray( time, 'epoch' )
+    ta = timeArray.timeArray( time, 'epoch' )
     meta = {}
     meta['location'] = transName
     meta['instrument'] = 'model'
     meta['bracket'] = 'A'
     meta['variable'] = varStr
     meta['dataType'] = 'transect'
-    dc = dataContainer('', ta, X,Y,Z, data, fieldNameList.get(varStr,[varStr]),
+    dc = dataContainer.dataContainer('', ta, X,Y,Z, data, fieldNameList.get(varStr,[varStr]),
                        coordSys='spcs', metaData=meta, acceptNaNs=True)
     return dc
 
@@ -1000,7 +1000,7 @@ class ncExtractTrack(ncExtractBase) :
       return compDCs[0]
 
     # figure out correct stacks
-    stacks = self.getStacks( epochToDatetime( T[0] ),  epochToDatetime( T[-1] ), exactBounds=True )
+    stacks = self.getStacks( timeArray.epochToDatetime( T[0] ),  timeArray.epochToDatetime( T[-1] ), exactBounds=True )
     # get profiles for all x,y locations
     time,vals,zcor,goodStaIx = self.getProfForStacks(stacks,varStr,X,Y)
     # exclude points outside the grid
@@ -1012,9 +1012,9 @@ class ncExtractTrack(ncExtractBase) :
     if time[0] > T[0] or time[-1] < T[-1] :
       print 'Extracted time range does not cover query range: cropping'
       if time[0] > T[0] :
-        print 'start',epochToDatetime(time[0]), '>', epochToDatetime(T[0])
+        print 'start',timeArray.epochToDatetime(time[0]), '>', timeArray.epochToDatetime(T[0])
       if time[-1] < T[-1] :
-        print 'end',epochToDatetime(time[-1]), '<', epochToDatetime(T[-1])
+        print 'end',timeArray.epochToDatetime(time[-1]), '<', timeArray.epochToDatetime(T[-1])
       goodTimeIx = np.logical_and( T >= time[0], T <= time[-1] )
       X = X[goodTimeIx]
       Y = Y[goodTimeIx]
@@ -1064,7 +1064,7 @@ class ncExtractTrack(ncExtractBase) :
         raise Exception('vertical interpolation failed: nan in result array')
 
     # create dataContainer
-    ta = timeArray(T,'epoch')
+    ta = timeArray.timeArray(T,'epoch')
     data = data[None,None,:]
 
     meta = {}
@@ -1073,7 +1073,7 @@ class ncExtractTrack(ncExtractBase) :
     meta['instrument'] = 'model'
     meta['bracket'] = 'F' if zRelativeToSurf else 'A'
     meta['variable'] = varStr
-    dc = dataContainer('', ta, X[None,:],Y[None,:],Z[None,:], data,
+    dc = dataContainer.dataContainer('', ta, X[None,:],Y[None,:],Z[None,:], data,
                        fieldNameList.get(varStr,[varStr]),
                        coordSys='spcs',metaData=meta,acceptNaNs=True)
 
@@ -1115,7 +1115,7 @@ class ncExtractSlab(ncExtractBase) :
                                 zRelativeToSurf, iTri=None)
     alongSLevel = zCoord==None
     # build meshContainer
-    ta = timeArray(t, 'epoch')
+    ta = timeArray.timeArray(t, 'epoch')
     x = self.nodeX
     y = self.nodeY
     connectivity = self.faceNodes

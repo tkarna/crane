@@ -8,14 +8,12 @@ Methods for fetching data from CMOP NetCDF cache.
 import os
 import time
 import numpy as np
-#from scipy.io.netcdf import netcdf_file as NetCDFFile
-#from Scientific.IO.NetCDF import NetCDFFile
 from netCDF4 import Dataset as NetCDFFile
 
 import datetime
 
-from data.dataContainer import dataContainer
-from files.stationFile import StationFile
+from crane.data import dataContainer
+from crane.files import stationFile
 
 #-------------------------------------------------------------------------------
 # Constants
@@ -332,7 +330,7 @@ def getDataContainerFromOffering( offeringDict, startTime, endTime, quality='bes
     t = t[goodIx]
     d = d[goodIx]
 
-  sta = StationFile()
+  sta = stationFile.StationFile()
   x,y = sta.getLocation( nc.station )
   z = nc.z
   meta = {}
@@ -349,7 +347,7 @@ def getDataContainerFromOffering( offeringDict, startTime, endTime, quality='bes
     meta['dataType'] =  'profiler_raw'
     meta.pop('msldepth')
   # TODO fetch and add all other useful data too, samplingrate etc
-  return dataContainer.fromTimeSeries( '', t, d, [meta['variable']], x,y,z,
+  return dataContainer.dataContainer.fromTimeSeries( '', t, d, [meta['variable']], x,y,z,
                      timeFormat='epoch', coordSys=sta.coordSys, metaData=meta)
 
 ### copied from cmop.ncdataextract
@@ -506,7 +504,7 @@ if __name__=='__main__' :
   print t
   print d
 
-  dc = dataContainerFromOffering( off, sT, eT )
+  dc = getDataContainerFromOffering( off, sT, eT )
   dc.saveAsNetCDF( 'test.nc' )
   print dc
 

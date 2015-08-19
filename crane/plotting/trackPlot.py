@@ -6,10 +6,11 @@ A class for plotting time dependent tracks, where x = x(t) etc., e.g. AUV, glide
 Tuomas Karna 2012-11-02
 """
 
-from data.dataContainer import dataContainer
-from data.timeArray import *
+# TODO import only modules
+from crane.data.dataContainer import dataContainer
+from crane.data.timeArray import *
 
-from plotting.plotBase import *
+from crane.plotting.plotBase import *
 
 class trackTimeSeriesPlot(colorPlotBase) :
   """trackTimeSeriesPlot class"""
@@ -31,7 +32,7 @@ class trackTimeSeriesPlot(colorPlotBase) :
       self.unit = 'log10('+self.unit+')'
     colorPlotBase.__init__(self,**defaultArgs)
     if self.xlim and self.xIsTime :
-      self.xlim = [ convertEpochToPlotTime( datetimeToEpochTime( dt ) ) for dt in self.xlim ]
+      self.xlim = [ convertEpochToPlotTime( timeArray.datetimeToEpochTime( dt ) ) for dt in self.xlim ]
 
   def setAxes(self, ax) :
     """Set axes for the diagram. All data will be plotted in these axes.
