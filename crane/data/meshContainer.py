@@ -10,7 +10,7 @@ Tuomas Karna 2012-11-26
 
 from crane.data import dataContainer
 
-class meshContainer(dataContainer) :
+class meshContainer(dataContainer.dataContainer) :
   """
   Generic mesh container.
   Contains an array of node coordinates,
@@ -40,7 +40,7 @@ class meshContainer(dataContainer) :
       checkDataDim = False
     if isinstance(time,(int,float,type(None))) :
       time = timeArray.timeArray(np.array([0]),'epoch')
-    dataContainer.__init__(self, description, time, x,y,z, data,
+    super(meshContainer, self).__init__(description, time, x,y,z, data,
                            fieldNames, coordSys, metaData, acceptNaNs=True,
                            checkDataXDim=checkDataDim,dtype=dtype)
     self.connectivity = connectivity.astype(np.int32)
@@ -53,7 +53,7 @@ class meshContainer(dataContainer) :
 
   def __eq__(self, other) :
     """True if all data is equal to other."""
-    if not dataContainer.__eq__(self,other) :
+    if not super(meshContainer,  self).__eq__(other) :
       return False
     if not np.array_equal( self.connectivity, other.connectivity ) :
       return False
@@ -156,7 +156,7 @@ class meshContainer(dataContainer) :
     Returns a new dataContainer object.
     Note: x,y,z are referenced rather than copied!
     """
-    dc = dataContainer.interpolateInTime(self,newTime,acceptNaNs)
+    dc = super(meshContainer, self).interpolateInTime(newTime, acceptNaNs)
     return meshContainer.fromDataContainer(dc, self.connectivity)
 
   def cropGrid( self, boundingBox ) :
@@ -207,7 +207,7 @@ class meshContainer(dataContainer) :
     startDate and endDate are datetime objects. Data in the returned array is refenreced, not copied.
     To obtain a copy use timeWindow(startDate, endDate).copy()
     """
-    dc = dataContainer.timeWindow(self,startDate,endDate,includeEnd)
+    dc = super(meshContainer, self).timeWindow(startDate, endDate, includeEnd)
     return meshContainer.fromDataContainer(dc, self.connectivity )
 
   def subsample( self, timeStamps=None, skipFactor=None, targetDt=None, currentDt=None, gapFactor=5) :
@@ -225,7 +225,7 @@ class meshContainer(dataContainer) :
     Returns:
     newDC      -- (array) subsampled version of this dataContainer
     """
-    dc = dataContainer.subsample(self, timeStamps, skipFactor, targetDt, currentDt, gapFactor)
+    dc = super(meshContainer, self).subsample(timeStamps, skipFactor, targetDt, currentDt, gapFactor)
     return meshContainer.fromDataContainer(dc, self.connectivity)
 
   def fixTriangleArea( self ) :
