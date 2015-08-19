@@ -126,7 +126,7 @@ class extractTransect(extractBase) :
     z = np.vstack( tuple(z) ) # shape (npt,ntime)
     data = np.vstack( tuple(data) )
     # create dataContainer
-    ta = timeArray(t, 'simulation', self.extractor.startTime).asEpoch()
+    ta = timeArray.timeArray(t, 'simulation', self.extractor.startTime).asEpoch()
     # if suspected bad values, print warning
     hasBadValues = np.isnan(data).any() or np.isinf(data).any() or np.any( data < VALID_MIN )
     if hasBadValues :

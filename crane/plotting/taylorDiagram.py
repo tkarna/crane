@@ -747,19 +747,19 @@ if __name__=='__main__':
   random.seed(int(3411))
   t0 = hstack( ( linspace(0,2,20), linspace(2.33,6,15) ) ) + 2193
   m0 = sin(t0)
-  ta0 = timeArray(t0,'corie')
+  ta0 = timeArray.timeArray(t0,'corie')
   
   t1 = linspace(-10,10,100) + 2193
   m1 = 0.8*sin(t1) + 0.03*random.randn(len(t1))
-  ta1 = timeArray(t1,'corie')
+  ta1 = timeArray.timeArray(t1,'corie')
   
   t2 = linspace(-9,17.7,65) + 2193
   m2 = 0.95*sin(t2) + 0.12*random.randn(len(t2))
-  ta2 = timeArray(t2,'corie')
+  ta2 = timeArray.timeArray(t2,'corie')
   
   t3 = linspace(-9,12.2,100) + 2193
   m3 = sin(t3-0.12) - 0.05*random.randn(len(t3))
-  ta3 = timeArray(t3,'corie')
+  ta3 = timeArray.timeArray(t3,'corie')
   
   d0 = dataContainer.fromTimeSeries( 'Observation', ta0, m0, ['elev'] )
   d1 = dataContainer.fromTimeSeries( 'model Eins', ta1, m1, ['elev'] )

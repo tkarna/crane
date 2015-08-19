@@ -744,7 +744,7 @@ class ncExtractStation(ncExtractBase) :
       data = np.reshape( np.array(data[goodIx]), (1,1,-1) )
       t = np.array(times[goodIx])
 
-      ta = timeArray( t, 'epoch' )
+      ta = timeArray.timeArray( t, 'epoch' )
       zSign = 1 if zRelativeToSurf else -1 # zRelToSurf => depth below surface
       msldepth = str(int(round(zSign*staZ[iSta]*100)))
       meta = {}
@@ -818,7 +818,7 @@ class ncExtractProfile(ncExtractBase) :
         raise Exception('bad values remain '+stationNames[iSta])
       # to (nGoodVert,1,nTime)
       data = np.swapaxes(np.array(v),0,1)[:,None,:]
-      ta = timeArray( np.array(t), 'epoch' )
+      ta = timeArray.timeArray( np.array(t), 'epoch' )
       # to (nGoodVert,nTime)
       z = np.swapaxes(np.array(z),0,1)
       nZ = z.shape[0]
@@ -921,7 +921,7 @@ class ncExtractTransect(ncExtractBase) :
     Z = np.swapaxes( Z,0,1 )[:,:]
     
     # build dataContainer
-    ta = timeArray( time, 'epoch' )
+    ta = timeArray.timeArray( time, 'epoch' )
     meta = {}
     meta['location'] = transName
     meta['instrument'] = 'model'
@@ -1064,7 +1064,7 @@ class ncExtractTrack(ncExtractBase) :
         raise Exception('vertical interpolation failed: nan in result array')
 
     # create dataContainer
-    ta = timeArray(T,'epoch')
+    ta = timeArray.timeArray(T,'epoch')
     data = data[None,None,:]
 
     meta = {}
@@ -1115,7 +1115,7 @@ class ncExtractSlab(ncExtractBase) :
                                 zRelativeToSurf, iTri=None)
     alongSLevel = zCoord==None
     # build meshContainer
-    ta = timeArray(t, 'epoch')
+    ta = timeArray.timeArray(t, 'epoch')
     x = self.nodeX
     y = self.nodeY
     connectivity = self.faceNodes

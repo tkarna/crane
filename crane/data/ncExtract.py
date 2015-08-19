@@ -1191,7 +1191,7 @@ class selfeExtract(selfeExtractBase) :
       data = np.reshape( np.array(data[goodIx]), (1,1,-1) )
       t = np.array(time[goodIx])
 
-      ta = timeArray( t, 'epoch' )
+      ta = timeArray.timeArray( t, 'epoch' )
       meta = {}
       meta['location'] = stationNames[iSta]
       meta['instrument'] = 'model'
@@ -1280,7 +1280,7 @@ class selfeExtract(selfeExtractBase) :
         raise Exception('bad values remain: '+staStr)
       # to (nGoodVert,1,nTime)
       data = v[:,None,:]
-      ta = timeArray( np.array(t), 'epoch' )
+      ta = timeArray.timeArray( np.array(t), 'epoch' )
       # to (nGoodVert,nTime)
       nZ = z.shape[0]
       x = staX[iSta]*np.ones((nZ,))
@@ -1360,7 +1360,7 @@ class selfeExtract(selfeExtractBase) :
     data = data[:,None,:]
     
     # build dataContainer
-    ta = timeArray( time, 'epoch' )
+    ta = timeArray.timeArray( time, 'epoch' )
     meta = {}
     meta['location'] = transName
     meta['instrument'] = 'model'
@@ -1392,7 +1392,7 @@ class selfeExtract(selfeExtractBase) :
     XX,YY,ZZ,TT,actualZ,data = self.getXYZT(varStr, X, Y, Z, T,zRelToSurf, stacks)
 
     # create dataContainer
-    ta = timeArray(TT, 'epoch', acceptDuplicates=True)
+    ta = timeArray.timeArray(TT, 'epoch', acceptDuplicates=True)
     data = data[None,None,:]
     if not zRelToSurf :
       # export the actual z coordinate where data was extracted
@@ -1433,7 +1433,7 @@ class selfeExtract(selfeExtractBase) :
     if stacks is None:
         stacks = self.dataFile.getStacks(startTime,endTime,wholeDays=wholeDays)
     time,vals,zcoords = self.getSlabForStacks(stacks, varStr, z, k, zRelToSurf)
-    ta = timeArray( time, 'epoch' )
+    ta = timeArray.timeArray( time, 'epoch' )
     vals = vals.filled(np.nan)
     data = vals[:,None,:]
     zcoords = zcoords.filled(np.nan)

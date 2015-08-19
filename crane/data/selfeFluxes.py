@@ -175,7 +175,7 @@ def makeFluxDataContainer(times, volFlux, location, runTag,
     """
     Creates a single dataContainer that contains all the flux time series
     """
-    ta = timeArray(times, 'epoch')
+    ta = timeArray.timeArray(times, 'epoch')
     x = np.array([0])
     y = np.array([0])
     z = np.array([0])
@@ -201,7 +201,7 @@ def makeVolumeDataContainer(times, volume, location, runTag,
     """
     Creates a single dataContainer that contains all the volume time series
     """
-    ta = timeArray(times, 'epoch')
+    ta = timeArray.timeArray(times, 'epoch')
     x = np.array([0])
     y = np.array([0])
     z = np.array([0])
@@ -403,7 +403,7 @@ def computeSelfeFluxes(path, regionFile, location, runTag, stacks=None,
 
     vCoords = dihvReader.dataFile.vCoords
     bathymetry = dihvReader.dataFile.bath
-    bathMC = meshContainer('', timeArray(np.array([0]),'epoch'),
+    bathMC = meshContainer('', timeArray.timeArray(np.array([0]),'epoch'),
                         dihvReader.dataFile.nodeX,
                         dihvReader.dataFile.nodeY,
                         np.zeros_like(dihvReader.dataFile.nodeX),

@@ -201,7 +201,7 @@ class plumeStatsComputer(selfeNCFile) :
     for i,var in enumerate(varNames):
       sthSuffix = '_{0:d}'.format(int(self.saltThreshold))
       data = np.swapaxes(values[:,fieldIndices[i]],0,1)[None,:,:] # (1,nStats,nTime)
-      ta = timeArray( time, 'epoch' )
+      ta = timeArray.timeArray( time, 'epoch' )
       meta = {}
       meta['location'] = 'plume'
       meta['instrument'] = 'model'

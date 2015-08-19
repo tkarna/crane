@@ -80,7 +80,7 @@ def computeSaltIntrusion( transectDC, salt_threshold_list ) :
         print e
       dayBegin = dayEnd
     data = np.array( dailyMax )[None,None,:]
-    ta = timeArray( np.array(dailyTime), 'epoch' )
+    ta = timeArray.timeArray( np.array(dailyTime), 'epoch' )
     meta = {}
     meta['location'] = transectDC.getMetaData('location')
     meta['instrument'] = 'model'

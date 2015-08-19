@@ -175,7 +175,7 @@ def generateTransectFromDataContainer( dc, timeStamp, flipDirection=False ) :
   if isinstance( timeStamp, datetime.datetime ) :
     # interpolate to correct time
     timeStamp = datetimeToEpochTime( timeStamp )
-    newTime = timeArray( np.array( [timeStamp] ), 'epoch' )
+    newTime = timeArray.timeArray( np.array( [timeStamp] ), 'epoch' )
     dc = dc.interpolateInTime( newTime, acceptNaNs=True )
     x = dc.x.flatten()
     y = dc.y.flatten()

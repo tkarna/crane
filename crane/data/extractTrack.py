@@ -129,7 +129,7 @@ def test() :
   startTime = datetime.datetime(2010,1,1,2,30,0)
   endTime = datetime.datetime(2010,1,1,12,45,0)
   t = np.linspace( datetimeToEpochTime( startTime ), datetimeToEpochTime( endTime ), 100 )
-  ta = timeArray( t, 'epoch' )
+  ta = timeArray.timeArray( t, 'epoch' )
 
   ee = extractTrack( dataDir, var )
   ee.setTrack( 'snake',x,y,z,ta )

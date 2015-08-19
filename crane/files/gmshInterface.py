@@ -335,7 +335,7 @@ class gmshMesh(object) :
     if isinstance(fieldNames,str) :
       fieldNames = [fieldNames]
     description = ''
-    ta = timeArray( np.array([0]), 'epoch' )
+    ta = timeArray.timeArray( np.array([0]), 'epoch' )
     if not isinstance(nodalValues, np.ndarray) :
       nodalValues = nodalValues*np.zeros((self.x.shape[0],1))
     data = nodalValues[:,:,None]
@@ -351,7 +351,7 @@ class gmshMesh(object) :
   def getMeshContainerWithZeroData( self ) :
     fieldNames = ['depth']
     description = ''
-    ta = timeArray( np.array([0]), 'epoch' )
+    ta = timeArray.timeArray( np.array([0]), 'epoch' )
     nodalValues = np.zeros((self.x.shape[0],1))
     data = nodalValues[:,:,None]
     mc = meshContainer( description, ta,self.x,self.y,self.z,

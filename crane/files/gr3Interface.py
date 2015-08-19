@@ -48,7 +48,7 @@ def readGR3FileToMC(inputFilename, fieldName='depth') :
   x,y,vals,conn,boundaries,description = readGR3File(inputFilename)
   data = np.reshape(vals, (-1,1,1) )
   z = np.zeros_like(x)
-  ta = timeArray( np.array([0]), 'epoch' )
+  ta = timeArray.timeArray( np.array([0]), 'epoch' )
   mc = meshContainer( description, ta,x,y,z,data,conn,[fieldName],coordSys='spcs')
   # append boundary information
   for bnd in boundaries :

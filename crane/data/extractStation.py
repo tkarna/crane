@@ -813,7 +813,7 @@ class extractStation(extractBase) :
     t,d = self.extractor.extract(stacks)
     if t == []:
       return []
-    ta = timeArray(t, 'simulation', self.extractor.startTime).asEpoch()
+    ta = timeArray.timeArray(t, 'simulation', self.extractor.startTime).asEpoch()
     var = self.fieldName
     dcList = []
     if not self.profile :
@@ -862,7 +862,7 @@ class extractStation(extractBase) :
         datai = datai.swapaxes(0,1) # from (dim,xyz,time) to (xyz,dim,time)
         msldepth = 'prof'
 
-      tai = timeArray(ti, 'simulation', self.extractor.startTime).asEpoch()
+      tai = timeArray.timeArray(ti, 'simulation', self.extractor.startTime).asEpoch()
       # if suspected bad values, print warning
       hasBadValues = np.isnan(datai).any() or np.isinf(datai).any() or np.any( datai < VALID_MIN )
       if hasBadValues :

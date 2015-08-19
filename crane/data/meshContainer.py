@@ -39,7 +39,7 @@ class meshContainer(dataContainer) :
       self.dataByElement = True
       checkDataDim = False
     if isinstance(time,(int,float,type(None))) :
-      time = timeArray(np.array([0]),'epoch')
+      time = timeArray.timeArray(np.array([0]),'epoch')
     dataContainer.__init__(self, description, time, x,y,z, data,
                            fieldNames, coordSys, metaData, acceptNaNs=True,
                            checkDataXDim=checkDataDim,dtype=dtype)

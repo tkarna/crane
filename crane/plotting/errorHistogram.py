@@ -405,19 +405,19 @@ if __name__=='__main__':
   #t0 = np.hstack( ( np.linspace(0,12,20), np.linspace(15.33,30,15) ) ) + startCorie
   t0 = np.linspace(0,12,20) + startCorie
   m0 = np.sin(t0)
-  ta0 = timeArray(t0,'corie')
+  ta0 = timeArray.timeArray(t0,'corie')
   
   t1 = np.linspace(-10,34,100) + startCorie
   m1 = 0.8*np.sin(t1) + 0.03*np.random.randn(len(t1))
-  ta1 = timeArray(t1,'corie')
+  ta1 = timeArray.timeArray(t1,'corie')
   
   t2 = np.linspace(-9,31.7,65) + startCorie
   m2 = 0.95*np.sin(t2) + 0.12*np.random.randn(len(t2))
-  ta2 = timeArray(t2,'corie')
+  ta2 = timeArray.timeArray(t2,'corie')
   
   t3 = np.linspace(-9,32.2,100) + startCorie
   m3 = np.sin(t3-0.12) - 0.05*np.random.randn(len(t3))-3.0
-  ta3 = timeArray(t3,'corie')
+  ta3 = timeArray.timeArray(t3,'corie')
   
   d0 = dataContainer.fromTimeSeries( 'Observation', ta0, m0, ['elev'] )
   d1 = dataContainer.fromTimeSeries( 'model Eins', ta1, m1, ['elev'] )

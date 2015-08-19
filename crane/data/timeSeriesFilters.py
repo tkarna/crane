@@ -203,7 +203,7 @@ def runningX( dc, T=T_M2, operator=computeRunningMean, gap_dt=None) :
   if len(tRes) == 0 :
     print 'Running mean could not be computed, skipping (time series too short?)'
     return
-  ta = timeArray( tRes, 'epoch' )
+  ta = timeArray.timeArray( tRes, 'epoch' )
   data = vRes.reshape( (1,1,-1) )
   if dc.xDependsOnTime : x = xRes[None,:]
   if dc.yDependsOnTime : y = yRes[None,:]
@@ -308,7 +308,7 @@ def smooth(time, vals, dt=None, gapFactor=20, T=T_M2):
   from scipy import signal
   if dt==None :
     dt = np.diff(time).mean()
-  ta = timeArray(time, 'epoch')
+  ta = timeArray.timeArray(time, 'epoch')
   # try to calculate exact dt by omitting large gaps
   gaps,ranges,t = ta.detectGaps(dt=dt,gapFactor=gapFactor)
   diff = []
@@ -377,7 +377,7 @@ def timeDerivative(dc):
         new_time.append(new_t)
     new_vals = np.hstack(tuple(new_vals))
     new_time = np.hstack(tuple(new_time))
-    ta = timeArray(new_time, 'epoch')
+    ta = timeArray.timeArray(new_time, 'epoch')
     data = new_vals.reshape((1, 1, -1))
     x = dc.x
     y = dc.y
@@ -409,7 +409,7 @@ def detectSignChanges(dc, direction='both'):
         new_vals.append(vwin[change_ix])
     new_vals = np.hstack(tuple(new_vals))
     new_time = np.hstack(tuple(new_time))
-    ta = timeArray(new_time, 'epoch')
+    ta = timeArray.timeArray(new_time, 'epoch')
     data = new_vals.reshape((1, 1, -1))
     x = dc.x
     y = dc.y
@@ -453,7 +453,7 @@ def computeTidalRange(dc, T=T_M2):
     if len(tRes) == 0 :
       print 'tidal data could not be computed, skipping (time series too short?)'
       return
-    ta = timeArray( tRes, 'epoch' )
+    ta = timeArray.timeArray( tRes, 'epoch' )
     data = xRes.reshape( (1,1,-1) )
     meta = dc.getMetaData()
     meta['dataType'] = 'timeseries'

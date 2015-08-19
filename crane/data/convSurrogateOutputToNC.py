@@ -69,7 +69,7 @@ def genSILDC( path,fn,runTag ) :
   meta['variable'] = var
   meta['tag'] = runTag
   goodIx = np.logical_and( np.isfinite(time), np.any(np.isfinite(vals),axis=0) )
-  ta = timeArray(time[goodIx],'epoch')
+  ta = timeArray.timeArray(time[goodIx],'epoch')
   data = vals[goodIx][None,None,:] / 1000.0
   nReg = 1
   xx = np.zeros((nReg,))
@@ -111,7 +111,7 @@ def genSHODC( path,fn,runTag ) :
   meta['variable'] = 'shov1'
   meta['tag'] = runTag
   goodIx = np.logical_and( np.isfinite(time), np.any(np.isfinite(vals),axis=0) )
-  ta = timeArray(time[goodIx],'epoch')
+  ta = timeArray.timeArray(time[goodIx],'epoch')
   data = vals[:,goodIx][:,None,:]
   indd = indData[:,:,goodIx]
   data = np.concatenate( (data,indd), axis=1 )
@@ -176,7 +176,7 @@ def genProfileDC(dataDir,runTag,location,var,x,y,
   if var != 'elev' :
     goodIx = np.logical_and( goodIx, np.any(np.isfinite(z),axis=0) )
   #print goodIx.shape
-  ta = timeArray(time[goodIx],'epoch')
+  ta = timeArray.timeArray(time[goodIx],'epoch')
   data = vals[:,goodIx][:,None,:]
   zz = z[:,goodIx]
   if var == 'elev' :
@@ -336,7 +336,7 @@ def getPlumeDC(runTag,dataDir,saltThreshold):
   for i,var in enumerate(varNames):
     sthSuffix = '_{0:d}'.format(int(saltThreshold))
     data = np.swapaxes(values[:,fieldIndices[i]],0,1)[None,:,:] # (1,nStats,nTime)
-    ta = timeArray( time, 'epoch' )
+    ta = timeArray.timeArray( time, 'epoch' )
     meta = {}
     meta['tag'] = runTag
     meta['location'] = 'plume'

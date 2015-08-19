@@ -217,7 +217,7 @@ def makeSlabPlots(netCDFFiles, imgDir, runTag=None, startTime=None,
   if startTime or endTime :
     if startTime == endTime :
       # interpolate to given time stamp
-      newTime = timeArray( np.array([datetimeToEpochTime(startTime)]), 'epoch' )
+      newTime = timeArray.timeArray( np.array([datetimeToEpochTime(startTime)]), 'epoch' )
       for i in range(len(dcs)) :
         dcs[i] = dcs[i].interpolateInTime( newTime )
     else :

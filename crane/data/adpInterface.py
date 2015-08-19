@@ -85,7 +85,7 @@ def getADPData(offering, sT, eT, var) :
   goodIx = np.logical_not( np.all( np.isnan( data[:,0,:] ), axis=0 ) )
   data = data[:,:,goodIx]
   zv = zv[:,goodIx]
-  ta = timeArray(t[goodIx], 'epoch')
+  ta = timeArray.timeArray(t[goodIx], 'epoch')
   # Prepare metadata
   meta = {}
   meta['dataType'] =  'profile'

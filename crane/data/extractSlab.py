@@ -72,7 +72,7 @@ class extractSlab(extractBase) :
     data[ data < VALID_MIN ] = np.nan
     # TODO add support for removing/keeping dry elements
     data = data.swapaxes(0,1) # from (dim,np,time) to (np,dim,time)
-    ta = timeArray(t, 'simulation', self.extractor.startTime).asEpoch()
+    ta = timeArray.timeArray(t, 'simulation', self.extractor.startTime).asEpoch()
     msldepth = ''
     if self.alongSCoord :
       msldepth = 'slev'+str(self.k)

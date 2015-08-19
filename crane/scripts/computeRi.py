@@ -82,7 +82,7 @@ def binOnGrid( dc, T, Z, tScale, zScale ) :
 
 def interpolateOnGridDC( dc, T, Z ) :
   vals = interpolateOnGrid(dc,T,Z)
-  ta = timeArray(T.ravel(),'epoch',acceptDuplicates=True)
+  ta = timeArray.timeArray(T.ravel(),'epoch',acceptDuplicates=True)
   meta = dc.getMetaData()
   fn = dc.fieldNames[:1]
   dc2 = dataContainer('',ta, dc.x, dc.y, Z.ravel()[None,:], vals.ravel()[None,None,:],fn,metaData=meta, acceptNaNs=True)
@@ -112,7 +112,7 @@ def runningX( dc, T=None, operator=computeRunningMean ) :
   if len(tRes) == 0 :
     print 'Running mean could not be computed, skipping (time series too short?)'
     return
-  ta = timeArray( tRes, 'epoch' )
+  ta = timeArray.timeArray( tRes, 'epoch' )
   data = xRes.reshape( (1,1,-1) )
   z = zRes[None,:]
   meta = dc.getMetaData()
@@ -290,7 +290,7 @@ def computeRi( tag, loc ) :
     y = y*np.ones((nZ,))
     z = Z.T
     data = C.T[:,None,:]
-    ta = timeArray(T[:,0],'epoch')
+    ta = timeArray.timeArray(T[:,0],'epoch')
     dc = dataContainer('', ta, x,y,z, data, fieldNames,
                         coordSys='spcs',metaData=meta,acceptNaNs=True)
     return dc

@@ -86,7 +86,7 @@ def processFluxes(runTag, var, location, imgDir):
         volError = volchange - volchange_from_fluxes
 
         # dump time series in dataContainers for plotting
-        newtime = timeArray(volDC.time.array[1:], 'epoch')
+        newtime = timeArray.timeArray(volDC.time.array[1:], 'epoch')
         volchangeDC = volDC.copy()
         volchangeDC.time = newtime
         volchangeDC.data = volchange[None, :, :]

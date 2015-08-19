@@ -26,9 +26,9 @@ def generateSat01ProfilerModData( obsWProfilerDC, modProfileDC ) :
   ix[-1,1] = len(to)
 
   # align times
-  tix = m.time.getAlignedTimeIndices( timeArray(tArr,'epoch') )
+  tix = m.time.getAlignedTimeIndices( timeArray.timeArray(tArr,'epoch') )
   tArr = tArr[tix]
-  ta = timeArray( tArr, 'epoch' )
+  ta = timeArray.timeArray( tArr, 'epoch' )
   m = m.interpolateInTime( ta, acceptNaNs=True )
 
   if not np.array_equal( tArr, m.time.array ) :
@@ -65,7 +65,7 @@ def generateSat01ProfilerModData( obsWProfilerDC, modProfileDC ) :
   znew = np.concatenate( tuple(znew) )
   vnew = np.concatenate( tuple(vnew) )
   tnew = np.concatenate( tuple(tnew) )
-  ta = timeArray( tnew, 'epoch',acceptDuplicates=True )
+  ta = timeArray.timeArray( tnew, 'epoch',acceptDuplicates=True )
 
   # create dataContainer
   z = znew[None,:]
@@ -153,7 +153,7 @@ def generateSat01ProfilerObsData( depDC, varDC ) :
   zNew = np.concatenate( tuple(zNew) )
   varNew = np.concatenate( tuple(varNew) )
   # create new dataContainer
-  tNew = timeArray(tNew,'epoch',acceptDuplicates=True)
+  tNew = timeArray.timeArray(tNew,'epoch',acceptDuplicates=True)
   z = np.reshape(zNew,(1,-1))
   data = np.reshape(varNew,(1,1,-1))
   var = varDC.fieldNames[0]

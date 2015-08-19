@@ -533,7 +533,7 @@ class volumeComputer(ncExtractBase):
     dcs=[]
     for i,var in enumerate(varNames):
       data = np.swapaxes(values[:,fieldIndices[i]],0,1)[None,:,:] # (1,nStats,nTime)
-      ta = timeArray( time, 'epoch' )
+      ta = timeArray.timeArray( time, 'epoch' )
       meta = {}
       # Add region name
       region_desc = [self.volumeVar, self.volumeThresholdLow, self.volumeThresholdHi,

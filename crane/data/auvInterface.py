@@ -81,7 +81,7 @@ def getAUVData( missionNB, var ) :
   z = dep[None,:] # z coordinate versus free surface
   data = np.reshape( v, (1,1,-1) )
  
-  ta = timeArray( t, 'epoch' )
+  ta = timeArray.timeArray( t, 'epoch' )
   
   print 'AUV mission',missionNB, ta.getDatetime(0),'->', ta.getDatetime(-1)
 

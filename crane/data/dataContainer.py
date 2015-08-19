@@ -143,7 +143,7 @@ class dataContainer(object) :
     if isinstance(time, np.ndarray) :
       if timeFormat == '' :
         raise Exception( 'If time is an array, timeFormat must be specified' )
-      time = timeArray(time, timeFormat)
+      time = timeArray.timeArray(time, timeFormat)
     
     nTime = len(time)
     nPoints = 1
@@ -451,7 +451,7 @@ class dataContainer(object) :
         timeStamps.append( np.arange( ranges[r,0],ranges[r,1]+1,skipFactor,dtype=int ) )
       timeStamps = np.concatenate( tuple(timeStamps), axis=0 )
     # create new dataContainer
-    newt = timeArray( self.time[timeStamps], 'epoch', acceptDuplicates=True )
+    newt = timeArray.timeArray( self.time[timeStamps], 'epoch', acceptDuplicates=True )
     newData = self.data[:,:,timeStamps]
     x = self.x[:,timeStamps] if self.xDependsOnTime else self.x
     y = self.y[:,timeStamps] if self.yDependsOnTime else self.y
@@ -528,7 +528,7 @@ class dataContainer(object) :
     goodIx = self.time.getRangeIndices( startDate, endDate, includeEnd )
     if len(goodIx) == 0 :
       raise Exception( 'Given time window out of range' )
-    t = timeArray(self.time.array[goodIx], self.time.timeFormat, acceptDuplicates=True)
+    t = timeArray.timeArray(self.time.array[goodIx], self.time.timeFormat, acceptDuplicates=True)
     d = self.data[:,:,goodIx]
     x = self.x[:,goodIx] if self.xDependsOnTime else self.x
     y = self.y[:,goodIx] if self.yDependsOnTime else self.y
@@ -581,7 +581,7 @@ class dataContainer(object) :
     startDate = None
     if 'startDate' in bundle.files :
       startDate = bundle['startDate'].tolist()
-    time = timeArray( bundle['time'].astype(cls.dtype), bundle['timeFormat'], startDate, acceptDuplicates=True )
+    time = timeArray.timeArray( bundle['time'].astype(cls.dtype), bundle['timeFormat'], startDate, acceptDuplicates=True )
     fieldNames = bundle['fieldNames'].tolist()
 
     x = bundle['x'].astype(cls.dtype)
