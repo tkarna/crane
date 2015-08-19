@@ -645,7 +645,7 @@ class StationCollection(tinyDB) :
     meta['dataType'] = 'timeseries'
     meta['tag'] = self.getObsTag()
     meta['variable'] = 'tidal_range'
-    dc2 = dataContainer( '', ta, dc.x,dc.y,dc.z, data,
+    dc2 = dataContainer.dataContainer( '', ta, dc.x,dc.y,dc.z, data,
                               ['tidal_range'], coordSys='',metaData=meta)
 
     self.addSample( dc2 )
@@ -762,7 +762,7 @@ class StationCollection(tinyDB) :
       meta['msldepth'] = '0'
       meta['dataType'] = 'timeseries'
       meta['variable'] = 'strat'
-      dc = dataContainer( '', s.time, s.x[0],s.y[0],z, data,
+      dc = dataContainer.dataContainer( '', s.time, s.x[0],s.y[0],z, data,
                                 ['strat'], coordSys=s.coordSys, metaData=meta )
       self.addSample( dc )
       dcs.append(dc)

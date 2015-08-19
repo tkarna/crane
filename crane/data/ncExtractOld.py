@@ -757,7 +757,7 @@ class ncExtractStation(ncExtractBase) :
       z = actualZ[iSta] if not np.isnan(actualZ[iSta]) else staZ[iSta]
       x = staX[iSta]
       y = staY[iSta]
-      dc = dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
+      dc = dataContainer.dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
                           coordSys='spcs',metaData=meta)
       dcs.append(dc)
     return dcs
@@ -830,7 +830,7 @@ class ncExtractProfile(ncExtractBase) :
       meta['bracket'] = 'A'
       meta['variable'] = varStr
       meta['dataType'] = 'profile'
-      dc = dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
+      dc = dataContainer.dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
                           coordSys='spcs',metaData=meta)
       dcs.append(dc)
     return dcs
@@ -928,7 +928,7 @@ class ncExtractTransect(ncExtractBase) :
     meta['bracket'] = 'A'
     meta['variable'] = varStr
     meta['dataType'] = 'transect'
-    dc = dataContainer('', ta, X,Y,Z, data, fieldNameList.get(varStr,[varStr]),
+    dc = dataContainer.dataContainer('', ta, X,Y,Z, data, fieldNameList.get(varStr,[varStr]),
                        coordSys='spcs', metaData=meta, acceptNaNs=True)
     return dc
 
@@ -1073,7 +1073,7 @@ class ncExtractTrack(ncExtractBase) :
     meta['instrument'] = 'model'
     meta['bracket'] = 'F' if zRelativeToSurf else 'A'
     meta['variable'] = varStr
-    dc = dataContainer('', ta, X[None,:],Y[None,:],Z[None,:], data,
+    dc = dataContainer.dataContainer('', ta, X[None,:],Y[None,:],Z[None,:], data,
                        fieldNameList.get(varStr,[varStr]),
                        coordSys='spcs',metaData=meta,acceptNaNs=True)
 

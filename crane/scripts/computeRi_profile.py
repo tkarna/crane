@@ -114,7 +114,7 @@ def computeRi( tag, loc ) :
     z = Z
     data = C[:,None,:]
     ta = profDC.time #timeArray(T[:,0],'epoch')
-    dc = dataContainer('', ta, x,y,z, data, fieldNames,
+    dc = dataContainer.dataContainer('', ta, x,y,z, data, fieldNames,
                         coordSys='spcs',metaData=meta,acceptNaNs=True)
     return dc
 

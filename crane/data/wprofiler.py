@@ -73,7 +73,7 @@ def generateSat01ProfilerModData( obsWProfilerDC, modProfileDC ) :
   meta = m.getMetaData()
   meta['dataType'] = 'profiler'
   #meta.pop( 'msldepth', None ) # TODO
-  dc = dataContainer('', ta, m.x[0],m.y[0],z,data,o.fieldNames,
+  dc = dataContainer.dataContainer('', ta, m.x[0],m.y[0],z,data,o.fieldNames,
                      m.coordSys,meta,acceptNaNs=True)
   return dc
 
@@ -160,7 +160,7 @@ def generateSat01ProfilerObsData( depDC, varDC ) :
   meta = varDC.getMetaData()
   #meta.pop( 'msldepth', None ) # TODO
   meta['dataType'] = 'profiler'
-  dc = dataContainer('',tNew,
+  dc = dataContainer.dataContainer('',tNew,
                         varDC.x,varDC.y,z,
                         data,[var],varDC.coordSys,metaData=meta)
   return dc

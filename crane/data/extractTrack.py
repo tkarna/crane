@@ -111,7 +111,7 @@ class extractTrack(extractBase) :
     meta['instrument'] = 'model'
     meta['bracket'] = 'F' if self.zRelativeToSurf else 'A'
     meta['variable'] = var
-    dc = dataContainer('', self.time, x,y,z, data, fieldNameList[var], coordSys='spcs',metaData=meta,acceptNaNs=True)
+    dc = dataContainer.dataContainer('', self.time, x,y,z, data, fieldNameList[var], coordSys='spcs',metaData=meta,acceptNaNs=True)
     return dc
 
 #-------------------------------------------------------------------------------

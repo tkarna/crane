@@ -210,7 +210,7 @@ class plumeStatsComputer(selfeNCFile) :
       meta['saltThreshold'] = str(self.saltThreshold)
       x = y = z = 0
       fNames = [ fn+sthSuffix for fn in fieldNames.get(var,[var]) ]
-      dc = dataContainer('', ta, x,y,z, data, fNames,
+      dc = dataContainer.dataContainer('', ta, x,y,z, data, fNames,
                           coordSys='spcs',metaData=meta)
       dcs.append(dc)
     return dcs

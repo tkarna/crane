@@ -96,7 +96,7 @@ def getADPData(offering, sT, eT, var) :
   meta['variable'] = ncreader.var
   meta['tag'] = 'obs' 
 
-  return dataContainer( '', ta, xv, yv, zv, data, [var], coordSys=sta.coordSys, acceptNaNs=True, metaData=meta)
+  return dataContainer.dataContainer( '', ta, xv, yv, zv, data, [var], coordSys=sta.coordSys, acceptNaNs=True, metaData=meta)
 
 
 #-------------------------------------------------------------------------------

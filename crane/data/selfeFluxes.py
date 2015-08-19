@@ -192,7 +192,7 @@ def makeFluxDataContainer(times, volFlux, location, runTag,
     meta['dataType'] = 'flux'
     meta['tag'] = runTag
 
-    dc = dataContainer('', ta, x, y, z, data, fieldNames, coordSys='spcs',
+    dc = dataContainer.dataContainer('', ta, x, y, z, data, fieldNames, coordSys='spcs',
                        metaData=meta)
     return dc
 
@@ -218,7 +218,7 @@ def makeVolumeDataContainer(times, volume, location, runTag,
     meta['dataType'] = 'flux'
     meta['tag'] = runTag
 
-    dc = dataContainer('', ta, x, y, z, data, fieldNames, coordSys='spcs',
+    dc = dataContainer.dataContainer('', ta, x, y, z, data, fieldNames, coordSys='spcs',
                        metaData=meta)
     return dc
 

@@ -209,7 +209,7 @@ def runningX( dc, T=T_M2, operator=computeRunningMean, gap_dt=None) :
   if dc.yDependsOnTime : y = yRes[None,:]
   if dc.zDependsOnTime : z = zRes[None,:]
   meta = dc.getMetaData()
-  dc2 = dataContainer( '', ta, x,y,z, data,
+  dc2 = dataContainer.dataContainer( '', ta, x,y,z, data,
                             dc.fieldNames[:1], coordSys=dc.coordSys,metaData=meta)
   return dc2
 
@@ -383,7 +383,7 @@ def timeDerivative(dc):
     y = dc.y
     z = dc.z
     meta = dc.getMetaData()
-    dc2 = dataContainer('', ta, x, y, z, data,
+    dc2 = dataContainer.dataContainer('', ta, x, y, z, data,
                         dc.fieldNames[:1], coordSys=dc.coordSys, metaData=meta)
     return dc2
 
@@ -415,7 +415,7 @@ def detectSignChanges(dc, direction='both'):
     y = dc.y
     z = dc.z
     meta = dc.getMetaData()
-    dc2 = dataContainer('', ta, x, y, z, data,
+    dc2 = dataContainer.dataContainer('', ta, x, y, z, data,
                         dc.fieldNames[:1], coordSys=dc.coordSys, metaData=meta)
     return dc2
 
@@ -459,6 +459,6 @@ def computeTidalRange(dc, T=T_M2):
     meta['dataType'] = 'timeseries'
     meta['tag'] = dc.getMetaData('tag')
     meta['variable'] = 'tidal_range'
-    dc2 = dataContainer( '', ta, dc.x,dc.y,dc.z, data,
+    dc2 = dataContainer.dataContainer( '', ta, dc.x,dc.y,dc.z, data,
                               ['tidal_range'], coordSys='',metaData=meta)
     return dc2

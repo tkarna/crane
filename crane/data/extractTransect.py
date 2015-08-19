@@ -137,7 +137,7 @@ class extractTransect(extractBase) :
     meta['bracket'] = 'A'
     meta['variable'] = var
     meta['dataType'] = 'transect'
-    dc = dataContainer('', ta, x,y,z, data, fieldNameList[var],
+    dc = dataContainer.dataContainer('', ta, x,y,z, data, fieldNameList[var],
                        coordSys='spcs', metaData=meta)
     return dc
 

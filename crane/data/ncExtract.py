@@ -1209,7 +1209,7 @@ class selfeExtract(selfeExtractBase) :
       z = np.mean(actualZ[iSta,:])
       x = staX[iSta]
       y = staY[iSta]
-      dc = dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
+      dc = dataContainer.dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
                           coordSys='spcs',metaData=meta)
       dcs.append(dc)
     return dcs
@@ -1291,7 +1291,7 @@ class selfeExtract(selfeExtractBase) :
       meta['bracket'] = 'A'
       meta['variable'] = varStr
       meta['dataType'] = 'profile'
-      dc = dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
+      dc = dataContainer.dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
                           coordSys='spcs',metaData=meta)
       dcs.append(dc)
     return dcs
@@ -1367,7 +1367,7 @@ class selfeExtract(selfeExtractBase) :
     meta['bracket'] = 'A'
     meta['variable'] = varStr
     meta['dataType'] = 'transect'
-    dc = dataContainer('', ta, X,Y,Z, data, fieldNameList.get(varStr,[varStr]),
+    dc = dataContainer.dataContainer('', ta, X,Y,Z, data, fieldNameList.get(varStr,[varStr]),
                        coordSys='spcs', metaData=meta, acceptNaNs=True)
     return dc
 
@@ -1406,7 +1406,7 @@ class selfeExtract(selfeExtractBase) :
     meta['instrument'] = 'model'
     meta['bracket'] = 'F' if zRelToSurf else 'A'
     meta['variable'] = varStr
-    dc = dataContainer('', ta, XX[None,:],YY[None,:],z, data,
+    dc = dataContainer.dataContainer('', ta, XX[None,:],YY[None,:],z, data,
                        fieldNameList.get(varStr,[varStr]),
                        coordSys='spcs',metaData=meta,acceptNaNs=True)
 

@@ -91,7 +91,7 @@ def getAUVData( missionNB, var ) :
   meta['instrument'] = 'AUV'
   meta['bracket'] = 'F'
   meta['variable'] = var
-  dc = dataContainer( '', ta,x,y,z,data,[var],coordSys='spcs', metaData=meta )
+  dc = dataContainer.dataContainer( '', ta,x,y,z,data,[var],coordSys='spcs', metaData=meta )
 
   return dc
 

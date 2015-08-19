@@ -77,7 +77,7 @@ def genSILDC( path,fn,runTag ) :
   zz = np.zeros((nReg,))
   fieldNames = [var]
   
-  dc = dataContainer('', ta, xx,yy,zz, data, fieldNames, coordSys='spcs',metaData=meta,acceptNaNs=True)
+  dc = dataContainer.dataContainer('', ta, xx,yy,zz, data, fieldNames, coordSys='spcs',metaData=meta,acceptNaNs=True)
   return dc
 
 def read_mat_sho_files( path, fn ) :
@@ -121,7 +121,7 @@ def genSHODC( path,fn,runTag ) :
   zz = np.zeros((nReg,))
   fieldNames = ['sho','sho_t','sho_s','sho_d','sho_v']
   
-  dc = dataContainer('', ta, xx,yy,zz, data, fieldNames, coordSys='spcs',metaData=meta,acceptNaNs=True)
+  dc = dataContainer.dataContainer('', ta, xx,yy,zz, data, fieldNames, coordSys='spcs',metaData=meta,acceptNaNs=True)
   return dc
 
 def read_mat_profile_files( path,loc,var,dataSetName='test',dataSetType='ms' ) :
@@ -187,7 +187,7 @@ def genProfileDC(dataDir,runTag,location,var,x,y,
     data = data[goodZ,:]
   xx = np.tile( x, (zz.shape[0],) )
   yy = np.tile( y, (zz.shape[0],) )
-  dc = dataContainer('', ta, xx,yy,zz, data, fieldNames, coordSys='spcs',metaData=meta,acceptNaNs=True)
+  dc = dataContainer.dataContainer('', ta, xx,yy,zz, data, fieldNames, coordSys='spcs',metaData=meta,acceptNaNs=True)
   return dc
 
 def interpolateInVertical(Z,V,z=None,k=None,zRelToSurf=False):
@@ -292,7 +292,7 @@ def getTSFromProfile(runTag, location, var, z=None, k=None,
   data = v[None,:,:]
   x = prof.x[0]
   y = prof.y[0]
-  dc = dataContainer('', prof.time, x,y,z, data, prof.fieldNames, coordSys=prof.coordSys,metaData=meta)
+  dc = dataContainer.dataContainer('', prof.time, x,y,z, data, prof.fieldNames, coordSys=prof.coordSys,metaData=meta)
   return dc
 
 def read_mat_plume_file( path,var,saltThreshold ) :
@@ -346,7 +346,7 @@ def getPlumeDC(runTag,dataDir,saltThreshold):
     meta['saltThreshold'] = str(saltThreshold)
     x = y = z = 0
     fNames = [ fn+sthSuffix for fn in fieldNames.get(var,[var]) ]
-    dc = dataContainer('', ta, x,y,z, data, fNames,
+    dc = dataContainer.dataContainer('', ta, x,y,z, data, fNames,
                         coordSys='spcs',metaData=meta)
     dcs.append(dc)
   return dcs

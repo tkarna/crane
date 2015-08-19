@@ -85,7 +85,7 @@ def interpolateOnGridDC( dc, T, Z ) :
   ta = timeArray.timeArray(T.ravel(),'epoch',acceptDuplicates=True)
   meta = dc.getMetaData()
   fn = dc.fieldNames[:1]
-  dc2 = dataContainer('',ta, dc.x, dc.y, Z.ravel()[None,:], vals.ravel()[None,None,:],fn,metaData=meta, acceptNaNs=True)
+  dc2 = dataContainer.dataContainer('',ta, dc.x, dc.y, Z.ravel()[None,:], vals.ravel()[None,None,:],fn,metaData=meta, acceptNaNs=True)
   return dc2
 
 # not needed
@@ -116,7 +116,7 @@ def runningX( dc, T=None, operator=computeRunningMean ) :
   data = xRes.reshape( (1,1,-1) )
   z = zRes[None,:]
   meta = dc.getMetaData()
-  dc2 = dataContainer( '', ta, dc.x,dc.y,z, data,
+  dc2 = dataContainer.dataContainer( '', ta, dc.x,dc.y,z, data,
                             dc.fieldNames[:1], coordSys=dc.coordSys,metaData=meta)
   return dc2
 
@@ -291,7 +291,7 @@ def computeRi( tag, loc ) :
     z = Z.T
     data = C.T[:,None,:]
     ta = timeArray.timeArray(T[:,0],'epoch')
-    dc = dataContainer('', ta, x,y,z, data, fieldNames,
+    dc = dataContainer.dataContainer('', ta, x,y,z, data, fieldNames,
                         coordSys='spcs',metaData=meta,acceptNaNs=True)
     return dc
 

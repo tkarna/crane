@@ -879,7 +879,7 @@ class extractStation(extractBase) :
         meta['bracket'] = 'F' if self.zRelativeToSurf else 'A'
         meta['msldepth'] = msldepth
         meta['dataType'] = 'timeseries'
-      dc = dataContainer('', tai, x,y,z, datai, fieldNameList[var],
+      dc = dataContainer.dataContainer('', tai, x,y,z, datai, fieldNameList[var],
                          coordSys='spcs',metaData=meta)
 
       dcList.append( dc )
