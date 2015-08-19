@@ -563,12 +563,15 @@ class normalizedStatisticsDiagram(object) :
     if 'label' not in kwargs.keys() :
       raise Exception( 'keyword argument label must be provided' )
     l = kwargs['label']
-    corr, stddev, bias, ioa, mur, crmse, nmse = self.stats[tag].addSample(sample, l, reference=reference)
+    stats = self.stats[tag].addSample(sample, l, reference=reference)
+    bias = stats['bias']
+    nmse = stats['nmse']
     if self.normalizeBias :
       # divide bias by std of the reference
       bias = bias/self.taylorDiags[tag].refStd
-    l1 = self.taylorDiags[tag].plotSample(corr,stddev, **kwargs)
-    l2 = self.biasDiags[tag].plotSample(bias,nmse, **kwargs)
+    l1 = self.taylorDiags[tag].plotSample(stats['corr'], stats['stddev'],
+                                          **kwargs)
+    l2 = self.biasDiags[tag].plotSample(bias, nmse, **kwargs)
     self.murphyLim[0] = 0.0 #min(self.murphyLim[0], nmse*1.05)
     self.murphyLim[1] = max(self.murphyLim[1], nmse*1.05)
     self.biasAx.set_ylim(self.murphyLim)

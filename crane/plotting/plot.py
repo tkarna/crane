@@ -694,7 +694,7 @@ class Plots(object):
     #constsToPlot = ['M2','S2','N2','L2','K2','K1','O1','P1','M4','M6','M8','Mf','Mm']
     constsToPlot = ['M2','S2','N2','L2','K2','K1','O1','P1','J1','NO1','OO1','M4','M6','M8','Mf','Mm','MSf']
     for var in self.coll.getAttributes('variable',dataType='timeseries') :
-      dia = stackAmplitudePhasePlot(unit=UNITS[var],**kwargs)
+      dia = tidalConstPlot.stackAmplitudePhasePlot(unit=UNITS[var],**kwargs)
 #      stations = self.coll.getAttributes( 'location',variable=var)
       stations = list( set( self.coll.getAttributes( 'location', variable=var ) ).intersection( set( stationX.keys() ) ) )
       orderedSta = sorted( stations, key = lambda k: stationX[k] )
@@ -729,7 +729,7 @@ class Plots(object):
     modelColors = self.makeColorsForModels()
     constsToPlot = ['M2','M4','M6','S2','K1','O1','MSf']
     for var in self.coll.getAttributes('variable',dataType='timeseries') :
-      dia = stackAmplitudePhasePlot(unit=UNITS[var],**kwargs)
+      dia = tidalConstPlot.stackAmplitudePhasePlot(unit=UNITS[var],**kwargs)
       #stations = self.coll.getAttributes( 'location',variable=var)
       stations = list( set( self.coll.getAttributes( 'location', variable=var ) ).intersection( set( stationX.keys() ) ) )
       orderedSta = sorted( stations, key = lambda k: stationX[k] )
