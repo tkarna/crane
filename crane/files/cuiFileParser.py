@@ -48,7 +48,7 @@ class cuiParser(object) :
         parts = line.rsplit(None,1)
         # data line
         timeStamp = datetime.datetime.strptime( parts[0], '%d-%b-%Y %H' )
-        t = datetimeToEpochTime( timeStamp )
+        t = timeArray.datetimeToEpochTime( timeStamp )
         self.time.append( t )
         val = float( parts[1] )
         self.data.append( val )

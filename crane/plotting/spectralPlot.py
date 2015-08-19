@@ -296,7 +296,7 @@ if __name__=='__main__':
   startTime = datetime(2010,1,12,0,0,0)
   endTime = datetime(2010,2,13,3,30,0)
   dt = 90.0
-  ta = generateSimulationTimeArray(startTime,endTime,dt).asEpoch()
+  ta = timeArray.generateSimulationTimeArray(startTime,endTime,dt).asEpoch()
   t = ta.array
   # Randomly select a fraction of an array with timesteps:
   frac_points = 0.6 # Fraction of points to discard

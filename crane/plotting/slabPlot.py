@@ -312,7 +312,7 @@ def generateSlabFromMeshContainer( mc, timeStamp ) :
   """
   if isinstance( timeStamp, datetime.datetime ) :
     # interpolate to correct time
-    timeStamp = datetimeToEpochTime( timeStamp )
+    timeStamp = timeArray.datetimeToEpochTime( timeStamp )
     newTime = timeArray.timeArray( np.array( [timeStamp] ), 'epoch' )
     mc = mc.interpolateInTime( newTime, acceptNaNs=True )
     x = mc.x.flatten()

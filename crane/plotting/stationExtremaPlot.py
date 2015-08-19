@@ -186,7 +186,7 @@ if __name__=='__main__':
   startTime = datetime(2010,1,12,0,0,0)
   endTime = datetime(2010,2,13,3,30,0)
   dt = 900.0
-  ta = generateSimulationTimeArray(startTime,endTime,dt).asEpoch()
+  ta = timeArray.generateSimulationTimeArray(startTime,endTime,dt).asEpoch()
   t = ta.array
   
   T = 44714

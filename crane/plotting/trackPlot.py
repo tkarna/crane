@@ -32,7 +32,7 @@ class trackTimeSeriesPlot(colorPlotBase) :
       self.unit = 'log10('+self.unit+')'
     colorPlotBase.__init__(self,**defaultArgs)
     if self.xlim and self.xIsTime :
-      self.xlim = [ convertEpochToPlotTime( datetimeToEpochTime( dt ) ) for dt in self.xlim ]
+      self.xlim = [ convertEpochToPlotTime( timeArray.datetimeToEpochTime( dt ) ) for dt in self.xlim ]
 
   def setAxes(self, ax) :
     """Set axes for the diagram. All data will be plotted in these axes.

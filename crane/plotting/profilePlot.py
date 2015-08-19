@@ -139,7 +139,7 @@ class profileTimeSeries(colorPlotBase) :
       self.unit = r'$\log10($'+self.unit+'$)$'
     colorPlotBase.__init__(self,**defaultArgs)
     if self.xlim and self.xIsTime :
-      self.xlim = [ convertEpochToPlotTime( datetimeToEpochTime( dt ) )
+      self.xlim = [ convertEpochToPlotTime( timeArray.datetimeToEpochTime( dt ) )
                  for dt in self.xlim ]
 
   def setAxes(self, ax) :

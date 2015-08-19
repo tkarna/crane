@@ -62,8 +62,8 @@ def getADPData(offering, sT, eT, var) :
   """
   s, d, b, i = offering.split('.')
   # convert datetime to epochtime with timeArray methods (safe timezone convert)
-  sT = datetimeToEpochTime( sT )
-  eT = datetimeToEpochTime( eT )
+  sT = timeArray.datetimeToEpochTime( sT )
+  eT = timeArray.datetimeToEpochTime( eT )
   off = {'location':s, 'msldepth':d, 'bracket':b, 'instrument':i, 'variable': var}
   ncreader = netcdfCacheADPReader( off )
   # Get data as 1D arrays 

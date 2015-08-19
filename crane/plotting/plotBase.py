@@ -312,9 +312,9 @@ class plotBase(object) :
     kwargs are passed to matplotlib axvspan routine."""
     if self.xIsTime :
       if isinstance( start, datetime.datetime ) :
-        start = datetimeToEpochTime(start)
+        start = timeArray.datetimeToEpochTime(start)
       if isinstance( end, datetime.datetime ) :
-        end = datetimeToEpochTime(end)
+        end = timeArray.datetimeToEpochTime(end)
       start = convertEpochToPlotTime(start)
       end = convertEpochToPlotTime(end)
     kwargs.setdefault( 'facecolor', [0.8,1.0,0.85] )

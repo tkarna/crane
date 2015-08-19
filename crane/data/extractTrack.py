@@ -125,10 +125,11 @@ def test() :
   y = 50*np.sin(x)+500
   z = np.linspace( -8, -2, 100 )
 
-  from crane.data import timeArray, datetimeToEpochTime
+  from crane.data import timeArray
   startTime = datetime.datetime(2010,1,1,2,30,0)
   endTime = datetime.datetime(2010,1,1,12,45,0)
-  t = np.linspace( datetimeToEpochTime( startTime ), datetimeToEpochTime( endTime ), 100 )
+  t = np.linspace(timeArray.datetimeToEpochTime(startTime),
+                  timeArray.datetimeToEpochTime(endTime), 100)
   ta = timeArray.timeArray( t, 'epoch' )
 
   ee = extractTrack( dataDir, var )

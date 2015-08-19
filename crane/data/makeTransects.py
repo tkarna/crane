@@ -219,7 +219,8 @@ def makeTransects(netCDFFiles, imgDir, startTime=None, endTime=None, skip=1,
   if startTime or endTime :
     if startTime == endTime :
       # interpolate to given time stamp
-      newTime = timeArray.timeArray( np.array([datetimeToEpochTime(startTime)]), 'epoch' )
+      t0 = timeArray.datetimeToEpochTime(startTime)
+      newTime = timeArray.timeArray( np.array([t0]), 'epoch' )
       for i in range(len(dcs)) :
         dcs[i] = dcs[i].interpolateInTime( newTime )
     else :
