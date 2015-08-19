@@ -27,22 +27,21 @@ python extractStation.py -d /home/workspace/ccalmr42/karnat/runs/db28dev/run03/o
 
 Tuomas Karna 2012-10-10
 """
-
-import numpy as np
-import time as timeMod
 import os
 import sys
 import datetime
 import glob
-
+import time as timeMod
 # set Ctrl-C to default signal (terminates fortran routines immediately)
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-from data.dataContainer import dataContainer
-from data.timeArray import timeArray
-from data.loadHindcastStations import excludeNaNs,VALID_MIN
-from files.csvStationFile import csvStationFile, csvStationFileWithDepth
+import numpy as np
+
+from crane.data import dataContainer
+from crane.data import timeArray
+from crane.data import loadHindcastStations
+from crane.files import csvStationFile
 
 import extract_mod
 
@@ -1017,7 +1016,7 @@ def parseCommandLine() :
   for var in varList :
     if noOfferings :
       if readNetcdf :
-        from data.ncExtract import extractForStations as extractNetCDF
+        from crane.data.ncExtract import extractForStations as extractNetCDF
         dcs = extractNetCDF(dataDir, var, stationFile, startTime, endTime,
                             profile, stacks=stacks)
       else :
@@ -1025,7 +1024,7 @@ def parseCommandLine() :
                             profile, modelCoordSys )
     else :
       # get all available offerings
-      import data.netcdfCacheInterface as netcdfDB
+      import crane.data.netcdfCacheInterface as netcdfDB
       if allOfferings :
         print('fetching {0:s} offerings from the database for all stations'.format(var))
         offerings = netcdfDB.getAllOfferings( [var.split('.')[0]] )

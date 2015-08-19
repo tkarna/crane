@@ -1,11 +1,12 @@
-
 import os
 import sys
 import datetime
+
 import numpy as np
 from scipy.interpolate import interp1d
-from data.dataContainer import dataContainer
-from data.timeArray import timeArray
+
+from crane.data import dataContainer
+from crane.data import timeArray
 
 #-------------------------------------------------------------------------------
 # Constants

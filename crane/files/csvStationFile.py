@@ -6,9 +6,11 @@ Tuomas Karna 2013-11-05
 """
 import csv
 import os
-from data.collection import tupleList
 
-class csvStationFile(tupleList) :
+from crane.data import collection
+
+
+class csvStationFile(collection.tupleList) :
   """Comma separated station file reader/writer
   
   Each station has attributes : 'x' and 'y'

@@ -20,7 +20,7 @@ Tuomas Karna 2012-10-10
 """
 
 # just a wrapper to parseCommandLine method
-from data.extractStation import *
+from crane.data import extractStation
 
 if __name__=='__main__' :
-  parseCommandLine()
+  extractStation.parseCommandLine()

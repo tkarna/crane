@@ -17,12 +17,12 @@ import sys
 import datetime
 import subprocess as sub
 
-from data.dataContainer import dataContainer
-from data.timeArray import timeArray
-from data.loadHindcastStations import excludeNaNs,VALID_MIN
-from data.extractStation import *
+from crane.data import dataContainer
+from crane.data import timeArray
+from crane.data import loadHindcastStations
+from crane.data import extractStation
 
-from files.buildPoints import BuildPoint
+from crane.files import buildPoints
 
 #-------------------------------------------------------------------------------
 # Functions
