@@ -4,17 +4,17 @@ High-level class to create timeseries and Taylor Diagrams.
 #-------------------------------------------------------------------------------
 # Imports
 #-------------------------------------------------------------------------------
-from data.timeArray import *
-from plotting.timeSeriesPlot import *
-from plotting.taylorDiagram import *
-from plotting.stationExtremaPlot import *
-from plotting.errorHistogram import *
-from plotting.spectralPlot import *
-from plotting.tidalConstPlot import *
-from plotting.profilePlot import *
-from plotting.trackPlot import *
-from files.stationFile import StationFile
-from plotting.plotBase import *
+from crane.data import timeArray
+from crane.plotting import plotBase
+from crane.plotting import timeSeriesPlot
+from crane.plotting import taylorDiagram
+from crane.plotting import stationExtremaPlot
+from crane.plotting import errorHistogram
+from crane.plotting import spectralPlot
+from crane.plotting import tidalConstPlot
+from crane.plotting import profilePlot
+from crane.plotting import trackPlot
+from crane.files import stationFile
 
 #-------------------------------------------------------------------------------
 # Constants
@@ -378,7 +378,7 @@ class Plots(object):
     kw = dict(kwargs)
     kw.setdefault('verbose', True)
     kw.setdefault('bbox_tight', True)
-    saveFigure(self.path, filename, extensions, **kw)
+    plotBase.saveFigure(self.path, filename, extensions, **kw)
 
   def makeSaltIntrusion(self, filetype='png', fPrefix='sil', varPrefix=None, ylim=None, err_ylim=None, **kwargs) :
     """Creates timeseries of salt intrusion length and saves to image directory.
@@ -408,7 +408,7 @@ class Plots(object):
         kw['title'] = ('%s %s\n %s - %s (PST)' %
                             (location, varTitle, sT, eT))
       fig = plt.figure(figsize=(7.5,3))
-      dia=timeSeriesPlotDC(varTitle, unit=UNITS[var], ylim=ylim, **kw)
+      dia = timeSeriesPlot.timeSeriesPlotDC(varTitle, unit=UNITS[var], ylim=ylim, **kw)
 
       for modKey in keys :
         m = self.coll.getSample( **modKey )

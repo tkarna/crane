@@ -12,7 +12,7 @@ import os
 import numpy as np
 
 from crane.data import timeArray
-from crane.data.netcdfIO import netcdfIO
+from crane.data import netcdfIO
 
 class dataContainer(object) :
   """

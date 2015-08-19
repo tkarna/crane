@@ -6,10 +6,11 @@ A class for plotting time dependent tracks, where x = x(t) etc., e.g. AUV, glide
 Tuomas Karna 2012-11-02
 """
 
-from data.dataContainer import dataContainer
-from data.timeArray import *
+# TODO import only modules
+from crane.data.dataContainer import dataContainer
+from crane.data.timeArray import *
 
-from plotting.plotBase import *
+from crane.plotting.plotBase import *
 
 class trackTimeSeriesPlot(colorPlotBase) :
   """trackTimeSeriesPlot class"""

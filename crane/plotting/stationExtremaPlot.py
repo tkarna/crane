@@ -8,8 +8,9 @@ Uses matplotlib.
 Tuomas Karna 2012-09-25
 """
 import numpy as np
-from data.dataContainer import dataContainer
-from plotting.plotBase import *
+# TODO import only modules
+from crane.data.dataContainer import dataContainer
+from crane.plotting.plotBase import *
 
 # class that takes a list of station names and distance coordinate, and time series
 class stationExtremaPlot(object) :

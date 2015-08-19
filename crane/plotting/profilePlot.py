@@ -6,8 +6,9 @@ Tuomas Karna 2012-11-02
 """
 
 import numpy as np
-from data.timeArray import *
-from plotting.plotBase import *
+# TODO import only modules
+from crane.data.timeArray import *
+from crane.plotting.plotBase import *
 
 class verticalProfilePlot(plotBase) :
   """Class that plots vertical profiles in (variable,z) line graphs."""

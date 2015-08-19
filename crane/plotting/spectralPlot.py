@@ -7,9 +7,10 @@ A class for plotting signals in frequency domain.
 Tuomas Karna 2012-10-04 17:17:23
 """
 import numpy as np
-from data.dataContainer import dataContainer
-from data.periodogram import *
-from plotting.plotBase import *
+# TODO import only modules
+from crane.data.dataContainer import dataContainer
+from crane.data.periodogram import *
+from crane.plotting.plotBase import *
 
 # TODO create a comprehensive class or use TAPPY
 class tidalConstituents(object) :

@@ -8,13 +8,14 @@ Uses matplotlib hist plotting routine.
 Tuomas Karna 2012-09-14
 """
 import numpy as np
-from data.dataContainer import dataContainer
-from plotting.plotBase import *
 import traceback
 import sys
 import matplotlib
 from matplotlib.ticker import FuncFormatter
-import data.statistics as statMod
+# TODO import only modules
+from crane.data.dataContainer import dataContainer
+from crane.plotting.plotBase import *
+import crane.data.statistics as statMod
 
 def tickLabelToPercent(y, position):
   # Ignore the passed in position. This has the effect of scaling the default

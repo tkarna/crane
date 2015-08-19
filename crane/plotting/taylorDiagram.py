@@ -12,9 +12,10 @@ Tuomas Karna 2012-08-15
 from scipy import *
 import sys
 
-from data import statistics
-from data.dataContainer import dataContainer
-from plotting.plotBase import *
+# TODO import only modules
+from crane.data import statistics
+from crane.data.dataContainer import dataContainer
+from crane.plotting.plotBase import *
 
 class diagramBase(object) :
   """Base class for statistics diagrams"""

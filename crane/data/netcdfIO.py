@@ -12,6 +12,7 @@ import os
 import numpy as np
 from netCDF4 import Dataset as NetCDFFile
 
+import crane
 from crane.data import timeArray
 
 #-------------------------------------------------------------------------------
@@ -85,12 +86,16 @@ class netcdfIO(object) :
     out = self.read( startTime, endTime, includeEnd, verbose=verbose)
     descr, ta, x,y,z, data, fns, cSys, conn, meta, bnds = out
     if conn is None:
-      from data.dataContainer import dataContainer
-      dc = dataContainer( descr, ta, x,y,z, data, fns, cSys,
-                          acceptNaNs=True, dtype=dtype )
+      dc = crane.data.dataContainer.dataContainer(descr, ta,
+                                                  x, y, z, data,
+                                                  fns, cSys,
+                                                  acceptNaNs=True,
+                                                  dtype=dtype)
     else :
-      from data.meshContainer import meshContainer
-      dc = meshContainer( descr, ta, x,y,z, data, conn, fns, cSys, dtype=dtype)
+      dc = crane.data.dataContainer.meshContainer(descr, ta,
+                                                  x, y, z,
+                                                  data, conn, fns,
+                                                  cSys, dtype=dtype)
       if bnds :
         for bnd in bnds :
           dc.addBoundary(bnd)
@@ -167,12 +172,12 @@ class netcdfIO(object) :
     vars = ncfile.variables
     timeVar = vars.pop('time')
     timeFormat = ncTimeUnitsInv[ timeVar.units ]
-    ta = timeArray( timeVar[:], timeFormat, acceptDuplicates=True )
+    ta = timeArray.timeArray( timeVar[:], timeFormat, acceptDuplicates=True )
     # infer correct time indices
     timeIx = ta.getRangeIndices( startTime, endTime, includeEnd=includeEnd )
     if len(timeIx) == 0 :
       raise Exception( 'No time stamps found for the given bounds {0:s} - {1:s}'.format(str(startTime),str(endTime)) )
-    ta = timeArray( timeVar[timeIx], timeFormat, acceptDuplicates=True )
+    ta = timeArray.timeArray( timeVar[timeIx], timeFormat, acceptDuplicates=True )
     if headerOnly :
       return metaData,ta # nX,nY,nZ ??
     coordSys = ''
@@ -209,10 +214,9 @@ class netcdfIO(object) :
     bndVars = [ vname for vname in vars if vname.find('bnd_nodes_')==0 ]
     if bndVars :
       boundaries = []
-      from data.meshContainer import meshBoundary
       for bndVar in sorted(bndVars) :
         v = vars.pop(bndVar)
-        bnd = meshBoundary( v.getncattr('type'), v.getncattr('tag'), v[:].astype(np.int64) )
+        bnd = crane.data.meshContainer.meshBoundary( v.getncattr('type'), v.getncattr('tag'), v[:].astype(np.int64) )
         boundaries.append( bnd )
     else :
       boundaries = None

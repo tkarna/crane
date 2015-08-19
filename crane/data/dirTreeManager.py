@@ -23,9 +23,11 @@ import numpy as np
 import datetime
 from dateutil import rrule, relativedelta
 from glob import glob
+import traceback
+import sys
 
-from plotting.plotBase import createDirectory
-from data.netcdfIO import netcdfIO
+from crane.plotting.plotBase import createDirectory
+from crane.data import netcdfIO
 
 ruleAlias = {'singleFile': ['singleFile', 'old', ],
              'monthlyFile': ['monthlyFile', 'default', ],
@@ -241,7 +243,7 @@ class singleFileTree(fileTree):
         m['endTime'] = et
         m['rootPath'] = rootPath
         filename = self.generateFileName(**m)
-        netcdfIO(filename).saveDataContainer(dc, dtype, overwrite,
+        netcdfIO.netcdfIO(filename).saveDataContainer(dc, dtype, overwrite,
                                              compress, digits)
 
     def findMatchingFiles(self, **kwargs):
@@ -269,7 +271,7 @@ class singleFileTree(fileTree):
         dcList = []
         for f in files:
             if os.path.isfile(f):
-                nc = netcdfIO(f)
+                nc = netcdfIO.netcdfIO(f)
                 try:
                     desc, ta = nc.readHeader(verbose=self.verbose)
                     if (st is not None and et is not None and not ta.overlaps(st, et)):
@@ -391,8 +393,9 @@ class monthlyFileTree(fileTree):
             # crop data dataContainer
             cropped_dc = dc.timeWindow(win_start, win_end, includeEnd=False)
             # save
-            netcdfIO(fn).saveDataContainer(cropped_dc, dtype, overwrite,
-                                           compress, digits)
+            netcdfIO.netcdfIO(fn).saveDataContainer(cropped_dc, dtype,
+                                                    overwrite, compress,
+                                                    digits)
 
     def getLocalFilename(self, filename, rootPath=None):
         """Removes base path from the file name"""
@@ -517,7 +520,7 @@ class monthlyFileTree(fileTree):
             outputDC = None
             for f in sampleFiles:
                 if os.path.isfile(f):
-                    nc = netcdfIO(f)
+                    nc = netcdfIO.netcdfIO(f)
                     try:
                         desc, ta = nc.readHeader(verbose=self.verbose)
                         file_st = ta.getDatetime(0)
@@ -537,6 +540,7 @@ class monthlyFileTree(fileTree):
                     except Exception as e:
                         print 'Error while reading file: {0:s}'.format(f)
                         print e
+                        traceback.print_exc(file=sys.stdout)
             if outputDC is not None:
                 dcList.append(outputDC)
         return dcList
