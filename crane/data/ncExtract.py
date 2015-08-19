@@ -1049,8 +1049,8 @@ class selfeExtractBase(object) :
 
     # figure out correct stacks
     if stacks is None:
-        stacks = self.dataFile.getStacks(epochToDatetime(T0[0]),
-                                         epochToDatetime(T0[-1]),
+        stacks = self.dataFile.getStacks(timeArray.epochToDatetime(T0[0]),
+                                         timeArray.epochToDatetime(T0[-1]),
                                          wholeDays=False)
     # get profiles for all x,y locations (nPoints,nVert,nTime)
     time,vals,zcor,is3d = self.getVerticalProfileForStacks(stacks,varStr,X0,Y0)
@@ -1066,14 +1066,14 @@ class selfeExtractBase(object) :
     if time[0] > T[0] or time[-1] < T[-1] :
       print 'Extracted time range does not cover query range: cropping'
       if time[0] > T[0] :
-        print 'start',epochToDatetime(time[0]), '>', epochToDatetime(T[0])
+        print 'start',timeArray.epochToDatetime(time[0]), '>', timeArray.epochToDatetime(T[0])
       if time[-1] < T[-1] :
-        print 'end',epochToDatetime(time[-1]), '<', epochToDatetime(T[-1])
+        print 'end',timeArray.epochToDatetime(time[-1]), '<', timeArray.epochToDatetime(T[-1])
       goodTimeIx = np.logical_and( T >= time[0], T <= time[-1] )
       print goodTimeIx
       if not np.any(goodTimeIx):
-        print 'extracted time range:', epochToDatetime(time[0]), '->', epochToDatetime(time[0])
-        print 'query time range:', epochToDatetime(T[0]), '->', epochToDatetime(T[0])
+        print 'extracted time range:', timeArray.epochToDatetime(time[0]), '->', timeArray.epochToDatetime(time[0])
+        print 'query time range:', timeArray.epochToDatetime(T[0]), '->', timeArray.epochToDatetime(T[0])
         raise Exception('Time arrays do not overlap - cannot extract')
       X = X[goodTimeIx]
       Y = Y[goodTimeIx]

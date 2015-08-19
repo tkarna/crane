@@ -1000,7 +1000,7 @@ class ncExtractTrack(ncExtractBase) :
       return compDCs[0]
 
     # figure out correct stacks
-    stacks = self.getStacks( epochToDatetime( T[0] ),  epochToDatetime( T[-1] ), exactBounds=True )
+    stacks = self.getStacks( timeArray.epochToDatetime( T[0] ),  timeArray.epochToDatetime( T[-1] ), exactBounds=True )
     # get profiles for all x,y locations
     time,vals,zcor,goodStaIx = self.getProfForStacks(stacks,varStr,X,Y)
     # exclude points outside the grid
@@ -1012,9 +1012,9 @@ class ncExtractTrack(ncExtractBase) :
     if time[0] > T[0] or time[-1] < T[-1] :
       print 'Extracted time range does not cover query range: cropping'
       if time[0] > T[0] :
-        print 'start',epochToDatetime(time[0]), '>', epochToDatetime(T[0])
+        print 'start',timeArray.epochToDatetime(time[0]), '>', timeArray.epochToDatetime(T[0])
       if time[-1] < T[-1] :
-        print 'end',epochToDatetime(time[-1]), '<', epochToDatetime(T[-1])
+        print 'end',timeArray.epochToDatetime(time[-1]), '<', timeArray.epochToDatetime(T[-1])
       goodTimeIx = np.logical_and( T >= time[0], T <= time[-1] )
       X = X[goodTimeIx]
       Y = Y[goodTimeIx]

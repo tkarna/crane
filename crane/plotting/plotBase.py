@@ -129,16 +129,16 @@ def updateYAxis(ax, yIsTime=False, ylim=None, minticks=3, maxticks=12, prune=Non
       span = timerange[1]-timerange[0]
       if span <= 1.0:
         # all data from same day
-        meanTime = epochToDatetime(convertPlotToEpochTime(np.mean(timerange)))
+        meanTime = timeArray.epochToDatetime(convertPlotToEpochTime(np.mean(timerange)))
         ax.set_ylabel(meanTime.strftime('%Y-%m-%d'))
       elif span < 25.0:
         # all data from same month
-        meanTime = epochToDatetime(convertPlotToEpochTime(np.mean(timerange)))
+        meanTime = timeArray.epochToDatetime(convertPlotToEpochTime(np.mean(timerange)))
         ax.set_ylabel(meanTime.strftime('%Y'))
         hourfmt = '%H:%M\n%b %d'
       elif span < 366.1:
         # all data from same year
-        meanTime = epochToDatetime(convertPlotToEpochTime(np.mean(timerange)))
+        meanTime = timeArray.epochToDatetime(convertPlotToEpochTime(np.mean(timerange)))
         ax.set_ylabel(meanTime.strftime('%Y'))
       else:
         monthfmt = '%b\n%Y'

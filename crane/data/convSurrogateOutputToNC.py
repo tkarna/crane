@@ -52,7 +52,7 @@ def read_mat_sil_files( path, fn ) :
   time = datenumPSTToEpoch(t)
   # round to nearest minute
   time = np.round(time/60.)*60.
-  print 'Loaded data for range:\n ',str(epochToDatetime(time[0])),' -> ',  str(epochToDatetime(time[-1]))
+  print 'Loaded data for range:\n ',str(timeArray.epochToDatetime(time[0])),' -> ',  str(timeArray.epochToDatetime(time[-1]))
   return time,data
 
 def genSILDC( path,fn,runTag ) :
@@ -94,7 +94,7 @@ def read_mat_sho_files( path, fn ) :
   time = datenumPSTToEpoch(t)
   # round to nearest minute
   time = np.round(time/60.)*60.
-  print 'Loaded data for range:\n ',str(epochToDatetime(time[0])),' -> ',  str(epochToDatetime(time[-1]))
+  print 'Loaded data for range:\n ',str(timeArray.epochToDatetime(time[0])),' -> ',  str(timeArray.epochToDatetime(time[-1]))
   
   return time,data,indData
   
@@ -142,7 +142,7 @@ def read_mat_profile_files( path,loc,var,dataSetName='test',dataSetType='ms' ) :
   time = datenumPSTToEpoch(t)
   # round to nearest minute
   time = np.round(time/60.)*60.
-  print '  Loaded data range: ',str(epochToDatetime(time[0])),' -> ',  str(epochToDatetime(time[-1]))
+  print '  Loaded data range: ',str(timeArray.epochToDatetime(time[0])),' -> ',  str(timeArray.epochToDatetime(time[-1]))
   return time,z,data
 
 def genProfileDC(dataDir,runTag,location,var,x,y,
@@ -311,7 +311,7 @@ def read_mat_plume_file( path,var,saltThreshold ) :
   time = datenumPSTToEpoch(t)
   # round to nearest minute
   time = np.round(time/60.)*60.
-  print '  Loaded data range: ',str(epochToDatetime(time[0])),' -> ',  str(epochToDatetime(time[-1]))
+  print '  Loaded data range: ',str(timeArray.epochToDatetime(time[0])),' -> ',  str(timeArray.epochToDatetime(time[-1]))
   return time,data
 
 def getPlumeDC(runTag,dataDir,saltThreshold):
