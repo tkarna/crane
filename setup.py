@@ -9,6 +9,6 @@ setup(name='crane',
       author_email='tuomas.karna@gmail.com',
       url='https://bitbucket.org/tkarna/crane',
       packages=['crane', 'crane.data', 'crane.plotting',
-		'crane.files'],
-     )
+                'crane.files'],
+      )
 

@@ -29,7 +29,7 @@ import matplotlib
 import matplotlib.dates
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from crane.data import timeArray as ta
+from crane.data import timeArray
 
 #-------------------------------------------------------------------------------
 # Constants
@@ -67,16 +67,16 @@ def updateXAxis(ax, xIsTime=False, xlim=None, minticks=3, maxticks=12, prune=Non
       span = timerange[1]-timerange[0]
       if span <= 1.0:
         # all data from same day
-        meanTime = epochToDatetime(convertPlotToEpochTime(np.mean(timerange)))
+        meanTime = timeArray.epochToDatetime(convertPlotToEpochTime(np.mean(timerange)))
         ax.set_xlabel(meanTime.strftime('%Y-%m-%d'))
       elif span < 25.0:
         # all data from same month
-        meanTime = epochToDatetime(convertPlotToEpochTime(np.mean(timerange)))
+        meanTime = timeArray.epochToDatetime(convertPlotToEpochTime(np.mean(timerange)))
         ax.set_xlabel(meanTime.strftime('%Y'))
         hourfmt = '%H:%M\n%b %d'
       elif span < 366.1:
         # all data from same year
-        meanTime = epochToDatetime(convertPlotToEpochTime(np.mean(timerange)))
+        meanTime = timeArray.epochToDatetime(convertPlotToEpochTime(np.mean(timerange)))
         ax.set_xlabel(meanTime.strftime('%Y'))
       else:
         monthfmt = '%b\n%Y'
