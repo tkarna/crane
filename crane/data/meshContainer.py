@@ -8,7 +8,7 @@ data manipulation methods.
 Tuomas Karna 2012-11-26
 """
 
-from data.dataContainer import *
+from crane.data import dataContainer
 
 class meshContainer(dataContainer) :
   """

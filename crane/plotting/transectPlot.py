@@ -9,7 +9,7 @@ Tuomas Karna 2012-11-16
 import numpy as np
 from data.dataContainer import dataContainer
 import datetime
-from data.timeArray import *
+from crane.data import timeArray
 from plotting.plotBase import *
 
 STA_MIN_DIST = 800

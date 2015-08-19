@@ -9,8 +9,8 @@ from scipy.interpolate import interp1d
 from glob import glob
 import time as timeMod
 
-from data.timeArray import *
-from data.dataContainer import *
+from crane.data import timeArray
+from crane.data import dataContainer
 from data.meshContainer import meshContainer
 from data.extractStation import fieldNameList, fieldNameToFilename
 from data.selfeGridUtils import *

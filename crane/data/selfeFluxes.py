@@ -20,7 +20,7 @@ import numpy as np
 import numpy.linalg
 import files.gr3Interface as gr3Interface
 from data.ncExtract import selfeNCFile, selfeExtractBase, getNCVariableName
-from data.dataContainer import *
+from crane.data import dataContainer
 from data.meshContainer import *
 from data.gridUtils import meshSearch2d, constructEdgeNodeArray
 from extractStation import addTracers, fieldNameToFilename

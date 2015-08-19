@@ -18,7 +18,7 @@ import datetime
 import subprocess as sub
 
 from data.meshContainer import meshContainer
-from data.timeArray import timeArray
+from crane.data import timeArray
 from data.loadHindcastStations import excludeNaNs,VALID_MIN
 from data.extractStation import *
 from plotting.plotBase import createDirectory

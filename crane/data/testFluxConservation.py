@@ -8,7 +8,7 @@ import os
 import numpy as np
 import files.gr3Interface as gr3Interface
 from data.ncExtract import selfeNCFile, selfeExtractBase, getNCVariableName
-from data.dataContainer import *
+from crane.data import dataContainer
 from plotting.timeSeriesPlot import *
 from plotting.plot import VARS, UNITS
 import data.dirTreeManager as dtm

@@ -8,7 +8,7 @@ Tuomas Karna 2012-12-04
 import string
 import os, sys
 
-from data.timeArray import *
+from crane.data import timeArray
 from data.meshContainer import *
 
 def readNodeBlock(infile, nPoints) :

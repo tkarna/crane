@@ -14,7 +14,7 @@ import sys
 from optparse import OptionParser
 
 from data.meshContainer import meshContainer
-from data.timeArray import *
+from crane.data import timeArray
 from data.collection import uniqueList
 from files.stationFile import StationFile
 from files.buildPoints import BuildPoint

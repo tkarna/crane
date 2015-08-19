@@ -6,8 +6,8 @@ Tuomas Karna 2013-11-07
 """
 import numpy as np
 from collections import deque
-from data.dataContainer import dataContainer
-from data.timeArray import *
+from crane.data import dataContainer
+from crane.data import timeArray
 
 #------------------------------------------------------------------------------
 # Low level routines with numpy arrays

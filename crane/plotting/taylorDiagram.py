@@ -743,7 +743,7 @@ if __name__=='__main__':
 
   # -- examples with dataContainer objects --
   # generate data
-  from data.timeArray import timeArray
+  from crane.data import timeArray
   random.seed(int(3411))
   t0 = hstack( ( linspace(0,2,20), linspace(2.33,6,15) ) ) + 2193
   m0 = sin(t0)

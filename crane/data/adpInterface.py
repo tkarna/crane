@@ -13,8 +13,8 @@ import datetime
 import data.netcdfCacheInterface as netcdfCacheInterface
 from data.netcdfCacheInterface import netcdfCacheReader as ncCacheReader
 from files.stationFile import StationFile
-from data.dataContainer import dataContainer
-from data.timeArray import *
+from crane.data import dataContainer
+from crane.data import timeArray
 #-------------------------------------------------------------------------------
 # Constants
 #-------------------------------------------------------------------------------

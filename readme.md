@@ -11,6 +11,7 @@ Pre-/post processing tools for ocean modeling products.
 - clean unused functions
 - pep8 all source
 - data module is unfortunately named... change
+- fix setup.py so that scripts get copied to correct bin dir
 - revisit docstrings (use numpy convetion?)
 - treat tappy better
     - fork tappy, morph to a generic installable package

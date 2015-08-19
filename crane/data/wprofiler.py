@@ -5,8 +5,8 @@ Tuomas Karna 2013-01-17
 """
 import numpy as np
 from scipy.interpolate import interp1d
-from data.dataContainer import dataContainer
-from data.timeArray import timeArray
+from crane.data import dataContainer
+from crane.data import timeArray
 
 def generateSat01ProfilerModData( obsWProfilerDC, modProfileDC ) :
 

@@ -178,7 +178,7 @@ class stationExtremaPlotDC(stationExtremaPlot) :
 
 if __name__=='__main__':
 
-  from data.timeArray import *
+  from crane.data import timeArray
   from datetime import datetime
 
   ### examples with numpy array inputs

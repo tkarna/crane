@@ -11,8 +11,8 @@ import sys
 import datetime
 
 import data.netcdfCacheInterface as netcdfCacheInterface
-from data.dataContainer import dataContainer
-from data.timeArray import *
+from crane.data import dataContainer
+from crane.data import timeArray
 #-------------------------------------------------------------------------------
 # Constants
 #-------------------------------------------------------------------------------

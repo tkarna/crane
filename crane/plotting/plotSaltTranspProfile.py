@@ -6,8 +6,8 @@ Tuomas Karna 2013-11-08
 """
 
 import numpy as np
-from data.dataContainer import *
-from data.timeArray import *
+from crane.data import dataContainer
+from crane.data import timeArray
 from data.stationCollection import *
 import data.dirTreeManager as dtm
 from data.pca import *

@@ -5,8 +5,8 @@ from optparse import OptionParser
 
 import data.stationCollection as StationCollection
 from data.loadHindcastStations import readDateRange
-from data.dataContainer import dataContainer
-from data.timeArray import *
+from crane.data import dataContainer
+from crane.data import timeArray
 from data.collection import uniqueList
 from files.stationFile import StationFile
 from files.csvStationFile import csvStationFile

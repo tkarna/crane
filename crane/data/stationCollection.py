@@ -13,13 +13,13 @@ import datetime
 import sys
 import traceback
 
-from data.dataContainer import *
-from data.timeArray import timeArray
-import data.netcdfCacheInterface as netcdfDB
-import data.loadHindcastStations as loadHindcastStations
-from data.harmonicAnalysis import tidalConstituents
-from plotting.plotBase import createDirectory
-from data.timeSeriesFilters import *
+from crane.data import dataContainer
+from crane.data import timeArray
+import crane.data.netcdfCacheInterface as netcdfDB
+import crane.data.loadHindcastStations as loadHindcastStations
+from crane.data import harmonicAnalysis
+from crane.plotting.plotBase import createDirectory
+from crane.data import timeSeriesFilters
 
 #-------------------------------------------------------------------------------
 # Constants
@@ -629,17 +629,17 @@ class StationCollection(tinyDB) :
     for i in range( ranges.shape[0] ) :
       tt = t[ ranges[i,0]:ranges[i,1] ]
       xx = x[ ranges[i,0]:ranges[i,1] ]
-      tt, xx = computeRunningRange( tt,xx,2*T )
+      tt, xx = timeSeriesFilters.computeRunningRange( tt,xx,2*T )
       if len(tt) == 0 :
         continue
-      tt, xx = computeRunningMean( tt,xx,3*T )
+      tt, xx = timeSeriesFilters.computeRunningMean( tt,xx,3*T )
       tRes = np.append( tRes, tt )
       xRes = np.append( xRes, xx )
     print 'tidal range cpu time',time.clock() - t0
     if len(tRes) == 0 :
       print 'tidal data could not be computed, skipping (time series too short?)'
       return
-    ta = timeArray( tRes, 'epoch' )
+    ta = timeArray.timeArray(tRes, 'epoch' )
     data = xRes.reshape( (1,1,-1) )
     meta = dc.getMetaData()
     meta['dataType'] = 'timeseries'
@@ -804,7 +804,7 @@ class HAManager( object ) :
     t0 = time.clock()
     sys.stdout.write( 'computing harmonic analysis: %s... '%(signal.description) )
     sys.stdout.flush()
-    tc =  tidalConstituents.computeFromData( signal )
+    tc =  harmonicAnalysis.tidalConstituents.computeFromData( signal )
     sys.stdout.write( '%.2f s\n'%(time.clock()-t0) )
     return tc
 
@@ -829,7 +829,7 @@ class HAManager( object ) :
         ampDict[const] = tcmod.getConstituent(const)[0] - tcobs.getConstituent(const)[0]
         phaDict[const] = tcmod.getConstituent(const)[1] - tcobs.getConstituent(const)[1]
       # fast to compute, no need to save
-      tc = tidalConstituents( 'error_'+tcmod.description, ampDict, phaDict, tcmod.fieldName, tcmod.startTime, tcmod.endTime )
+      tc = harmonicAnalysis.tidalConstituents( 'error_'+tcmod.description, ampDict, phaDict, tcmod.fieldName, tcmod.startTime, tcmod.endTime )
       return tc
 
     signal = self.coll.getSample( **key )
@@ -845,7 +845,7 @@ class HAManager( object ) :
     fname = os.path.join(key['tag'],self.subDir,fname)
     tc = None
     if os.path.isfile( fname ) :
-      tc = tidalConstituents.loadFromASCII( fname )
+      tc = harmonicAnalysis.tidalConstituents.loadFromASCII( fname )
     else :
       try :
         tc = self.compute( signal )

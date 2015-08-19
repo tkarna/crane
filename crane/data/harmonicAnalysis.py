@@ -12,8 +12,8 @@ import sys
 import numpy as np
 import os
 
-import data.timeArray as timeArray
-import data.dataContainer as dataContainer
+from crane.data import timeArray
+from crane.data import dataContainer
 import time
 import datetime
 
@@ -195,11 +195,11 @@ class tidalConstituents(object) :
     return cls(description, ampDict, phaseDict, fieldName, startTime, endTime)
     
   @classmethod
-  def computeFromData( cls, dataContainer ) :
+  def computeFromData( cls, dc ) :
     """Computes harmonic analysis for given dataContainer and returns a tidalConstituents object."""
-    amp, pha = computeTidalConstituents( dataContainer )
-    t = dataContainer.time
-    return cls( dataContainer.description, amp, pha, dataContainer.fieldNames[0], t.getDatetime(0), t.getDatetime(-1) )
+    amp, pha = computeTidalConstituents( dc )
+    t = dc.time
+    return cls( dc.description, amp, pha, dc.fieldNames[0], t.getDatetime(0), t.getDatetime(-1) )
     
   def printConstituents( self ) :
     print self.description,':', self.fieldName

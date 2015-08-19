@@ -11,8 +11,8 @@ import numpy as np
 from scipy.interpolate import interp1d
 import time as timeMod
 
-from data.timeArray import *
-from data.dataContainer import dataContainer
+from crane.data import timeArray
+from crane.data import dataContainer
 from data.dirTreeManager import netcdfTree, oldTreeRule, defaultTreeRule
 from plotting.transectPlot import generateTransectFromDataContainer
 

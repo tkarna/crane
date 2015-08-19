@@ -8,7 +8,7 @@ Tuomas Karna 2012-10-18
 # Imports
 #-------------------------------------------------------------------------------
 import datetime
-from data.timeArray import *
+from crane.data import timeArray
 from data.dataContainer import dataContainer
 
 #-------------------------------------------------------------------------------

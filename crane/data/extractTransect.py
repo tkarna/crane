@@ -17,8 +17,8 @@ import sys
 import datetime
 import subprocess as sub
 
-from data.dataContainer import dataContainer
-from data.timeArray import timeArray
+from crane.data import dataContainer
+from crane.data import timeArray
 from data.loadHindcastStations import excludeNaNs,VALID_MIN
 from data.extractStation import *
 

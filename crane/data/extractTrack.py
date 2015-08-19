@@ -15,8 +15,8 @@ import sys
 import datetime
 import subprocess as sub
 
-from data.dataContainer import dataContainer
-from data.timeArray import timeArray
+from crane.data import dataContainer
+from crane.data import timeArray
 from data.loadHindcastStations import excludeNaNs,VALID_MIN
 from data.extractStation import *
 
@@ -125,7 +125,7 @@ def test() :
   y = 50*np.sin(x)+500
   z = np.linspace( -8, -2, 100 )
 
-  from data.timeArray import timeArray, datetimeToEpochTime
+  from crane.data import timeArray, datetimeToEpochTime
   startTime = datetime.datetime(2010,1,1,2,30,0)
   endTime = datetime.datetime(2010,1,1,12,45,0)
   t = np.linspace( datetimeToEpochTime( startTime ), datetimeToEpochTime( endTime ), 100 )

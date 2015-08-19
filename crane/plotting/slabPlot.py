@@ -9,7 +9,7 @@ Tuomas Karna 2012-11-27
 import numpy as np
 from data.meshContainer import meshContainer
 import datetime
-from data.timeArray import *
+from crane.data import timeArray
 from plotting.plotBase import *
 import matplotlib.tri as tri
 from data.coordSys import *

@@ -1,6 +1,6 @@
 
 import numpy as np
-from data.timeArray import *
+from crane.data import timeArray
 from data.meshContainer import *
 
 class gmshMesh(object) :

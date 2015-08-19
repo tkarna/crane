@@ -10,8 +10,8 @@ import os
 import sys
 import traceback
 import numpy as np
-from data.timeArray import *
-from data.dataContainer import *
+from crane.data import timeArray
+from crane.data import dataContainer
 import glob
 from scipy.io.matlab import loadmat
 import datetime

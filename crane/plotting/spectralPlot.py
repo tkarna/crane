@@ -288,7 +288,7 @@ class stackSpectralPlotDC(stackSpectralPlot) :
 
 if __name__=='__main__':
 
-  from data.timeArray import *
+  from crane.data import timeArray
   from datetime import datetime
 
   ### examples with numpy array inputs
@@ -301,7 +301,7 @@ if __name__=='__main__':
   # Randomly select a fraction of an array with timesteps:
   frac_points = 0.6 # Fraction of points to discard
   t = t[ np.random.rand(len(t)) >= frac_points ]
-  ta = timeArray(t, 'epoch')
+  ta = timeArray.timeArray(t, 'epoch')
 
   tcs = tidalConstituents()
   TM2 = tcs.getPeriod('M2')
