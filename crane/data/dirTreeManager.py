@@ -88,7 +88,51 @@ def getDataContainer(rootPath=None, rule=None, dataType=None, tag=None,
     Returns
     -------
     dc : dataContainer or meshContainer
-        First data set that matches the query data. In case of meshed data
+        First data set that matches the query. In case of meshed data
+        returns a meshContainer object
+    """
+    return getAllDataContainers(rootPath, rule, dataType, tag, location,
+                                variable, startTime, endTime, msldepth,
+                                slevel, verbose)[0]
+
+
+def getAllDataContainers(rootPath=None, rule=None, dataType=None, tag=None,
+                         location=None, variable=None,
+                         startTime=None, endTime=None,
+                         msldepth=None, slevel=None, verbose=False):
+    """
+    Reads all matching dataContainers from file tree given the meta data.
+
+    Parameters
+    ----------
+    rootPath : string, optional
+        Set the root path of the file tree. By default the current
+        directory is used.
+    rule : string or fileTree object, optional
+        Specify which tree abstraction to use. Possible values are
+        'singleFileTree' or 'monthlyFileTree'. If unspecified, first
+        method that finds a matching file is used.
+    dataType : string
+        dataType of the dataContainer to read. Possible values are
+        'timeseries', 'profile', 'track', 'transect', 'slab', etc.
+    tag : string, optional
+    location : string, optional
+    variable : string, optional
+    msldepth : string, optional
+    slevel : string, optional
+        Meta data of the data to look for.
+    startTime : datetime, optional
+    endTime : datetime, optional
+        start and end times of the data. If the data set on disk is
+        longer, than the requested range, only the matching time steps 
+        are read. Saves time in case of long, large data sets.
+    verbose : bool, optional
+        Print information on stdin
+
+    Returns
+    -------
+    dcs : list of dataContainer or meshContainer
+        All data sest that matche the query. In case of meshed data
         returns a meshContainer object
     """
     keys = ['dataType', 'tag', 'location', 'variable',
@@ -114,8 +158,7 @@ def getDataContainer(rootPath=None, rule=None, dataType=None, tag=None,
     dcList = tree.readFiles(**kwargs)
     if len(dcList) == 0:
         raise Exception('Reading data from tree failed: ' + argsStr)
-    return dcList[0]
-
+    return dcList
 
 def saveDataContainerInTree(dcs, rootPath=None, rule=None, dtype=np.float64,
                             overwrite=False, compress=False, digits=None):

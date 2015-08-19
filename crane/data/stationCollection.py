@@ -20,6 +20,7 @@ import crane.data.loadHindcastStations as loadHindcastStations
 from crane.data import harmonicAnalysis
 from crane.plotting.plotBase import createDirectory
 from crane.data import timeSeriesFilters
+from crane.data import dirTreeManager
 
 #-------------------------------------------------------------------------------
 # Constants
@@ -554,15 +555,8 @@ class StationCollection(tinyDB) :
   @classmethod
   def loadFromNetCDFCollection( cls, tag, startTime=None, endTime=None,
                                 obsTag=None, dataDir='data', treeRule=None, dataType=None, variable=None, verbose=True ) :
-    from data.dirTreeManager import netcdfTreeTraverser
-
-    tra = netcdfTreeTraverser( rule=treeRule, verbose=verbose )
-    dcs,st,et = tra.readFiles( tag=tag, dataType=dataType, variable=variable,
-                         startTime=startTime, endTime=endTime, msldepth=None )
-    if not startTime :
-      startTime = st
-    if not endTime :
-      endTime = et
+    dcs = dirTreeManager.getAllDataContainers(tag=tag, dataType=dataType, variable=variable,
+                         startTime=startTime, endTime=endTime, msldepth=None, verbose=True)
     sc = cls( startTime, endTime, obsTag )
     # add to collection
     for dc in dcs :
