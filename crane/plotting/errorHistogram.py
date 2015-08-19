@@ -401,7 +401,7 @@ if __name__=='__main__':
   # generate data
   np.random.seed(int(3411))
   startTime = datetime(2010,1,12,0,0,0)
-  startCorie = datetimeToCorieTime(startTime)
+  startCorie = timeArray.datetimeToCorieTime(startTime)
   #t0 = np.hstack( ( np.linspace(0,12,20), np.linspace(15.33,30,15) ) ) + startCorie
   t0 = np.linspace(0,12,20) + startCorie
   m0 = np.sin(t0)

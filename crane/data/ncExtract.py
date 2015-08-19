@@ -470,7 +470,7 @@ class selfeNCFile(object) :
     """Returns time stamps from given netCDF file in epoch format."""
     startTime = ' '.join(self.ncfile.variables['time'].base_date.split()[2:4])
     startTime = datetime.datetime.strptime( startTime, '%Y-%m-%d %H:%M:%S' )
-    time = simulationToEpochTime( self.ncfile.variables['time'][:], startTime )
+    time = timeArray.simulationToEpochTime( self.ncfile.variables['time'][:], startTime )
     return time
 
   def getStacks( self, startTime, endTime, wholeDays=False ) :

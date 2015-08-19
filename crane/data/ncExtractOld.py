@@ -286,7 +286,7 @@ class ncExtractBase(object) :
     nTime = len(ncfile.dimensions['time'])
     startTime = ' '.join(ncfile.variables['time'].base_date.split()[2:4])
     startTime = datetime.datetime.strptime( startTime, '%Y-%m-%d %H:%M:%S' )
-    time = simulationToEpochTime( ncfile.variables['time'][:], startTime )
+    time = timeArray.simulationToEpochTime( ncfile.variables['time'][:], startTime )
     return time
 
   def getVProf(self, ncfile, varStr, staX, staY, iTri, u, nix) :
