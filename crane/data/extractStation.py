@@ -41,14 +41,16 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 from crane.data import dataContainer
 from crane.data import timeArray
-from data.loadHindcastStations import excludeNaNs,VALID_MIN
-from files.csvStationFile import csvStationFile, csvStationFileWithDepth
+from crane.files import csvStationFile
 
-import extract_mod
+# TODO extracting legacy selfe format is now obsolete?
+#import extract_mod
 
 #------------------------------------------------------------------------------
 # Constants
 #------------------------------------------------------------------------------
+
+VALID_MIN = -89
 
 # use consistent field names throughout the skill assessment package
 fieldNameToFilename = { 'temp':'temp.63',
@@ -296,14 +298,14 @@ def extractForXYZ( dataDir, var, stationFile, startTime, endTime, profile=False,
   """
 
   if profile:
-    csvReader = csvStationFile()
+    csvReader = csvStationFile.csvStationFile()
     csvReader.readFromFile(stationFile)
     tuples = csvReader.getTuples() # all entries (loc,x,y)
     stationNames = [ t[0] for t in tuples ]
     x = np.array([ t[1] for t in tuples ])
     y = np.array([ t[2] for t in tuples ])
   else:
-    csvReader = csvStationFileWithDepth()
+    csvReader = csvStationFile.csvStationFileWithDepth()
     csvReader.readFromFile(stationFile)
     tuples = csvReader.getTuples() # all entries (loc,x,y,z,zType,var)
     stationNames = [ t[0] for t in tuples ]
@@ -380,7 +382,7 @@ def extractForOfferings( dataDir, var, offerings, startTime, endTime, profile=Fa
   """
 
   # read station file
-  staReader = csvStationFile()
+  staReader = csvStationFile.csvStationFile()
   staReader.readFromFile(stationFile)
 
   # screen possible duplicates in the offerings (e.g. instrument can be ignored)
@@ -822,7 +824,9 @@ class extractStation(extractBase) :
       # Reshaping is determined by data type (scalar vs. vector & time series vs. transect)
       nComponents = self.extractor.getNumberOfComponents()
       if not self.profile :
-        ti,di = excludeNaNs( t, d[i,:] )
+        goodIx = np.isfinite(t) * np.isfinite(d[i, :])
+        ti = t[goodIx]
+        di = d[i, goodIx]
         if len(ti) == 0 :
           print 'all bad data',station,len(t)
           continue

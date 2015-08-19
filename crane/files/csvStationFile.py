@@ -6,9 +6,9 @@ Tuomas Karna 2013-11-05
 """
 import csv
 import os
-from data.collection import tupleList
+from crane.data import collection
 
-class csvStationFile(tupleList) :
+class csvStationFile(collection.tupleList) :
   """Comma separated station file reader/writer
   
   Each station has attributes : 'x' and 'y'
@@ -22,7 +22,7 @@ class csvStationFile(tupleList) :
   """
   def __init__(self,source=None) :
     keywords=['location','x','y']
-    tupleList.__init__(self,keywords,source)
+    super(csvStationFile, self). __init__(keywords, source)
   
   def readFromFile(self,filename, verbose=False):
     """Reads data from csv file
@@ -111,7 +111,7 @@ class csvStationFileWithDepth(csvStationFile) :
     self.reg_keywords=['location','x','y','z','zType']
     self.opt_keywords = ['variable']
     allkeywords = self.reg_keywords+self.opt_keywords
-    tupleList.__init__(self,allkeywords,source)
+    super(csvStationFileWithDepth, self).__init__(allkeywords, source)
   
   def readFromFile(self,filename):
     """Reads data from csv file"""
