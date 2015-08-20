@@ -4,16 +4,16 @@ Collection of methods for manipulating mesh data.
 
 Tuomas Karna 2013-02-15
 """
-
 import sys
-import numpy as np
-from scipy.spatial import KDTree, cKDTree
 import time as timeMod
 
-from data.meshContainer import *
-from files.gmshInterface import gmshMesh
-import files.gr3Interface as gr3Interface
-from files.gmshInterface import gmshMesh
+import numpy as np
+from scipy.spatial import KDTree, cKDTree
+
+from crane.data import meshContainer
+from crane.files import gmshInterface
+from crane.files import gr3Interface
+from crane.files import gmshInterface
 
 def readAnyMeshFile( inFile, dataFile=None ) :
   """Reads mesh data in a meshContainer. Supported formats are GR3 (SELFE), MSH (GMSH) and meshContainer netCDF."""

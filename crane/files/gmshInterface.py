@@ -1,7 +1,7 @@
-
 import numpy as np
+
 from crane.data import timeArray
-from data.meshContainer import *
+from crane.data import meshContainer
 
 class gmshMesh(object) :
   """Object that represents GMSH mesh"""

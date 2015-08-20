@@ -4,12 +4,12 @@ Collection of methods for reading/writing gr3 unstructured grid files.
 
 Tuomas Karna 2012-12-04
 """
-
 import string
-import os, sys
+import os
+import sys
 
 from crane.data import timeArray
-from data.meshContainer import *
+from crane.data import meshContainer
 
 def readNodeBlock(infile, nPoints) :
   # iN x y data

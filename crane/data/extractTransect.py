@@ -53,11 +53,11 @@ def extractTransectForBPFile( bpFile, dataDir, varList, startTime, endTime, name
 
   return extractTransectForCoords( x, y, dataDir, varList, startTime, endTime,
                                    name, modelCoordSys )
-  
+
 #-------------------------------------------------------------------------------
 # Classes
 #-------------------------------------------------------------------------------
-class extractTransect(extractBase) :
+class extractTransect(extractStation.extractBase) :
   """A higher lever extraction object for transects"""
   def __init__(self, dataDir, fieldName, firstStack=1, modelCoordSys='spcs') :
     extractBase.__init__(self,dataDir,fieldName,firstStack,modelCoordSys)
@@ -267,7 +267,7 @@ def parseCommandLine() :
   dcs = []
   if readNetcdf :
     # use ncExtract instead of this module
-    from data.ncExtract import extractTransectForBPFile as extractTransectForBPFileNC
+    from crane.data.ncExtract import extractTransectForBPFile as extractTransectForBPFileNC
     dcs = extractTransectForBPFileNC(bpFile, dataDir, varList,
                                      startTime, endTime, name=name,
                                      modelCoordSys=modelCoordSys, stacks=stacks)
@@ -278,11 +278,9 @@ def parseCommandLine() :
 
   for dc in dcs :
     dc.setMetaData( 'tag', runTag )
-  import data.dirTreeManager as dtm
-  rule = dtm.oldTreeRule()
-  #rule = dtm.defaultTreeRule()
-  dtm.saveDataContainerInTree( dcs, path=outDir, rule=rule, dtype=np.float32,
-                               overwrite=True, compress=True, digits=digits )
+  import crane.data.dirTreeManager as dtm
+  dtm.saveDataContainerInTree( dcs, dtype=np.float32, overwrite=True, compress=True,
+                               digits=digits )
 
 if __name__=='__main__' :
   parseCommandLine()

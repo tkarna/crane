@@ -24,8 +24,6 @@ elif 'hopper' in os.environ.get('HOSTNAME', []):
     matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
-from matplotlib.dates import date_ticker_factory
-import matplotlib
 import matplotlib.dates
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 

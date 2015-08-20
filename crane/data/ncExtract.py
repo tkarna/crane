@@ -6,18 +6,21 @@ Tuomas Karna 2013-11-06
 import os
 import sys
 import traceback
-from data.gridUtils import *
-from netCDF4 import Dataset as NetCDFFile
-from glob import glob
+import datetime
 import time as timeMod
+from glob import glob
+
+import numpy as np
+from netCDF4 import Dataset as NetCDFFile
 
 from crane.data import timeArray
 from crane.data import dataContainer
-from data.meshContainer import meshContainer
-from data.selfeGridUtils import verticalCoordinates
-from files.buildPoints import BuildPoint
-from files.csvStationFile import csvStationFile,csvStationFileWithDepth
-from data.extractStation import fieldNameList, fieldNameToFilename
+from crane.data import gridUtils
+from crane.data import meshContainer
+from crane.data import selfeGridUtils
+from crane.files import buildPoints
+from crane.files import csvStationFile
+from crane.data import extractStation
 
 #-------------------------------------------------------------------------------
 # High-level functions
@@ -46,7 +49,7 @@ def extractTrackForDataContainer(dataDir, trackDC, var, name, bpFile=None,
   # Overwrite x,y coords if using alternative coordinate system (open channels)
   if bpFile is not None:
     print 'Overwriting xy from buildpoint'
-    bp = BuildPoint()
+    bp = buildPoints.BuildPoint()
     bp.readFileFromDisk( bpFile )
     x = bp.getX()
     y = bp.getY()
@@ -113,7 +116,7 @@ def extractTransectForBPFile(bpFile, dataDir, varList, startTime, endTime,
   """
   Extracts a transect defined in the bpFile and returns a dataContainer.
   """
-  bpObj = BuildPoint()
+  bpObj = buildPoints.BuildPoint()
   bpObj.readFileFromDisk(bpFile)
   x = bpObj.points[:,1]
   y = bpObj.points[:,2]
@@ -184,7 +187,7 @@ def extractForStations( dataDir, var, stationFile, startTime, endTime,
     raise Exception('File does not exist: '+stationFile)
 
   if profile:
-    csvReader = csvStationFile()
+    csvReader = csvStationFile.csvStationFile()
     csvReader.readFromFile(stationFile)
     tuples = csvReader.getTuples() # all entries (loc,x,y)
     stationNames = [ t[0] for t in tuples ]
@@ -200,7 +203,7 @@ def extractForStations( dataDir, var, stationFile, startTime, endTime,
                          verbose=verbose)
 
   # not profile, depths defined in stationFile
-  csvReader = csvStationFileWithDepth()
+  csvReader = csvStationFile.csvStationFileWithDepth()
   csvReader.readFromFile(stationFile)
   tuples = csvReader.getTuples() # all entries (loc,x,y,z,zType,var)
   stationNames = [ t[0] for t in tuples ]
@@ -323,9 +326,9 @@ def getNCVariableName( var ) :
   if var in ncVarNames :
     # custom names
     return ncVarNames[var]
-  elif var in fieldNameToFilename and fieldNameToFilename[var][:5] == 'trcr_' :
+  elif var in extractStation.fieldNameToFilename and extractStation.fieldNameToFilename[var][:5] == 'trcr_' :
     # derived from tracer model,trcr_X
-    return fieldNameToFilename[var].split('.')[0]
+    return extractStation.fieldNameToFilename[var].split('.')[0]
   else :
     # default: same name
     return var
@@ -455,15 +458,16 @@ class selfeNCFile(object) :
       h0 = 0.01 # bug in old combine version: h0 missing
 
     # init vCoords object
-    self.vCoords = verticalCoordinates(self.nVert, nz, h_s, h_c, ztot=zz,
-                                       sigma=sigma, cs=Cs, h0=h0)
+    self.vCoords = selfeGridUtils.verticalCoordinates(self.nVert, nz, h_s, h_c,
+                                                      ztot=zz, sigma=sigma, cs=Cs,
+                                                      h0=h0)
 
     # construct mesh search object
     if meshSearchObj != None :
       self.meshSearch2d = meshSearchObj
     else :
-      self.meshSearch2d = meshSearch2d( self.nodeX, self.nodeY,
-                                        self.faceNodes, self.edgeNodes )
+      self.meshSearch2d = gridUtils.meshSearch2d( self.nodeX, self.nodeY,
+                                                  self.faceNodes, self.edgeNodes )
     self.headerIsRead = True
 
   def getTime( self ) :
@@ -535,7 +539,7 @@ class selfeExtractBase(object) :
     self.externalMeshSeachObj = meshSearchObj
     if fileTypeStr == None :
       try :
-        self.fileName = fieldNameToFilename[var]
+        self.fileName = extractStation.fieldNameToFilename[var]
         self.fileTypeStr = self.fileName.split('.')[1]
       # Try and guess the file name
       except :
@@ -626,12 +630,12 @@ class selfeExtractBase(object) :
       elevfile = self.getNCFile(iStack,fileName='elev.61')
 
     if horzInterp==None :
-      horzInterp = horizontalInterpolator(self.dataFile.meshSearch2d,
-                                          x,y,stationNames)
+      horzInterp = gridUtils.horizontalInterpolator(self.dataFile.meshSearch2d,
+                                                    x,y,stationNames)
     nodesToRead = horzInterp.getParentNodes()
     parentElems = horzInterp.parentElems
     nodesToReadData = horzInterp.getParentNodes(self.dataFile.discrType)
-    
+
     time = ncfile.getTime()
     nTime = len(time)
 
@@ -705,9 +709,9 @@ class selfeExtractBase(object) :
     """
 
     # create interpolator object for recycling
-    
-    horzInterp = horizontalInterpolator(self.dataFile.meshSearch2d,
-                                        x,y,stationNames)
+
+    horzInterp = gridUtils.horizontalInterpolator(self.dataFile.meshSearch2d,
+                                                  x,y,stationNames)
 
     time = []
     vals = []
@@ -1167,7 +1171,7 @@ class selfeExtract(selfeExtractBase) :
       # merge components
       for i in range(len(compDCs[0])) :
         compDCs[0][i].mergeFields( compDCs[1][i] )
-        compDCs[0][i].fieldNames = fieldNameList.get(varStr,[varStr]) # hvel: ['u','v']
+        compDCs[0][i].fieldNames = extractStation.fieldNameList.get(varStr,[varStr]) # hvel: ['u','v']
         compDCs[0][i].setMetaData( 'variable',varStr )
       return compDCs[0]
 
@@ -1209,7 +1213,7 @@ class selfeExtract(selfeExtractBase) :
       z = np.mean(actualZ[iSta,:])
       x = staX[iSta]
       y = staY[iSta]
-      dc = dataContainer.dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
+      dc = dataContainer.dataContainer('', ta, x,y,z, data, extractStation.fieldNameList.get(varStr,[varStr]),
                           coordSys='spcs',metaData=meta)
       dcs.append(dc)
     return dcs
@@ -1232,7 +1236,7 @@ class selfeExtract(selfeExtractBase) :
       # merge components
       for i in range(len(compDCs[0])) :
         compDCs[0][i].mergeFields( compDCs[1][i] )
-        compDCs[0][i].fieldNames = fieldNameList.get(varStr,[varStr]) # hvel: ['u','v']
+        compDCs[0][i].fieldNames = extractStation.fieldNameList.get(varStr,[varStr]) # hvel: ['u','v']
         compDCs[0][i].setMetaData( 'variable',varStr )
       return compDCs[0]
 
@@ -1291,7 +1295,7 @@ class selfeExtract(selfeExtractBase) :
       meta['bracket'] = 'A'
       meta['variable'] = varStr
       meta['dataType'] = 'profile'
-      dc = dataContainer.dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
+      dc = dataContainer.dataContainer('', ta, x,y,z, data, extractStation.fieldNameList.get(varStr,[varStr]),
                           coordSys='spcs',metaData=meta)
       dcs.append(dc)
     return dcs
@@ -1312,7 +1316,7 @@ class selfeExtract(selfeExtractBase) :
         compDCs.append( dc )
       # merge components
       compDCs[0].mergeFields( compDCs[1] )
-      compDCs[0].fieldNames = fieldNameList.get(varStr,[varStr]) # hvel: ['u','v']
+      compDCs[0].fieldNames = extractStation.fieldNameList.get(varStr,[varStr]) # hvel: ['u','v']
       compDCs[0].setMetaData('variable',varStr)
       return compDCs[0]
 
@@ -1367,7 +1371,7 @@ class selfeExtract(selfeExtractBase) :
     meta['bracket'] = 'A'
     meta['variable'] = varStr
     meta['dataType'] = 'transect'
-    dc = dataContainer.dataContainer('', ta, X,Y,Z, data, fieldNameList.get(varStr,[varStr]),
+    dc = dataContainer.dataContainer('', ta, X,Y,Z, data, extractStation.fieldNameList.get(varStr,[varStr]),
                        coordSys='spcs', metaData=meta, acceptNaNs=True)
     return dc
 
@@ -1385,7 +1389,7 @@ class selfeExtract(selfeExtractBase) :
         compDCs.append( dc )
       # merge components
       compDCs[0].mergeFields( compDCs[1] )
-      compDCs[0].fieldNames = fieldNameList.get(varStr,[varStr]) # hvel: ['u','v']
+      compDCs[0].fieldNames = extractStation.fieldNameList.get(varStr,[varStr]) # hvel: ['u','v']
       compDCs[0].setMetaData('variable',varStr)
       return compDCs[0]
 
@@ -1407,7 +1411,7 @@ class selfeExtract(selfeExtractBase) :
     meta['bracket'] = 'F' if zRelToSurf else 'A'
     meta['variable'] = varStr
     dc = dataContainer.dataContainer('', ta, XX[None,:],YY[None,:],z, data,
-                       fieldNameList.get(varStr,[varStr]),
+                       extractStation.fieldNameList.get(varStr,[varStr]),
                        coordSys='spcs',metaData=meta,acceptNaNs=True)
 
     return dc
@@ -1426,7 +1430,7 @@ class selfeExtract(selfeExtractBase) :
         compDCs.append( dc )
       # merge components
       compDCs[0].mergeFields( compDCs[1] )
-      compDCs[0].fieldNames = fieldNameList.get(varStr,[varStr]) # hvel: ['u','v']
+      compDCs[0].fieldNames = extractStation.fieldNameList.get(varStr,[varStr]) # hvel: ['u','v']
       compDCs[0].setMetaData('variable',varStr)
       return compDCs[0]
 
@@ -1458,7 +1462,7 @@ class selfeExtract(selfeExtractBase) :
     # make a special vcoords evaluator that reads elev.61 if necessary?
     # implement selfeNCFile class that reads header, comps vcoords, getsNodal data
     # selfeExtractBase has two files, dataFile and elevFile, latter always 63 file
-    
+
     # make meshContainer
     meta = {}
     meta['dataType'] = 'slab'
@@ -1471,6 +1475,6 @@ class selfeExtract(selfeExtractBase) :
       meta['bracket'] = 'F' if zRelToSurf else 'A'
       meta['msldepth'] = msldepth
     mc = meshContainer('', ta, x,y,zArray, data, connectivity,
-                       fieldNameList.get(varStr,[varStr]),coordSys='spcs',
+                       extractStation.fieldNameList.get(varStr,[varStr]),coordSys='spcs',
                        metaData=meta,)
     return mc
