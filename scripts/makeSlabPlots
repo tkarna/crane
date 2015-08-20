@@ -10,7 +10,7 @@ Tuomas Karna 2012-12-02
 """
 
 # just a wrapper to parseCommandLine method
-from data.makeSlabPlots import *
+from crane.data import makeSlabPlots
 
 if __name__=='__main__' :
-  parseCommandLine()
+  makeSlabPlots.parseCommandLine()

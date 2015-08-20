@@ -9,7 +9,7 @@ Tuomas Karna 2014-10-10
 """
 
 # just a wrapper to parseCommandLine method
-from data.selfeFluxes import *
+from crane.data import selfeFluxes
 
-if __name__=='__main__' :
-  parseCommandLine()
+if __name__=='__main__':
+  selfeFluxes.parseCommandLine()

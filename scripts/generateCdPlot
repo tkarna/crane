@@ -7,19 +7,19 @@ Tuomas Karna 2013-01-07
 
 import os
 import numpy as np
-import files.gr3Interface as gr3Interface
-from files.buildPoints import BuildPoint
-from files.paramParser import ParamParser
-from data.selfeGridUtils import verticalCoordinates
+from crane.files import gr3Interface
+from crane.files import buildPoints
+from crane.files import paramParser
+from crane.data import selfeGridUtils
 
-from plotting.plotBase import *
-from plotting.plot import VARS,UNITS
-from plotting.slabPlot import slabSnapshotDC
+from crane.plotting.plotBase import *
+from crane.plotting.plot import VARS, UNITS
+from crane.plotting import slabPlot
 
 def generateCdPlot( dataDir, runTag, imgDir, mainChannel, clim=[0.00,0.006] ) :
   
   # load param.in and check bottom friction type
-  params = ParamParser(os.path.join(dataDir,'param.in'))
+  params = paramParser.ParamParser(os.path.join(dataDir,'param.in'))
   useRoughness = params['bfric'] == 1
   Cdmax = params['Cdmax'] if useRoughness else None
   print 'use roughness:',useRoughness
@@ -37,7 +37,7 @@ def generateCdPlot( dataDir, runTag, imgDir, mainChannel, clim=[0.00,0.006] ) :
     eta = np.zeros_like(depth)
 
     # read channel bp file
-    channelBP = BuildPoint()
+    channelBP = buildPoints.BuildPoint()
     channelBP.readFileFromDisk(mainChannel)
     channelX = channelBP.getX()
     channelY = channelBP.getY()
@@ -80,7 +80,7 @@ def generateCdPlot( dataDir, runTag, imgDir, mainChannel, clim=[0.00,0.006] ) :
     eta[estuaryIx] = griddata( channelXY, etaAlong[:,None], gridXY, method='nearest' ).squeeze()
 
     # generate vertical coordinates for eta
-    vcoords = verticalCoordinates.fromVGridFile(os.path.join(dataDir,'vgrid.in'))
+    vcoords = selfeGridUtils.verticalCoordinates.fromVGridFile(os.path.join(dataDir,'vgrid.in'))
     z, kbot, iwet = vcoords.computeVerticalCoordinates(eta,depth)
 
     # compute Cd
@@ -125,7 +125,7 @@ def generateCdPlot( dataDir, runTag, imgDir, mainChannel, clim=[0.00,0.006] ) :
     width += 1.3 # make room for colorbar & labels
     figsize = (width,height)
     fig = plt.figure(figsize=figsize)
-    dia = slabSnapshotDC(clabel='Cd',unit='', logScale=False,
+    dia = slabPlot.slabSnapshotDC(clabel='Cd',unit='', logScale=False,
                           climIsLog=False, clim=clim)
     dia.setupAxes( fig )
     dia.addSample( CdMC, 0, bbox=bBox, plotType='contourf', N=NContour )

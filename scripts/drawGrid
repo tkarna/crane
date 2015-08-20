@@ -6,17 +6,19 @@ Pseudocolor plots of unstructured triangular grids.
 Draws grid bathymetry or whatever is in column 4 of a grid file
 
 """
-import sys,os,getopt
+import sys
+import os
+import getopt
 
-from plotting.plotBase import *
+import matplotlib.pyplot as plt
 import matplotlib.tri as tri
-from matplotlib.lines import Line2D  
+from matplotlib.lines import Line2D
 import numpy as np
 import math
 
 import cProfile
 
-import files.grid as gr
+import crane.files.grid as gr
 
 def signa(x1, x2, x3, y1, y2, y3):    # area formed by 3 points
    """Compute the signed area of an element given the 3 vertices"""
@@ -24,7 +26,7 @@ def signa(x1, x2, x3, y1, y2, y3):    # area formed by 3 points
 
 def computeER(area):
     """Compute the equivalent radius given the area"""
-    return 2.0 * math.sqrt(area) / 3.1415926535897
+    return 2.0 * math.sqrt(area) / np.pi
 
 def computeAreas(tri):
     areas = tri.x * 0.0

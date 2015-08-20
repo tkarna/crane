@@ -14,7 +14,7 @@ Tuomas Karna 2013-01-07
 """
 
 # just a wrapper to parseCommandLine method
-from plotting.generateTimeSeriesPlot import *
+from crane.plotting import generateTimeSeriesPlot
 
 if __name__=='__main__' :
-  parseCommandLine()
+  generateTimeSeriesPlot.parseCommandLine()

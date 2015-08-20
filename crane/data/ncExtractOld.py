@@ -11,7 +11,7 @@ import time as timeMod
 
 from crane.data import timeArray
 from crane.data import dataContainer
-from data.meshContainer import meshContainer
+from crane.data import meshContainer
 from data.extractStation import fieldNameList, fieldNameToFilename
 from data.selfeGridUtils import *
 from files.csvStationFile import csvStationFile, csvStationFileWithDepth
@@ -1140,7 +1140,7 @@ class ncExtractSlab(ncExtractBase) :
     else :
       meta['bracket'] = 'F' if zRelativeToSurf else 'A'
       meta['msldepth'] = msldepth
-    mc = meshContainer('', ta, x,y,z, data, connectivity, fieldNameList.get(varStr,[varStr]), coordSys='spcs',metaData=meta)
+    mc = meshContainer.meshContainer('', ta, x,y,z, data, connectivity, fieldNameList.get(varStr,[varStr]), coordSys='spcs',metaData=meta)
     return mc
 
 def test() :

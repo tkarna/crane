@@ -4,8 +4,8 @@ Converts SELFE *.sta station file to comma separated value (*.csv) format.
 
 Tuomas Karna 2013-11-10
 """
-from files.stationFile import *
-from files.csvStationFile import *
+from crane.files import stationFile
+from crane.files import csvStationFile
 from optparse import OptionParser
 
 def convert( inputStaFile, outputCSVFile ):
@@ -13,11 +13,11 @@ def convert( inputStaFile, outputCSVFile ):
   
   # read legacy station file
   print 'Reading',inputStaFile
-  staFile = StationFile()
+  staFile = stationFile.StationFile()
   staFile.readFileFromDisk(inputStaFile)
   
   # csv
-  csvFile = csvStationFile()
+  csvFile = csvStationFile.csvStationFile()
   for sta in staFile.stations :
     x,y = staFile.getLocation(sta)
     csvFile.addSample( location=sta, x=x, y=y )

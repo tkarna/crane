@@ -7,6 +7,7 @@ Tuomas Karna 2012-12-04
 import string
 import os
 import sys
+import numpy as np
 
 from crane.data import timeArray
 from crane.data import meshContainer
@@ -49,7 +50,7 @@ def readGR3FileToMC(inputFilename, fieldName='depth') :
   data = np.reshape(vals, (-1,1,1) )
   z = np.zeros_like(x)
   ta = timeArray.timeArray( np.array([0]), 'epoch' )
-  mc = meshContainer( description, ta,x,y,z,data,conn,[fieldName],coordSys='spcs')
+  mc = meshContainer.meshContainer( description, ta,x,y,z,data,conn,[fieldName],coordSys='spcs')
   # append boundary information
   for bnd in boundaries :
     print bnd.type, bnd.tag, len(bnd.nodes)
@@ -104,7 +105,7 @@ def readGR3File(inputFilename) :
       for iN in range(nBndNodes) :
         tmpList.append( int(infile.readline()) )
       nodes = np.array(tmpList,dtype=int)-1
-      boundaries.append( meshBoundary( 'open', tag, nodes ) )
+      boundaries.append( meshContainer.meshBoundary( 'open', tag, nodes ) )
     nLandBndSegments = int(infile.readline().split()[0])
     nLandBndNodesTot = int(infile.readline().split()[0])
     landBndTags = range(nOpenBndSegments+1,nOpenBndSegments+nLandBndSegments+1)
@@ -127,7 +128,7 @@ def readGR3File(inputFilename) :
         tmpList.append( int(infile.readline()) )
       #tmpList = fromfile(infile,dtype=int,count=nBndNodes,sep=' ')
       nodes = np.array(tmpList,dtype=int)-1
-      boundaries.append( meshBoundary( landType, tag, nodes ) )
+      boundaries.append( meshContainer.meshBoundary( landType, tag, nodes ) )
 
   infile.close()
 

@@ -6,7 +6,7 @@ Tuomas Karna 2013-11-07
 """
 
 # just a wrapper to parseCommandLine method
-from data.computeSkillMetrics import *
+from crane.data import computeSkillMetrics
 
 if __name__=='__main__' :
-  parseCommandLine()
+  computeSkillMetrics.parseCommandLine()

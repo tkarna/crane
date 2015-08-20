@@ -13,17 +13,11 @@ import datetime
 import sys
 from optparse import OptionParser
 
-from data.dataContainer import dataContainer
-from data.meshContainer import meshContainer
-from data.timeArray import *
-from files.stationFile import StationFile
-from files.buildPoints import BuildPoint
+from crane.data import dataContainer
 
-from plotting.plot import VARS,UNITS
-from plotting.plotBase import createDirectory, saveFigure, parseTimeStr
-#from plotting.transectPlot import *
-#from plotting.slabPlot import *
-from plotting.profilePlot import *
+from crane.plotting.plot import VARS,UNITS
+from crane.plotting.plotBase import createDirectory, saveFigure, parseTimeStr
+from crane.plotting import profilePlot
 
 #-------------------------------------------------------------------------------
 # Main routine
@@ -48,7 +42,7 @@ def plotProfile( userRunTag, ncfiles, imgDir, fPrefix='prof',filetype='png',
 
   dcs = []
   for f in ncfiles :
-    dc = dataContainer.loadFromNetCDF(f)
+    dc = dataContainer.dataContainer.loadFromNetCDF(f)
     dcs.append(dc)
 
   if startTime or endTime :
@@ -60,7 +54,7 @@ def plotProfile( userRunTag, ncfiles, imgDir, fPrefix='prof',filetype='png',
     for i in range(len(dcs)) :
       dcs[i] = dcs[i].timeWindow( startTime, endTime, includeEnd=True )
 
-  dia = stackProfileTimeSeriesDC(ylabel='depth',xlabel='',cmap=cmap,
+  dia = profilePlot.stackProfileTimeSeriesDC(ylabel='depth',xlabel='',cmap=cmap,
                                  plotheight=3.2, **kwargs)
 
   for j,dc in enumerate(dcs) :

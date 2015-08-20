@@ -9,7 +9,7 @@ Tuomas Karna 2012-09-28
 """
 
 import sys
-from files.paramParser import ParamParser
+from crane.files import paramParser
 
 # human readable explanation
 explanation = { 'ics':'coord sys: 1=cartesian 2=latlon',
@@ -76,13 +76,7 @@ def compareParamFiles( files ) :
   # each entry is a dictionary of parameters and values
   p = dict()
   for tag in files :
-    p[tag] = ParamParser( files[tag] )._dict
-
-  #p['run29_29'] = ParamParser('param.in.run29')._dict
-  #p['db14'] = ParamParser('param.in.db14')._dict
-  #p['db16'] = ParamParser('param.in.db16')._dict
-  #p['db22'] = ParamParser('param.in.db22')._dict
-  #p['db26'] = ParamParser('param.in.db26')._dict
+    p[tag] = paramParser.ParamParser( files[tag] )._dict
 
   # all params
   allParams = set()

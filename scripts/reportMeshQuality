@@ -6,7 +6,7 @@ Tuomas Karna 2014-06-18
 """
 
 # just a wrapper to parseCommandLine method
-from data.reportMeshQuality import *
+from crane.data import reportMeshQuality
 
 if __name__=='__main__' :
-  parseCommandLine()
+  reportMeshQuality.parseCommandLine()

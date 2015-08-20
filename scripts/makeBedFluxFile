@@ -9,7 +9,7 @@ jesse.e.lopez 2014-09-26
 """
 
 # just a wrapper to parseCommandLine method
-from files import makeBedFluxFile as mbff
+from crane.files import makeBedFluxFile as mbff
 
 if __name__ == '__main__':
     mbff.parseCommandLine()

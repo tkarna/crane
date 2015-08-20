@@ -23,7 +23,7 @@ Tuomas Karna 2012-11-11
 """
 
 # just a wrapper to parseCommandLine method
-from data.makeTransects import *
+from crane.data import makeTransects
 
 if __name__=='__main__' :
-  parseCommandLine()
+  makeTransects.parseCommandLine()

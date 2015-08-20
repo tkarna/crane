@@ -9,11 +9,7 @@ import os
 import numpy as np
 from scipy.spatial import cKDTree
 
-import files.gr3Interface as gr3Interface
-
-from plotting.plot import VARS,UNITS
-from plotting.slabPlot import slabSnapshotDC, plt
-from plotting.plotBase import createDirectory, saveFigure
+from crane.files import gr3Interface
 
 def evalDistanceToPoints( mc, cloudX, cloudY ) :
   """Computes the distance from each mesh node to the closes point."""
@@ -27,7 +23,6 @@ def evalDistanceToPoints( mc, cloudX, cloudY ) :
 def generateNudge( gridFile, dt ) :
 
   # load hgrid.gr3 in meshContainer
-  import files.gr3Interface as gr3Interface
   depthMC = gr3Interface.readGR3FileToMC(gridFile)
 
   # find open bnd with most nodes (must be pacific boudary)

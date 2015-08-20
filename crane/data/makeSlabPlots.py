@@ -13,7 +13,7 @@ import datetime
 import sys
 from optparse import OptionParser
 
-from data.meshContainer import meshContainer
+from crane.data import meshContainer
 from crane.data import timeArray
 from data.collection import uniqueList
 from files.stationFile import StationFile
@@ -190,9 +190,9 @@ def makeSlabPlots(netCDFFiles, imgDir, runTag=None, startTime=None,
   dcs = []
   for fn in netCDFFiles :
     if startTime and endTime and startTime != endTime :
-      dc = meshContainer.loadFromNetCDF(fn, startTime, endTime)
+      dc = meshContainer.meshContainer.loadFromNetCDF(fn, startTime, endTime)
     else:
-      dc = meshContainer.loadFromNetCDF(fn)
+      dc = meshContainer.meshContainer.loadFromNetCDF(fn)
     if bBox :
       dc = dc.cropGrid(bBox)
     dcs.append(dc)

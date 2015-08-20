@@ -15,8 +15,8 @@ import shutil
 from subprocess import call
 import numpy as np
 from optparse import OptionParser
-from files.grid import *
-from files.paramParser import *
+from crane.files import grid
+from crane.files import paramParser
 
 #-------------------------------------------------------------------------------
 # Constants 
@@ -45,19 +45,19 @@ def genBoundary(sPath, ignore):
 def makeFgIn(sPath, ignore):
     """ Creates gen_fg.in file required as input for gen_fg program """
     file = os.path.join(sPath, 'hgrid.gr3')
-    grid = readHGrid(file)
+    gridObj = grid.readHGrid(file)
     # If open boundaries are to be ignored, get them from list and create
     # a list of boundaries to be included for creation of boundary files.
     # Otherwise, all open boundaries will be forced.
     if ignore != []:
-        nOB = grid.obNodes.nB - len(ignore)
+        nOB = gridObj.obNodes.nB - len(ignore)
         bndList = []
-        for bnd in range(1,grid.obNodes.nB+1):
+        for bnd in range(1,gridObj.obNodes.nB+1):
             if bndList.count(bnd):
                 continue
             bndList.append(bnd)
     else:
-        nOB = grid.obNodes.nB
+        nOB = gridObj.obNodes.nB
         bndList = range(1,nOB+1)
 
     try:
@@ -110,7 +110,7 @@ def create3DFiles(lPath, sPath, outputsPath, nDays):
     # UV = 3
     #makeInterpIn(nDays, 3)
     #gen_fg = "%s/interpolate_variables_selfe4" % BIN_PATH
-    #call([gen_fg])      
+    #call([gen_fg])
 
     # Back to where we came from
     os.chdir(oldWD)
@@ -118,22 +118,22 @@ def create3DFiles(lPath, sPath, outputsPath, nDays):
 def makeTimeIn(sPath, inFile, nDays, timestep, ignore=[]):
     """ Creates input file for timeint.in code to interp *3D.th files """
     file = os.path.join(sPath,'hgrid.gr3')
-    grid = readHGrid(file)
+    gridObj = grid.readHGrid(file)
 
     # If open boundaries are to be ignored, get them from list and create
     # a list of boundaries to be included for creation of boundary files.
     # Otherwise, all open boundaries will be forced.
     if ignore != []:
-        nOB = grid.obNodes.nB - len(ignore)
+        nOB = gridObj.obNodes.nB - len(ignore)
         bndList = []
-        for bnd in range(1,grid.obNodes.nB+1):
+        for bnd in range(1,gridObj.obNodes.nB+1):
             if ignore.count(bnd):
                 continue
             bndList.append(bnd)
     else:
-        nOB = grid.obNodes.nB
+        nOB = gridObj.obNodes.nB
         bndList = range(1,nOB+1)
-    
+
     # Get number of nodes from open boundaries that will be used for forcings
     # nNodesOB = np.zeros((nOB))
     # for bnd in range(len(bndList)): 
@@ -202,7 +202,7 @@ def setupNestedRun(lPath, sPath, timestep, outputsPath, nDays, ignore):
     genBoundary(sPath, ignore)
     create3DFiles(lPath, sPath, outputsPath, nDays)
     # If timestep of new run doesn't match old run, interpolate
-    param = ParamParser("%s/param.in" % lPath)
+    param = paramParser.ParamParser("%s/param.in" % lPath)
     interpTime3D(sPath, outputsPath, nDays, timestep, ignore)
 
 #-------------------------------------------------------------------------------

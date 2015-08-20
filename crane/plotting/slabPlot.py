@@ -7,7 +7,6 @@ Tuomas Karna 2012-11-27
 """
 
 import numpy as np
-from data.meshContainer import meshContainer
 import datetime
 from crane.data import timeArray
 from plotting.plotBase import *
@@ -478,7 +477,8 @@ if __name__ == '__main__' :
   plt.show()
 
   # example with meshContainer
-  d0 =  meshContainer.loadFromNetCDF('/home/tuomas/workspace/cmop/utils/processing/data/tmp/test_hvel_400_2010-06-14_2010-06-15.nc')
+  from crane.data import meshContainer
+  d0 =  meshContainer.meshContainer.loadFromNetCDF('/home/tuomas/workspace/cmop/utils/processing/data/tmp/test_hvel_400_2010-06-14_2010-06-15.nc')
   d0 = d0.cropGrid( [4000,1e5,200,1e5] )
   print d0
   print d0.x.shape, d0.y.shape, d0.connectivity.shape, d0.data[:,0,-1].shape

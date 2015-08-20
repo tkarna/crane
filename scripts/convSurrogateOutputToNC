@@ -8,7 +8,7 @@ Tuomas Karna 2013-11-06
 """
 
 # just a wrapper to parseCommandLine method
-from data.convSurrogateOutputToNC import *
+from crane.data import convSurrogateOutputToNC
 
 if __name__=='__main__' :
-  parseCommandLine()
+  convSurrogateOutputToNC.parseCommandLine()

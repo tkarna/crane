@@ -11,7 +11,7 @@ Tuomas Karna 2012-11-29
 """
 
 # just a wrapper to parseCommandLine method
-from data.auvInterface import *
+from crane.data import auvInterface
 
 if __name__=='__main__' :
-  parseCommandLine()
+  auvInterface.parseCommandLine()

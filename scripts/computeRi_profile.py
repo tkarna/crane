@@ -4,11 +4,9 @@ A script for computing gradient Richardson number from model profiles.
 
 import numpy as np
 from crane.data import dataContainer
-from crane.data import timeArray
-from data.stationCollection import *
-import data.dirTreeManager as dtm
-from data.pca import *
-from data.eqState import *
+from crane.data import dirTreeManager as dtm
+from crane.data import pca
+from crane.data import eqState
 from scipy.spatial import cKDTree
 from plotting.plotBase import convertEpochToPlotTime
 
@@ -34,7 +32,7 @@ def computeRi( tag, loc ) :
     A = np.reshape( A, (-1,dc.data.shape[1]) )
     print A.mean(axis=0)
     print A.shape
-    p = PCA(A,fraction=0.9)
+    p = pca.PCA(A,fraction=0.9)
     print "npc:", p.npc
     print "% variance:", p.sumvariance * 100
     B = p.pc()
@@ -73,7 +71,8 @@ def computeRi( tag, loc ) :
   T_cntr = np.tile(salt.time.array,(z_cntr.shape[0],1))
   print z_cntr.shape, T_cntr.shape
   # density gradient
-  drhodz = equationOfStateJackettAlpha( s_cnrt, t_cnrt, p_cntr )*dtdz + equationOfStateJackettBeta( s_cnrt, t_cnrt, p_cntr )*dsdz
+  drhodz = (eqState.equationOfStateJackettAlpha(s_cnrt, t_cnrt, p_cntr)*dtdz +
+            eqState.equationOfStateJackettBeta(s_cnrt, t_cnrt, p_cntr)*dsdz)
   # gradient Richardson number
   rho0 = 1000.0
   g = 9.81
@@ -113,7 +112,7 @@ def computeRi( tag, loc ) :
     y = y*np.ones((nZ,))
     z = Z
     data = C[:,None,:]
-    ta = profDC.time #timeArray(T[:,0],'epoch')
+    ta = profDC.time
     dc = dataContainer.dataContainer('', ta, x,y,z, data, fieldNames,
                         coordSys='spcs',metaData=meta,acceptNaNs=True)
     return dc

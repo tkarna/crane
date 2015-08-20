@@ -128,7 +128,7 @@ def skillExtract(startTime, endTime, getObs, runTag, modelDir, hindcastTag,
     offerings = obsColl.getSubset(exclude=True, location=excludedStations).getOfferings()
   elif extractMode == 'all' :
     # extract for all possible station locations and depth
-    import data.netcdfCacheInterface as netcdfDB
+    from crane.data import netcdfCacheInterface as netcdfDB
     offerings = netcdfDB.getAllOfferings(variables=variables)
   else :
     raise Exception( 'extractMode not supported: '+extractMode )

@@ -5,10 +5,9 @@ A script for computing gradient Richardson number from Winched Profiler track.
 import numpy as np
 from crane.data import dataContainer
 from crane.data import timeArray
-from data.stationCollection import *
-import data.dirTreeManager as dtm
-from data.pca import *
-from data.eqState import *
+from crane.data import dirTreeManager as dtm
+from crane.data import pca
+from crane.data import eqState
 from scipy.interpolate import interp1d, griddata
 from scipy.signal import convolve
 from scipy.spatial import cKDTree
@@ -18,12 +17,6 @@ from plotting.plotBase import convertEpochToPlotTime
 # Constants 
 #-------------------------------------------------------------------------------
 
-oldRule = dtm.oldTreeRule()
-defRule = dtm.defaultTreeRule()
-
-tra = dtm.netcdfTreeTraverser( rule=oldRule )
-tra2 = dtm.netcdfTreeTraverser( rule=defRule )
-
 #-------------------------------------------------------------------------------
 # Functions
 #-------------------------------------------------------------------------------
@@ -32,7 +25,7 @@ def doPCA( dc ) :
   A = dc.data[0,:2,:].T.copy()
   #print A.mean(axis=0)
   #print A.shape
-  p = PCA(A,fraction=0.9999)
+  p = pca.PCA(A,fraction=0.9999)
   print "npc:", p.npc
   print "% variance:", p.sumvariance * 100
   B = p.pc()
@@ -261,7 +254,8 @@ def computeRi( tag, loc ) :
   Zcntr = -Z[:,:-1] + 0.5*dz
   Tcntr = T[:,:-1]
   # density gradient
-  drhodz = equationOfStateJackettAlpha( s_cnrt, t_cnrt, p_cntr )*dtdz + equationOfStateJackettBeta( s_cnrt, t_cnrt, p_cntr )*dsdz
+  drhodz = (eqState.equationOfStateJackettAlpha(s_cnrt, t_cnrt, p_cntr)*dtdz +
+            eqState.equationOfStateJackettBeta(s_cnrt, t_cnrt, p_cntr)*dsdz)
   # gradient Richardson number
   rho0 = 1000.0
   g = 9.81

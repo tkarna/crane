@@ -24,13 +24,9 @@ import os
 import datetime
 import struct
 
-from data.makeTransects import *
-from data.dataContainer import dataContainer
-from data.timeArray import *
+from crane.data import dataContainer
+from crane.data import timeArray
 from scipy.interpolate import interp1d, griddata
-from plotting.plotBase import convertEpochToPlotTime
-from plotting.transectPlot import *
-from data.timeArray import *
 
 # output direct access binary for fortran
 def thWriteBinary(fn, t, var, nlevels=37):
@@ -79,8 +75,8 @@ def transect2Nested(sFile, tFile, startTime, endTime, dt, nLevels):
     #dt = 36.0
 
     # read the extracted temperature transect
-    dctemp = dataContainer.loadFromNetCDF(tFile)
-    ta = generateSimulationTimeArray(startTime,endTime,dt)
+    dctemp = dataContainer.dataContainer.loadFromNetCDF(tFile)
+    ta = timeArray.generateSimulationTimeArray(startTime,endTime,dt)
     dctemp = dctemp.interpolateInTime(ta,acceptNaNs=True)
     (Ttemp,Xtemp,Ytemp,Ztemp,Ctemp) = dcToTransect( dctemp )
     ind = np.isnan(Ctemp).any()
@@ -88,8 +84,8 @@ def transect2Nested(sFile, tFile, startTime, endTime, dt, nLevels):
     thWriteBinary('temp3D.th', Ttemp, Ctemp, nLevels)
 
     # read the extracted salt transect
-    dcsalt = dataContainer.loadFromNetCDF(sFile)
-    ta = generateSimulationTimeArray(startTime,endTime,dt)
+    dcsalt = dataContainer.dataContainer.loadFromNetCDF(sFile)
+    ta = timeArray.generateSimulationTimeArray(startTime,endTime,dt)
     dcsalt = dcsalt.interpolateInTime(ta,acceptNaNs=True)
     (Tsalt,Xsalt,Ysalt,Zsalt,Csalt) = dcToTransect( dcsalt )
     # write binary

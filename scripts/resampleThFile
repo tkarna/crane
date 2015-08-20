@@ -6,9 +6,10 @@ Tuomas Karna 2013-05-20
 """
 import sys
 import numpy as np
+import datetime
 from scipy.interpolate import interp1d
-from data.timeArray import *
-from plotting.plotBase import parseTimeStr
+from crane.data import timeArray
+from crane.plotting.plotBase import parseTimeStr
 
 def resampleThFile(infile, outfile, simStartDate, startTime, endTime,dt=None, colIx=None, scalar=1.0) :
 
@@ -24,13 +25,14 @@ def resampleThFile(infile, outfile, simStartDate, startTime, endTime,dt=None, co
   vals = np.vstack((vals[0,:],vals))
   
   # convert time to epoch for cropping and interpolation
-  oldta = timeArray(time, 'simulation', simStartDate).asEpoch()
+  oldta = timeArray.timeArray(time, 'simulation', simStartDate).asEpoch()
   olddt = time[2]-time[1]
   newdt = dt if dt else olddt
   print 'old dt:', olddt
   print 'new dt:', newdt
-  newta = generateSimulationTimeArray(startTime+datetime.timedelta(seconds=newdt),
-                                      endTime,newdt).asEpoch()
+  newta = timeArray.generateSimulationTimeArray(startTime +
+                                                datetime.timedelta(seconds=newdt),
+                                                endTime,newdt).asEpoch()
   print ' * old time steps:\n',oldta
   print ' * new time steps:\n',newta
   

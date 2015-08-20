@@ -4,24 +4,26 @@ Merges dataContainer files in time.
 
 Tuomas Karna 2015-01-09
 """
-import sys
-from data.dataContainer import *
-import data.dirTreeManager as dtm
+from crane.data import dataContainer
+from crane.data import dirTreeManager as dtm
+
 
 def mergeDataContainersInTime(fileList):
     first = fileList[0]
-    masterDC = dataContainer.loadFromNetCDF(first)
+    masterDC = dataContainer.dataContainer.loadFromNetCDF(first)
 
     for next in fileList[1:]:
-        dc = dataContainer.loadFromNetCDF(next)
+        dc = dataContainer.dataContainer.loadFromNetCDF(next)
         masterDC.mergeTemporal(dc)
 
     return masterDC
 
-#-------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Main: Commandline interface
-#-------------------------------------------------------------------------------
-def parseCommandLine() :
+# ------------------------------------------------------------------------------
+
+
+def parseCommandLine():
     from optparse import OptionParser
 
     parser = OptionParser()
@@ -38,13 +40,12 @@ def parseCommandLine() :
     masterDC = mergeDataContainersInTime(fileList)
 
     if outfile is None:
-        import data.dirTreeManager as dtm
-        rule = dtm.oldTreeRule()
+        rule = 'singleFile'
         dtm.saveDataContainerInTree(masterDC, rule=rule,
                                     dtype=np.float32, overwrite=True,
                                     compress=True)
     else:
         masterDC.saveAsNetCDF(outfile)
 
-if __name__=='__main__' :
+if __name__ == '__main__':
     parseCommandLine()

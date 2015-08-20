@@ -16,7 +16,6 @@ import matplotlib.gridspec as gridspec
 
 import data.dirTreeManager as dtm
 from data.dataContainer import dataContainer
-from data.meshContainer import meshContainer
 from crane.data import timeArray
 from files.stationFile import StationFile
 from files.buildPoints import BuildPoint
