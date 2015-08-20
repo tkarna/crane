@@ -66,7 +66,7 @@ def getDataContainer(rootPath=None, rule=None, dataType=None, tag=None,
         directory is used.
     rule : string or fileTree object, optional
         Specify which tree abstraction to use. Possible values are
-        'singleFileTree' or 'monthlyFileTree'. If unspecified, first
+        'singleFile' or 'monthlyFile'. If unspecified, first
         method that finds a matching file is used.
     dataType : string
         dataType of the dataContainer to read. Possible values are
@@ -80,7 +80,7 @@ def getDataContainer(rootPath=None, rule=None, dataType=None, tag=None,
     startTime : datetime, optional
     endTime : datetime, optional
         start and end times of the data. If the data set on disk is
-        longer, than the requested range, only the matching time steps 
+        longer, than the requested range, only the matching time steps
         are read. Saves time in case of long, large data sets.
     verbose : bool, optional
         Print information on stdin
@@ -110,7 +110,7 @@ def getAllDataContainers(rootPath=None, rule=None, dataType=None, tag=None,
         directory is used.
     rule : string or fileTree object, optional
         Specify which tree abstraction to use. Possible values are
-        'singleFileTree' or 'monthlyFileTree'. If unspecified, first
+        'singleFile' or 'monthlyFile'. If unspecified, first
         method that finds a matching file is used.
     dataType : string
         dataType of the dataContainer to read. Possible values are
@@ -124,7 +124,7 @@ def getAllDataContainers(rootPath=None, rule=None, dataType=None, tag=None,
     startTime : datetime, optional
     endTime : datetime, optional
         start and end times of the data. If the data set on disk is
-        longer, than the requested range, only the matching time steps 
+        longer, than the requested range, only the matching time steps
         are read. Saves time in case of long, large data sets.
     verbose : bool, optional
         Print information on stdin
@@ -174,7 +174,7 @@ def saveDataContainerInTree(dcs, rootPath=None, rule=None, dtype=np.float64,
         directory is used.
     rule : string or fileTree object, optional
         Specify which tree abstraction to use. Possible values are
-        'singleFileTree' or 'monthlyFileTree'. If unspecified, first
+        'singleFile' or 'monthlyFile'. If unspecified, first
         method that finds a matching file is used.
     dtype : numpy dtype, optional
         data type of the arrays to write to disk. If unspecified
