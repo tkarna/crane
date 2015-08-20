@@ -610,7 +610,7 @@ class dataContainer(object) :
   def loadFromNetCDF( cls, filename, startTime=None, endTime=None, includeEnd=False, verbose=True ) :
     """Creates a new dataContainer from netCDF file.
     """
-    nc = netcdfIO(filename)
+    nc = netcdfIO.netcdfIO(filename)
     dc = nc.readToDataContainer( startTime, endTime, includeEnd=includeEnd, verbose=verbose )
     return dc
 

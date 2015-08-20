@@ -52,7 +52,7 @@ def _runTasksInQueue( num_threads, tasks ) :
   tasks - list of (function,args)
   """
   pool = multiprocessing.Pool(num_threads)
-  p = pool.map_async(_launch_job, tasks)
+  p = pool.map_async(_launch_job, tasks, chunksize=1)
   timeLimit = 24*3600
   try:
     result = p.get(timeLimit)

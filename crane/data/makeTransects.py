@@ -3,17 +3,16 @@ import datetime
 import sys
 from optparse import OptionParser
 
-import data.stationCollection as StationCollection
-from data.loadHindcastStations import readDateRange
 from crane.data import dataContainer
 from crane.data import timeArray
-from data.collection import uniqueList
-from files.stationFile import StationFile
-from files.csvStationFile import csvStationFile
+from crane.data import collection
+from crane.files import csvStationFile
 
-from plotting.plot import VARS,UNITS
-from plotting.plotBase import *
-from plotting.transectPlot import stackTransectPlotDC, plt
+import matplotlib
+import matplotlib.pyplot as plt
+from crane.plotting.plot import VARS,UNITS
+from crane.plotting.plotBase import saveFigure, createDirectory
+from crane.plotting import transectPlot
 
 import multiprocessing
 # NOTE this must not be a local function in runTasksInQueue
@@ -37,7 +36,7 @@ def _runTasksInQueue( num_threads, tasks ) :
   tasks - list of (function,args)
   """
   pool = multiprocessing.Pool(num_threads)
-  p = pool.map_async(_launch_job, tasks)
+  p = pool.map_async(_launch_job, tasks, chunksize=1)
   timeLimit = 24*3600
   try:
     result = p.get(timeLimit)
@@ -48,7 +47,7 @@ def processFrame(dcs, logScaleVars, xlim, ylim, nCLines, defaultNCLines, clim, d
                  cmapDict, stationFile, diff, imgDir, fPrefix, filetype,
                  maxPlotSize=10.0):
     # make empty plot
-    dia = stackTransectPlotDC(figwidth=maxPlotSize,
+    dia = transectPlot.stackTransectPlotDC(figwidth=maxPlotSize,
                               plotheight=2.0/10.0*maxPlotSize)
     it = 0
     # round time to nearest minute
@@ -128,7 +127,7 @@ def processFrame(dcs, logScaleVars, xlim, ylim, nCLines, defaultNCLines, clim, d
 
     # save to disk
     dateStr = dateStr.replace(' ','_').replace(':','-')
-    file = '_'.join([fPrefix,transectName,'-'.join(uniqueList(varList)),dateStr])
+    file = '_'.join([fPrefix,transectName,'-'.join(collection.uniqueList(varList)),dateStr])
     saveFigure(imgDir,file,filetype,verbose=True, dpi=100, bbox_tight=True)
     plt.close(dia.fig)
 
@@ -205,13 +204,13 @@ def makeTransects(netCDFFiles, imgDir, startTime=None, endTime=None, skip=1,
 
   dcs = []
   for fn in netCDFFiles :
-    dc = dataContainer.loadFromNetCDF(fn)
+    dc = dataContainer.dataContainer.loadFromNetCDF(fn)
     if ylim is None:
         ylim = [np.nanmin(dc.z), np.nanmax(dc.z)]
     dcs.append( dc )
 
   if stationFilePath :
-    stationFile = csvStationFile()
+    stationFile = csvStationFile.csvStationFile()
     stationFile.readFromFile( stationFilePath )
   else :
     stationFile = None
