@@ -9,6 +9,7 @@ Tuomas Karna 2012-11-26
 """
 import numpy as np
 from crane.data import dataContainer
+from crane.data import netcdfIO
 
 
 class meshContainer(dataContainer.dataContainer) :
@@ -147,7 +148,7 @@ class meshContainer(dataContainer.dataContainer) :
   def loadFromNetCDF( cls, filename, startTime=None, endTime=None, includeEnd=False ) :
     """Creates a new dataContainer from netCDF file.
     """
-    nc = netcdfIO(filename)
+    nc = netcdfIO.netcdfIO(filename)
     mc = nc.readToDataContainer( startTime, endTime, includeEnd=includeEnd )
     return mc
 

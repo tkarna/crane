@@ -15,16 +15,19 @@ from optparse import OptionParser
 
 from crane.data import meshContainer
 from crane.data import timeArray
-from data.collection import uniqueList
-from files.stationFile import StationFile
-from files.buildPoints import BuildPoint
-from data.selfeGridUtils import readAnyMeshFile
+from crane.data import collection
+from crane.files import stationFile
+from crane.files import buildPoints
+from crane.data.selfeGridUtils import readAnyMeshFile
 
 import traceback
 
-from plotting.plot import VARS,UNITS
-from plotting.slabPlot import stackSlabPlotDC
-from plotting.plotBase import *
+import matplotlib.pyplot as plt
+import matplotlib
+from crane.plotting.plot import VARS, UNITS
+from crane.plotting import slabPlot
+from crane.plotting.plotBase import createDirectory
+from crane.plotting.plotBase import saveFigure
 
 import multiprocessing
 # NOTE this must not be a local function in runTasksInQueue
@@ -60,7 +63,7 @@ def _runTasksInQueue( num_threads, tasks ) :
     raise e
 
 def processFrame(dcs, time, logScaleVars, aspect, clim, diffClim, cmap, bBox,
-                 transectFile, stationFile, bathMC, isobaths, diff, imgDir, fPrefix, filetype,
+                 transectFile, stationFileObj, bathMC, isobaths, diff, imgDir, fPrefix, filetype,
                  maxPlotSize=6.0):
   """Plots only the first time step of the meshContainers."""
   it = 0
@@ -71,7 +74,7 @@ def processFrame(dcs, time, logScaleVars, aspect, clim, diffClim, cmap, bBox,
   #height = minsize if aspect > 1.0 else minsize/aspect
   #width = minsize*aspect if aspect > 1.0 else minsize
   width += 1.3 # make room for colorbar & labels
-  dia = stackSlabPlotDC(figwidth=width, plotheight=height)
+  dia = slabPlot.stackSlabPlotDC(figwidth=width, plotheight=height)
 
   varList = []
   for i,dc in enumerate(dcs) :
@@ -127,7 +130,7 @@ def processFrame(dcs, time, logScaleVars, aspect, clim, diffClim, cmap, bBox,
       varList.append('diff_'+var)
 
   # add transect markers (if any)
-  if transectFile :
+  if transectFile is not None:
     for bp in transectFile :
         dia.addTransectMarker('all', bp.getX(), bp.getY(),
                               color='w', linewidth=2.0)
@@ -135,15 +138,15 @@ def processFrame(dcs, time, logScaleVars, aspect, clim, diffClim, cmap, bBox,
                               color='k', linewidth=1.0)
 
   # add station markers (if any)
-  if stationFile :
-    for sta in stationFile :
-        xSta,ySta = stationFile.getLocation( sta )
+  if stationFileObj is not None:
+    for sta in stationFileObj :
+        xSta,ySta = stationFileObj.getLocation( sta )
         dia.addStationMarker('all', xSta, ySta, sta.replace('saturn','sat'),
                              printLabel=True, color='k')
 
   # save to disk
   dateStr = dateStr.replace(' ','_').replace(':','-')
-  varStr = '-'.join(uniqueList(varList))
+  varStr = '-'.join(collection.uniqueList(varList))
   file = '_'.join([fPrefix,name,varStr,dateStr])
   saveFigure(imgDir, file, filetype, verbose=True, dpi=200, bbox_tight=True)
   plt.close(dia.fig)
@@ -197,15 +200,15 @@ def makeSlabPlots(netCDFFiles, imgDir, runTag=None, startTime=None,
       dc = dc.cropGrid(bBox)
     dcs.append(dc)
 
-  stationFile = transectFile = None
-  if stationFilePath :
-    stationFile = StationFile( stationFilePath )
-    stationFile.readFileFromDisk()
+  stationFileObj = transectFile = None
+  if stationFilePath:
+    stationFileObj = stationFile.StationFile( stationFilePath )
+    stationFileObj.readFileFromDisk()
 
   if transectFilePath :
     transectFile = []
     for trf in transectFilePath :
-      bp = BuildPoint()
+      bp = buildPoints.BuildPoint()
       bp.readFileFromDisk(trf)
       transectFile.append(bp)
   
@@ -261,7 +264,7 @@ def makeSlabPlots(netCDFFiles, imgDir, runTag=None, startTime=None,
         dcs_single.append(dc.subsample([it]))
     function = processFrame
     args = [dcs_single, time, logScaleVars, aspect, clim, diffClim, cmap, bBox,
-            transectFile, stationFile, bathMC, isobaths, diff, imgDir, fPrefix, filetype,
+            transectFile, stationFileObj, bathMC, isobaths, diff, imgDir, fPrefix, filetype,
             maxPlotSize]
     tasks.append((function, args))
   _runTasksInQueue(num_threads, tasks)
