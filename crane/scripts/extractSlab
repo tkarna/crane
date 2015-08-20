@@ -11,7 +11,7 @@ Tuomas Karna 2012-11-16
 """
 
 # just a wrapper to parseCommandLine method
-from data.extractSlab import *
+from crane.data import extractSlab
 
 if __name__=='__main__' :
-  parseCommandLine()
+  extractSlab.parseCommandLine()

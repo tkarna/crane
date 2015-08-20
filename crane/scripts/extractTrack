@@ -9,7 +9,7 @@ Tuomas Karna 2012-11-29
 """
 
 # just a wrapper to parseCommandLine method
-from data.extractTrack import *
+from crane.data import extractTrack
 
 if __name__=='__main__' :
-  parseCommandLine()
+  extractTrack.parseCommandLine()

@@ -7,8 +7,6 @@ data manipulation methods.
 
 Tuomas Karna 2012-11-26
 """
-import numpy as np 
-
 import numpy as np
 from crane.data import dataContainer
 

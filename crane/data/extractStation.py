@@ -1047,12 +1047,12 @@ def parseCommandLine() :
                                   profile, modelCoordSys, stationFile )
     for dc in dcs :
       dc.setMetaData( 'tag',runTag )
-    import data.dirTreeManager as dtm
+    import crane.data.dirTreeManager as dtm
     if saveInTree :
-      rule = dtm.defaultTreeRule()
+      rule = 'monthlyFile'
     else :
-      rule = dtm.oldTreeRule()
-    dtm.saveDataContainerInTree( dcs, path=outDir, rule=rule, dtype=np.float32,
+      rule = 'singleFile'
+    dtm.saveDataContainerInTree( dcs, rootPath=outDir, rule=rule, dtype=np.float32,
                                  overwrite=True, compress=True, digits=digits )
 
 if __name__=='__main__' :

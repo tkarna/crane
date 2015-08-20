@@ -17,13 +17,9 @@ import sys
 import datetime
 import subprocess as sub
 
-from data.meshContainer import meshContainer
+from crane.data import meshContainer
 from crane.data import timeArray
-from data.loadHindcastStations import excludeNaNs,VALID_MIN
-from data.extractStation import *
-from plotting.plotBase import createDirectory
-
-from files.buildPoints import BuildPoint
+from crane.data import extractStation
 
 #-------------------------------------------------------------------------------
 # Functions
@@ -43,15 +39,15 @@ def extractSlabForLevel( dataDir, varList, startTime, endTime, name, zCoord=None
 # Classes
 #-------------------------------------------------------------------------------
   
-class extractSlab(extractBase) :
+class extractSlab(extractStation.extractBase) :
   """A higher lever extraction object for slabs"""
   def __init__(self, dataDir, fieldName, firstStack=1, modelCoordSys='spcs') :
-    extractBase.__init__(self,dataDir,fieldName,firstStack,modelCoordSys)
+    super(extractSlab, self).__init__(dataDir,fieldName,firstStack,modelCoordSys)
     self.extractor.setSlabMode()
     self.name = None
 
   def setSlab( self, name, z=None,k=None,zRelativeToSurf=False) :
-    '''Set slab parameters.'''
+    """Set slab parameters."""
     self.name = name
     self.extractor.setSlab(z,k,zRelativeToSurf)
     self.zRelativeToSurf = zRelativeToSurf
@@ -69,7 +65,7 @@ class extractSlab(extractBase) :
     x,y = self.extractor.getMeshNodeCoords()
 
     # TODO remove bad values (nan mask?)
-    data[ data < VALID_MIN ] = np.nan
+    data[ data < extractStation.VALID_MIN ] = np.nan
     # TODO add support for removing/keeping dry elements
     data = data.swapaxes(0,1) # from (dim,np,time) to (np,dim,time)
     ta = timeArray.timeArray(t, 'simulation', self.extractor.startTime).asEpoch()
@@ -96,7 +92,7 @@ class extractSlab(extractBase) :
     else :
       meta['bracket'] = 'F' if self.zRelativeToSurf else 'A'
       meta['msldepth'] = msldepth
-    mc = meshContainer('', ta, x,y,z, data, connectivity, fieldNameList[var], coordSys='spcs',metaData=meta)
+    mc = meshContainer.meshContainer('', ta, x,y,z, data, connectivity, fieldNameList[var], coordSys='spcs',metaData=meta)
     return mc
 
 #-------------------------------------------------------------------------------
@@ -236,7 +232,7 @@ def parseCommandLine() :
 
   dcs = []
   if readNetcdf :
-    from data.ncExtract import extractSlabForLevel as extractNetCDF
+    from crane.data.ncExtract import extractSlabForLevel as extractNetCDF
     dcs = extractNetCDF( dataDir, varList, startTime, endTime,
                          name, zCoord, kLevel, zRelativeToSurf, stacks=stacks)
   else :
@@ -245,10 +241,9 @@ def parseCommandLine() :
                         modelCoordSys=modelCoordSys )
   for dc in dcs :
     dc.setMetaData( 'tag', runTag )
-  import data.dirTreeManager as dtm
-  rule = dtm.oldTreeRule()
-  #rule = dtm.defaultTreeRule()
-  dtm.saveDataContainerInTree( dcs, path=outDir, rule=rule, dtype=np.float32,
+  import crane.data.dirTreeManager as dtm
+  rule = 'singleFile'
+  dtm.saveDataContainerInTree( dcs, rootPath=outDir, rule=rule, dtype=np.float32,
                                overwrite=True, compress=True, digits=digits  )
 
 if __name__=='__main__' :

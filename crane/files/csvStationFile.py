@@ -113,7 +113,7 @@ class csvStationFileWithDepth(csvStationFile) :
     self.reg_keywords=['location','x','y','z','zType']
     self.opt_keywords = ['variable']
     allkeywords = self.reg_keywords+self.opt_keywords
-    super(csvStationFileWithDepth, self).__init__(allkeywords, source)
+    super(csvStationFile, self).__init__(allkeywords, source)
   
   def readFromFile(self,filename):
     """Reads data from csv file"""

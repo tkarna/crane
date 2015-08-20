@@ -769,7 +769,7 @@ class selfeExtractBase(object) :
     z_actual : array_like (nProfiles,nTime,)
         The z coordinate at which the interpolation actually took place
     """
-    vertInterp = verticalInterpolator(z,k,zRelToSurf)
+    vertInterp = gridUtils.verticalInterpolator(z,k,zRelToSurf)
     v, z_actual = vertInterp.evaluateArray(zcoords,vals)
     v = np.ma.masked_invalid(v)
     return v,z_actual
@@ -1474,7 +1474,7 @@ class selfeExtract(selfeExtractBase) :
     else :
       meta['bracket'] = 'F' if zRelToSurf else 'A'
       meta['msldepth'] = msldepth
-    mc = meshContainer('', ta, x,y,zArray, data, connectivity,
+    mc = meshContainer.meshContainer('', ta, x,y,zArray, data, connectivity,
                        extractStation.fieldNameList.get(varStr,[varStr]),coordSys='spcs',
                        metaData=meta,)
     return mc

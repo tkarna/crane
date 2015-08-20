@@ -60,7 +60,7 @@ def extractTransectForBPFile( bpFile, dataDir, varList, startTime, endTime, name
 class extractTransect(extractStation.extractBase) :
   """A higher lever extraction object for transects"""
   def __init__(self, dataDir, fieldName, firstStack=1, modelCoordSys='spcs') :
-    extractBase.__init__(self,dataDir,fieldName,firstStack,modelCoordSys)
+    super(extractTransect, self).__init__(dataDir,fieldName,firstStack,modelCoordSys)
     self.extractor.setTransectMode()
     self.name = None
     
@@ -228,6 +228,9 @@ def parseCommandLine() :
   if endStr is None and stackStr is None:
     parser.print_help()
     parser.error('endStr   undefined')
+  if not name :
+    parser.print_help()
+    parser.error('name  undefined')
   if not runTag :
     parser.print_help()
     parser.error('runTag  undefined')
@@ -279,8 +282,9 @@ def parseCommandLine() :
   for dc in dcs :
     dc.setMetaData( 'tag', runTag )
   import crane.data.dirTreeManager as dtm
-  dtm.saveDataContainerInTree( dcs, dtype=np.float32, overwrite=True, compress=True,
-                               digits=digits )
+  rule = 'singleFile'
+  dtm.saveDataContainerInTree( dcs, rootPath=outDir, dtype=np.float32, overwrite=True, compress=True,
+                               digits=digits, rule=rule )
 
 if __name__=='__main__' :
   parseCommandLine()
