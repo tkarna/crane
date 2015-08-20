@@ -14,19 +14,23 @@ Tuomas Karna 2013-01-07
 """
 
 import os
-import numpy as np
 import datetime
 import sys
 from optparse import OptionParser
 
-from data.stationCollection import StationCollection
-from files.csvStationFile import *
-from data.dataContainer import dataContainer
-from data.statistics import murphySkillScore
+import numpy as np
+import matplotlib.pyplot as plt
 
-from plotting.plot import *
-from plotting.plotBase import * #createDirectory
-from plotting.timeSeriesPlot import timeSeriesPlotDC2
+from crane.data import dirTreeManager as dtm
+from crane.data import stationCollection
+from crane.files import csvStationFile
+from crane.data import dataContainer
+from crane.data import statistics
+
+from crane.plotting import plot
+from crane.plotting import plotBase
+from crane.plotting import timeSeriesPlot
+
 
 #-------------------------------------------------------------------------------
 # Functions
@@ -44,7 +48,7 @@ def generateTSPlot(startTime, endTime, dcs, imgDir=None, ylim={},
 
   # a collection for all the data
   dataDir = 'data'
-  sc = StationCollection( startTime, endTime, obsTag )
+  sc = stationCollection.StationCollection( startTime, endTime, obsTag )
 
   # add data from the files
   for dc in dcs :
@@ -60,9 +64,9 @@ def generateTSPlot(startTime, endTime, dcs, imgDir=None, ylim={},
 
   # plot
   # master container to hold all the axes, x axis will be shared
-  canvas = stackPlotBase(rightPad=1.25)
+  canvas = plotBase.stackPlotBase(rightPad=1.25)
 
-  modelColors = makeColorsForModels(sc)
+  modelColors = plot.makeColorsForModels(sc)
   comKeys = sc.getComparableKeys(requireObs=False, requireMod=False)
   for c in comKeys :
     if c[0][2] == None :
@@ -80,10 +84,10 @@ def generateTSPlot(startTime, endTime, dcs, imgDir=None, ylim={},
     else :
       o = None
 
-    title = ' '.join((VARS.get(var,var),'['+UNITS.get(var,'-')+']'))
+    title = ' '.join((plot.VARS.get(var,var),'['+plot.UNITS.get(var,'-')+']'))
     xlabel = startTime.year if startTime.year==endTime.year else 'Date'
-    dia = timeSeriesPlotDC2( title=title, ylabel=station.upper()+' '+msldepth, ylim=ylim.get(var,None), xlabel=xlabel )
-    canvas.addPlot( dia, tag=VARS.get(var,var)+station+msldepth )
+    dia = timeSeriesPlot.timeSeriesPlotDC2( title=title, ylabel=station.upper()+' '+msldepth, ylim=ylim.get(var,None), xlabel=xlabel )
+    canvas.addPlot( dia, tag=plot.VARS.get(var,var)+station+msldepth )
     if obsKey :
       dia.addSample( o, color='r', label=obsKey['tag'] )
     for modKey in modKeys :
@@ -91,7 +95,7 @@ def generateTSPlot(startTime, endTime, dcs, imgDir=None, ylim={},
       l = modKey['tag'].split('-')[0]
       if doMurphyScore:
           o2, m2 = o.alignTimes(m)
-          murphy = murphySkillScore(o2.data.ravel(), m2.data.ravel())
+          murphy = statistics.murphySkillScore(o2.data.ravel(), m2.data.ravel())
           l += ' MS={ms:.2f}'.format(ms=murphy)
       dia.addSample(m, color=modelColors[modKey['tag']], label=l)
     dia.showLegend()
@@ -109,7 +113,7 @@ def generateTSPlot(startTime, endTime, dcs, imgDir=None, ylim={},
     # ----- Save file -----
     sT = str(sc.startTime.date())
     eT = str(sc.endTime.date())
-    imgDir = createDirectory(imgDir)
+    imgDir = plotBase.createDirectory(imgDir)
     varList = uniqueList([ tup[0][1] for tup in comKeys ])
     #depSet = list(depSet)
     tagStr = '-'.join(uniqueList([ dc.getMetaData('tag') for dc in dcs ]))
@@ -132,13 +136,12 @@ def generateTSPlot(startTime, endTime, dcs, imgDir=None, ylim={},
 #-------------------------------------------------------------------------------
 # Main routine
 #-------------------------------------------------------------------------------
-def makeTSPlotForStationFile(runTags,csvStationFile,startTime,endTime,
-                              imgDir=None,ylim={}):
+def makeTSPlotForStationFile(runTags, stationFile, startTime, endTime,
+                              imgDir=None, ylim={}):
   # load data
   dcs = []
-  stationsToExtract = csvStationFileWithDepth()
-  stationsToExtract.readFromFile(csvStationFile)
-  import data.dirTreeManager as dtm
+  stationsToExtract = csvStationFile.csvStationFileWithDepth()
+  stationsToExtract.readFromFile(stationFile)
   for runTag in runTags :
     for key in stationsToExtract.getTuples() :
       loc,x,y,z,zType,var = key
@@ -209,8 +212,8 @@ def parseCommandLine() :
     parser.print_help()
     parser.error('End date undefined')
 
-  startTime = parseTimeStr( startStr )
-  endTime = parseTimeStr( endStr )
+  startTime = plotBase.parseTimeStr( startStr )
+  endTime = plotBase.parseTimeStr( endStr )
 
   ylim = {}
   if ylimStr :
@@ -228,9 +231,9 @@ def parseCommandLine() :
     print ' - using y limits',ylim
   if csvStationFile :
     print ' - stations read from',csvStationFile
-    
-  makeTSPlotForStationFile(runTags,csvStationFile,startTime,endTime,
-                              imgDir,ylim)
+
+  makeTSPlotForStationFile(runTags, csvStationFile, startTime, endTime,
+                           imgDir, ylim)
 
 if __name__=='__main__' :
   parseCommandLine()

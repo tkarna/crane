@@ -1053,7 +1053,7 @@ def parseCommandLine() :
       if len(offerings) == 0:
           print('No offerings received, skipping variable {0:s}'.format(var))
       if readNetcdf :
-        from data.ncExtract import extractForOfferings as extractNetCDF
+        from crane.data.ncExtract import extractForOfferings as extractNetCDF
         dcs = extractNetCDF( dataDir, var, offerings, startTime, endTime,
                             profile, stationFile)
       else :

@@ -15,13 +15,13 @@ import datetime
 import matplotlib
 if 'TACC_SYSTEM' in os.environ and os.environ['TACC_SYSTEM'] == 'stampede':
     # change backend if no display present (e.g. on supercomputers)
-    matplotlib.use("Agg")
+    matplotlib.use("Agg", warn=False)
 elif 'stccmop' in os.environ.get('HOSTNAME', []):
-    matplotlib.use("Agg")
+    matplotlib.use("Agg", warn=False)
 elif 'edison' in os.environ.get('HOSTNAME', []):
-    matplotlib.use("Agg")
+    matplotlib.use("Agg", warn=False)
 elif 'hopper' in os.environ.get('HOSTNAME', []):
-    matplotlib.use("Agg")
+    matplotlib.use("Agg", warn=False)
 
 import matplotlib.pyplot as plt
 import matplotlib.dates

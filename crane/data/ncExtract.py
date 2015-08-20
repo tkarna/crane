@@ -255,7 +255,7 @@ def extractForOfferings( dataDir, var, offerings, startTime, endTime,
   """
 
   # read station file
-  staReader = csvStationFile()
+  staReader = csvStationFile.csvStationFile()
   staReader.readFromFile(stationFile)
 
   # screen possible duplicates in the offerings (e.g. instrument can be ignored)
