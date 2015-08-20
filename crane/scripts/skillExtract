@@ -22,12 +22,8 @@ import os
 import sys
 from optparse import OptionParser
 
-import data.stationCollection as StationCollection
-from data.loadHindcastStations import readDateRange
-from files.stationFile import StationFile
-
-from plotting.plot import Plots
-from data.extractStation import addTracers, tracerModelObsVariables
+from crane.data import stationCollection
+from crane.data.extractStation import addTracers, tracerModelObsVariables
 
 #-------------------------------------------------------------------------------
 # Constants
@@ -103,12 +99,12 @@ def skillExtract(startTime, endTime, getObs, runTag, modelDir, hindcastTag,
   obsColl = None
   if ( not (getObs or onlineObs) ) and os.path.isdir( os.path.join(obsTag,dataDir) ) :
     try :
-      obsColl = StationCollection.StationCollection.loadFromNetCDFCollection( obsTag, startTime, endTime, obsTag, dataDir )
+      obsColl = stationCollection.StationCollection.loadFromNetCDFCollection( obsTag, startTime, endTime, obsTag, dataDir )
     except Exception as e :
       print 'Could not read existing observations'
       print e
   if not obsColl or len(obsColl) == 0:
-    obsColl = StationCollection.fetchAvailableObservations(startTime, endTime,
+    obsColl = stationCollection.fetchAvailableObservations(startTime, endTime,
                                                            obsTag,
                                                            variables=variables)
 
@@ -144,7 +140,7 @@ def skillExtract(startTime, endTime, getObs, runTag, modelDir, hindcastTag,
         o['variable'] = customVarNames.get(o['variable'],o['variable'])
 
     # extract station time series
-    modColl = StationCollection.extractForOfferings( runTag, modelDir,
+    modColl = stationCollection.extractForOfferings( runTag, modelDir,
                                   offerings, startTime, endTime,
                                   modelCoordSys='spcs', stationFile=stationFile,
                                   netcdf=readNetcdf )
@@ -157,7 +153,7 @@ def skillExtract(startTime, endTime, getObs, runTag, modelDir, hindcastTag,
         print 'Extracting sediment model profiles of : '
         for p in sedVars :
           print p
-        modColl3 = StationCollection.extractProfiles( runTag, modelDir, sedVars,
+        modColl3 = stationCollection.extractProfiles( runTag, modelDir, sedVars,
                                                      startTime, endTime,
                                                      stationFile, sedStations,
                                                      modelCoordSys='spcs',
@@ -165,7 +161,7 @@ def skillExtract(startTime, endTime, getObs, runTag, modelDir, hindcastTag,
         modColl.update(modColl3)
       if customVarNames :
         profVars = [ customVarNames.get(v,v) for v in profVars ]
-      modColl2 = StationCollection.extractProfiles( runTag, modelDir, profVars,
+      modColl2 = stationCollection.extractProfiles( runTag, modelDir, profVars,
                                                     startTime, endTime,
                                                     stationFile, profStations,
                                                     modelCoordSys='spcs',
@@ -187,7 +183,7 @@ def skillExtract(startTime, endTime, getObs, runTag, modelDir, hindcastTag,
   # Part IIb  : get hindcast data
   #-------------------------------------------------------------------------------
   if hindcastTag :
-    modColl = StationCollection.fetchHindcastFromDatFiles( runTag,
+    modColl = stationCollection.fetchHindcastFromDatFiles( runTag,
                                 hindcastTag, offerings,
                                 startTime, endTime, removeBadValues, stationFile )
     modColl.saveAsNetCDFCollection( dataDir )
@@ -199,7 +195,7 @@ def skillExtract(startTime, endTime, getObs, runTag, modelDir, hindcastTag,
   #-------------------------------------------------------------------------------
   # Part III  : compute derived data products
   #-------------------------------------------------------------------------------
-  derivedColl = StationCollection.computeDerivedProducts( obsColl, updatedTags )
+  derivedColl = stationCollection.computeDerivedProducts( obsColl, updatedTags )
   if onlineObs :
     # do not store obs derived products
     derivedColl = derivedColl.getSubset( exclude=True, tag=obsTag )

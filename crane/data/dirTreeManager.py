@@ -160,6 +160,7 @@ def getAllDataContainers(rootPath=None, rule=None, dataType=None, tag=None,
         raise Exception('Reading data from tree failed: ' + argsStr)
     return dcList
 
+
 def saveDataContainerInTree(dcs, rootPath=None, rule=None, dtype=np.float64,
                             overwrite=False, compress=False, digits=None):
     """Saves dataContainer(s) in a tree with the given fileTreeRule.
@@ -324,6 +325,7 @@ class singleFileTree(fileTree):
                 except Exception as e:
                     print 'Error while reading file: {0:s}'.format(f)
                     print e
+                    traceback.print_exc(file=sys.stdout)
         return dcList
 
 

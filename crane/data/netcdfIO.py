@@ -86,16 +86,19 @@ class netcdfIO(object) :
     out = self.read( startTime, endTime, includeEnd, verbose=verbose)
     descr, ta, x,y,z, data, fns, cSys, conn, meta, bnds = out
     if conn is None:
-      dc = crane.data.dataContainer.dataContainer(descr, ta,
-                                                  x, y, z, data,
-                                                  fns, cSys,
-                                                  acceptNaNs=True,
-                                                  dtype=dtype)
+      # NOTE import here to avoid cyclic import issues
+      import crane.data.dataContainer as dataContainer
+      dc = dataContainer.dataContainer(descr, ta,
+                                       x, y, z, data,
+                                       fns, cSys,
+                                       acceptNaNs=True,
+                                       dtype=dtype)
     else :
-      dc = crane.data.dataContainer.meshContainer(descr, ta,
-                                                  x, y, z,
-                                                  data, conn, fns,
-                                                  cSys, dtype=dtype)
+      import crane.data.meshContainer as meshContainer
+      dc = meshContainer.meshContainer(descr, ta,
+                                       x, y, z,
+                                       data, conn, fns,
+                                       cSys, dtype=dtype)
       if bnds :
         for bnd in bnds :
           dc.addBoundary(bnd)
