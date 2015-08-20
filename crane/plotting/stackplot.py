@@ -1,14 +1,16 @@
 import matplotlib
 
-import pylab
-from pylab import *
-import numpy
+import numpy as np
 import numpy.ma as ma
 
-#import tempfile, os, traceback
-#import cmop
-##import cmop.pylabutil as pylabutil
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib import dates
+
+from pylab import find
+
 import pylabutil
+
 
 def getvalidplotargs():
       return [
@@ -54,29 +56,29 @@ def getvalidplotargs():
 
 def addGaps(t,arr,**kwargs):
     '''Take a timeseries of data with presumed even timestep.
-    Find gaps in the data that are longer than 
+    Find gaps in the data that are longer than
      the timestep * gapfactor, where timestep can be given as an argument
-    or calculated from the data as median difference of t. 
-    A NaN value is inserted between the to sides of the gap to cause a 
-    gap in a timeseries plot. The data can contain NaN values initially. 
+    or calculated from the data as median difference of t.
+    A NaN value is inserted between the to sides of the gap to cause a
+    gap in a timeseries plot. The data can contain NaN values initially.
      NaN values are stripped out before the calculation of the timestep.
      Optional arguments: timestep , gapfactor
     '''
     timestep = kwargs.get('timestep',None)
     factor= kwargs.get('gapfactor',5)
-    t  = ma.array(t,mask = equal(t,None))
-    arr  = ma.array(arr,mask = equal(arr,None) | equal(arr,nan))
+    t  = ma.array(t,mask = np.equal(t,None))
+    arr  = ma.array(arr,mask = np.equal(arr,None) | np.equal(arr,np.nan))
     # ensure that the arrays are masked arrays, with None values masked
     t.mask = arr.mask | t.mask  # find the overlap of the masks of both the time and the data
     arr.mask = t.mask  # set both arrays to use the overlap of the masks
     t = t.compressed() # compress the time to remove the masked values
-    a = ma.array(arr.compressed(),mask = False)  # compress the data 
-    dt = diff(t)  # find the actual timesteps between data values
+    a = ma.array(arr.compressed(),mask = False)  # compress the data
+    dt = np.diff(t)  # find the actual timesteps between data values
     if timestep is None:  # if no user supplied expected timestep was supplied
-      timestep = median(dt) # calculate the median timestep
+      timestep = np.median(dt) # calculate the median timestep
     gaps = find(np.abs(dt)>timestep*factor)  # find gaps larger than some factor times the expected timestep
-    a = numpy.insert(a,gaps+1,nan)   # insert nan values in gaps
-    t = numpy.insert(t,gaps+1,nan)  
+    a = np.insert(a,gaps+1,np.nan)   # insert np.nan values in gaps
+    t = np.insert(t,gaps+1,np.nan)
     return (t,a)
 
 def ismasked(x):
@@ -85,12 +87,12 @@ def ismasked(x):
 
 def maskNulls(arr,maskval=None):
     '''Return a masked array masked on values = mask, extending the mask if necessary.'''
- 
+
     if ismasked(arr): # retain existing mask
-       arr.mask = numpy.equal(numpy.array(arr,dtype='object'),maskval) | arr.mask
+       arr.mask = np.equal(np.array(arr,dtype='object'),maskval) | arr.mask
        return arr
     else:
-       return ma.masked_array(arr,  mask = numpy.equal(numpy.array(arr,dtype='object'),maskval))
+       return ma.masked_array(arr,  mask = np.equal(np.array(arr,dtype='object'),maskval))
 
 def GetTZCorrection():
     """ Returns -8*60*60 (8 hours, 60 minutes, 60 seconds) """
@@ -105,11 +107,11 @@ class dataset:
          zlim         : (low z, high z)
          zlabel: label for a colorbar for the 3rd dimension
          color: color for plotting dataset
-      '''  
+      '''
       self.label = lbl
       self.kwargs = kwargs
       try:
-          X = array([todate(t) for t in X])
+          X = np.array([todate(t) for t in X])
           self.x_is_time = True
       except:
           self.x_is_time = False
@@ -126,34 +128,34 @@ class dataset:
 
 def stackplot(data, **kwargs):
   '''
-Creates a matplotlib figure (via pylab) displaying a vertical stack of 
+Creates a matplotlib figure (via pylab) displaying a vertical stack of
 scatter plots with a shared x-axis.
 
 Arguments:
-  data     : a list of (yaxis, overlays) pairs, 
+  data     : a list of (yaxis, overlays) pairs,
              where overlays is a list of (label, X, Y) pairs, and
              label and yaxis are strings and array is a numpy numeric array
-             Examples: 
+             Examples:
                 [('salinity', [dataset('my data', aX, asY,**kwargs), dataset('your data', bX, bsY, **kwargs)])]
                 [
                  ('salinity', [
-                               dataset('my data', aX, atY), 
+                               dataset('my data', aX, atY),
                                dataset('your data', bX, btY)
                               ]
                  ),
                  ('temperature', [
-                               dataset('my data', aX, atY), 
+                               dataset('my data', aX, atY),
                                dataset('your data', bX, btY)
                               ]
                  ),
                 ]
 
 Optional keyword arguments are:
-  xlabel       : label to place on the x-axis.  
+  xlabel       : label to place on the x-axis.
   x_is_time    : Interpret x-axis as time strings
-  dateformat   : xtick format for time axis, 
+  dateformat   : xtick format for time axis,
                  defaults to '%m-%d %H:%M'
-  sourceformat : source format for time string data, 
+  sourceformat : source format for time string data,
                  defaults to '%Y-%m-%d %H:%M:%S'
   color_order  : order to rotate through colors, defaults to 'rgbcmykw'
   width        : width of the figure, defaults to 6in
@@ -163,11 +165,11 @@ Optional keyword arguments are:
   ylim         : (low y, high y)
   style        : style of plot marker {. - -- : , o }  plus others
   plottype     : 'scatter' or '', defaults to ''
-  handlegaps   : useful for timeseries non-scatter plots with a line style, 
+  handlegaps   : useful for timeseries non-scatter plots with a line style,
                  defaults to False
-  timestep     : used with handlegaps, expected time step, 
+  timestep     : used with handlegaps, expected time step,
                  defaults to the median timestep of the data
-  gapfactor    : used with handlegaps, this times the timestep determines 
+  gapfactor    : used with handlegaps, this times the timestep determines
                  the minimum size of gap to handle,
                  defaults to 5
 (see http://matplotlib.sourceforge.net/matplotlib.pyplot.html#-plot)
@@ -184,12 +186,12 @@ Optional keyword arguments are:
 
   if titlestr:
      topmargin = topmargin + 0.15 * len(titlestr.split('\n')) # increase size of top marign to handle multiline titles
-  thefig = gcf()
+  thefig = plt.gcf()
   figure_width = float(kwargs.get('width', thefig.get_figwidth()))*w_scale
-  thefig.set_figwidth(figure_width) 
+  thefig.set_figwidth(figure_width)
   if n*plotheight + topmargin > thefig.get_figheight():
     thefig.set_figheight(n*plotheight + topmargin)
-    
+
   if not data: return
 
   sps = []
@@ -212,8 +214,8 @@ Optional keyword arguments are:
       for  D in overlays:
         X = D.X
         if X is not None:
-           X = array([X])
-           lox, hix = nanmin(X), nanmax(X)
+           X = np.array([X])
+           lox, hix = np.nanmin(X), np.nanmax(X)
            if minx == None: minx, maxx = lox, hix
            if lox < minx: minx = lox
            if hix > maxx: maxx = hix
@@ -223,7 +225,7 @@ Optional keyword arguments are:
   # get the x range
   if kwargs.has_key('xlim'):
       (minx, maxx) = kwargs['xlim']
-  else: 
+  else:
       minx, maxx = analyzeX(data)
   # get the global y range, if there is one
   miny = None
@@ -233,7 +235,7 @@ Optional keyword arguments are:
   if x_is_time:
      # just min and max x if x_is_time
      if minx is not None and minx == maxx: maxx = maxx + 1/24.
-   
+
   lastplot = None
   #foo = data[0]
   #data[0] = data[1]
@@ -243,9 +245,9 @@ Optional keyword arguments are:
   for i,(var,overlays) in enumerate(data):
     empty = True
     if lastplot:
-      p = subplot(n,1,i+1, sharex=lastplot)
+      p = plt.subplot(n,1,i+1, sharex=lastplot)
     else:
-      p = subplot(n,1,i+1)
+      p = plt.subplot(n,1,i+1)
     lastplot = p
     for j,D in enumerate(overlays):
 
@@ -275,7 +277,7 @@ Optional keyword arguments are:
         dxlbl = xlbl
       # strip out Ys that do not correspond to a valid X
       if X is not None:
-        ids = numpy.where(X.mask==False)
+        ids = np.where(X.mask==False)
         X = X[ids]
         if Y is not None:
           Y = Y[ids]
@@ -319,11 +321,10 @@ Optional keyword arguments are:
               scatargs[d] = Dkwargs[d]
         # if data has Z values, then create a scatter plot, with Z as color
         #cmop.debug('starting scatter plot function.')
-        im = scattermap(X,Y,color=Z,**scatargs
-        )
+        im = scattermap(X,Y,color=Z,**scatargs)
         #cmop.debug('finished scatter plot function.')
           #norm = matplotlib.colors.Normalize(vmin = min(Z), vmax = max(Z), clip = False)
-        axes(p)
+        plt.axes(p)
       elif plottype == 'scatter':
         scatargs = dict()
         for d in Dkwargs:
@@ -331,12 +332,12 @@ Optional keyword arguments are:
               scatargs[d] = Dkwargs[d]
         # if data has Z values, then create a scatter plot, with Z as color
         #cmop.debug('starting scatter plot function.')
-        
-        im = scatter3(X,Y,color=Z,**scatargs
-        )
+
+        im = scatter3(X,Y,color=Z,**scatargs)
+
         #cmop.debug('finished scatter plot function.')
           #norm = matplotlib.colors.Normalize(vmin = min(Z), vmax = max(Z), clip = False)
-        axes(p)
+        plt.axes(p)
       elif plottype == 'vlines':
         vlinesargs = dict()
         for d in Dkwargs:
@@ -357,38 +358,38 @@ Optional keyword arguments are:
         k = len(X) / binsize
         x1 = X.reshape((k, binsize))[:,0]
         y1 = Y.reshape((k, binsize))[0,:]
-        (x2, y2) = numpy.meshgrid(x1, y1) 
-        z1 = numpy.reshape(Z, (k, binsize)).transpose()
+        (x2, y2) = np.meshgrid(x1, y1)
+        z1 = np.reshape(Z, (k, binsize)).transpose()
         cdict = {'red': ((0.0, 0, 1),
-                         (0.01, 0, 0), 
-                         (0.35, 0, 0), 
-                         (0.66, 1, 1), 
-                         (0.89, 1, 1), 
+                         (0.01, 0, 0),
+                         (0.35, 0, 0),
+                         (0.66, 1, 1),
+                         (0.89, 1, 1),
                          (1, 0.5, 0.5)),
                'green': ((0.0, 0, 1),
-                         (0.01, 0, 0), 
-                         (0.125, 0, 0), 
-                         (0.375, 1, 1), 
-                         (0.640, 1, 1), 
-                         (0.910, 0, 0), 
+                         (0.01, 0, 0),
+                         (0.125, 0, 0),
+                         (0.375, 1, 1),
+                         (0.640, 1, 1),
+                         (0.910, 0, 0),
                          (1, 0, 0)),
                 'blue': ((0.0, 0, 1),
-                         (0.01, 0.5, 0.5), 
-                         (0.11, 1, 1), 
-                         (0.34, 1, 1), 
+                         (0.01, 0.5, 0.5),
+                         (0.11, 1, 1),
+                         (0.34, 1, 1),
                          (0.65, 0, 0),
-                         (0.75, 0, 0), 
-                         (1, 0, 0))} 
+                         (0.75, 0, 0),
+                         (1, 0, 0))}
         my_cmap = matplotlib.colors.LinearSegmentedColormap('my_colormap',cdict,256)
         cdict = cm.jet._segmentdata
 
-        im = pcolor(x2,y2,z1,cmap=my_cmap, vmin=vmin, vmax=vmax)
+        im = plt.pcolor(x2,y2,z1,cmap=my_cmap, vmin=vmin, vmax=vmax)
       else:
         # construct the marker string, using specified color or default color
         if Dkwargs.has_key('color'):
           dcolor = Dkwargs['color']
         else:
-          dcolor = colors[(j+1) % len(colors)] 
+          dcolor = colors[(j+1) % len(colors)]
         marker = Dkwargs.get('style', '.')
         marker = Dkwargs.get('marker', marker)
         if marker == '-':
@@ -403,27 +404,27 @@ Optional keyword arguments are:
            if d in getvalidplotargs():
               plotargs[d] = Dkwargs[d]
       #print plotargs
-        # if data has no ZZ values, use plot 
+        # if data has no ZZ values, use plot
         #if x_is_time & Dkwargs.get('handlegaps', False):
         if Dkwargs.get('handlegaps', False):
           X,Y = addGaps(X,Y,**Dkwargs)
-        #im = gca().plot(X,Y,marker=marker,linestyle=linestyle,color=dcolor,label=lbl)
-        im = gca().plot(X,Y,**plotargs)
+        #im = plt.gca().plot(X,Y,marker=marker,linestyle=linestyle,color=dcolor,label=lbl)
+        im = plt.gca().plot(X,Y,**plotargs)
 
       # set the x-axis limits
       if lminx is not None:
-        gca().set_xlim(lminx, lmaxx)
+        plt.gca().set_xlim(lminx, lmaxx)
       else:
         # do nothing
         pass
 
       # set the y-axis limits
       if lminy is not None:
-        gca().set_ylim(lminy, lmaxy)
+        plt.gca().set_ylim(lminy, lmaxy)
       else:
         # do nothing
         pass
-      
+
     # make a FontProperties object
     props = matplotlib.font_manager.FontProperties(size='x-small')
 
@@ -433,9 +434,9 @@ Optional keyword arguments are:
     if plottype == 'scatter' or plottype == 'scattermap':
       colorb_width = 0
       if not empty and not kwargs.get('nocolorbar', False):
-        # estimate colorbar height.  
-        col = colorbarhelper(pylab.colorbar(),clabel,cticks=cticks)
-        # workaround for matplotlib bug with colorb outside of axes.  
+        # estimate colorbar height.
+        col = colorbarhelper(plt.colorbar(),clabel,cticks=cticks)
+        # workaround for matplotlib bug with colorb outside of axes.
         # '.' markers are clipped by the axes bounding box
         # patch submitted to matplotlib-devel for a thorough fix
         if col is not None:
@@ -451,9 +452,9 @@ Optional keyword arguments are:
     elif plottype=='pcolor':
       colorb_width = 0
       if not empty and not kwargs.get('nocolorbar', False):
-        # estimate colorbar height.  
-        col = colorbarhelper(pylab.colorbar(),clabel,cticks=cticks)
-        # workaround for matplotlib bug with colorb outside of axes.  
+        # estimate colorbar height.
+        col = colorbarhelper(plt.colorbar(),clabel,cticks=cticks)
+        # workaround for matplotlib bug with colorb outside of axes.
         # '.' markers are clipped by the axes bounding box
         # patch submitted to matplotlib-devel for a thorough fix
         if col is not None:
@@ -470,21 +471,21 @@ Optional keyword arguments are:
       leg = None
       legend_width = 0
       if not empty and not kwargs.get('nolegend', False):
-        # estimate legend height.  
+        # estimate legend height.
         legend_height = 0.2 + len(overlays)*0.35/thefig.get_figheight()
         if legend_height > plotheight:
-           thefig.set_figheight(topmargin + legend_height*n*1.5) 
+           thefig.set_figheight(topmargin + legend_height*n*1.5)
            plotheight=legend_height
         bottom = 0.5-(legend_height/plotheight)/2
-        leg = legend(prop=props , labelspacing=0.02, borderpad = 0.5, loc=(1.01,bottom), numpoints=1)
-        axes(p)
-        # workaround for matplotlib bug with legend outside of axes.  
+        leg = plt.legend(prop=props , labelspacing=0.02, borderpad = 0.5, loc=(1.01,bottom), numpoints=1)
+        plt.axes(p)
+        # workaround for matplotlib bug with legend outside of axes.
         # '.' markers are clipped by the axes bounding box
         # patch submitted to matplotlib-devel for a thorough fix
         if leg is not None:
           for x in leg.legendHandles:
              try:
-                x._legmarker.set_clip_on(False) 
+                x._legmarker.set_clip_on(False)
              except:
                 pass
           # grrr....there seems to be no way to get the final legend width
@@ -510,23 +511,23 @@ Optional keyword arguments are:
           #thefig.set_figwidth(thefig.get_figwidth() + legend_width)
 
     # add this subplot to a list for adjustment later
-    sps.append((p,gci(),col))  
+    sps.append((p,plt.gci(),col))
 
     if x_is_time:
     # set the formatter and tick locator if the x axis is time data
       if kwargs.get('timetick','') == '':
        if lminx == lmaxx: lmaxx = lmaxx + 1/24.
-       loc, fmt = date_ticker_factory(lmaxx - lminx, numticks=6)
-       gca().xaxis_date()
-       gca().xaxis.set_major_formatter(fmt)
-       gca().xaxis.set_major_locator(loc)
+       loc, fmt = dates.date_ticker_factory(lmaxx - lminx, numticks=6)
+       plt.gca().xaxis_date()
+       plt.gca().xaxis.set_major_formatter(fmt)
+       plt.gca().xaxis.set_major_locator(loc)
       else:
        # determine xaxis range, used to determine tick labels if x-axis is time
        if lmaxx is not None:
          dtrange = lmaxx-lminx
          ltime = (lmaxx+lminx)/2
          if dtrange < 1827 and xyearticks: dtrange =  1827 # force y-axis tick labels to be at least years
-         pylabutil.adaptive_date_ticks(gca().xaxis,dtrange = dtrange, ltime = ltime, debug=False, formatm=xformatstringm, format=xformatstring, lformat=dxlbl,yearstr=yearstr)
+         pylabutil.adaptive_date_ticks(plt.gca().xaxis,dtrange = dtrange, ltime = ltime, debug=False, formatm=xformatstringm, format=xformatstring, lformat=dxlbl,yearstr=yearstr)
 
        else:
          dtrange = None
@@ -537,65 +538,65 @@ Optional keyword arguments are:
     # set the formatter and tick locator if the x axis is time data
       if kwargs.get('timetick','') == '':
        if lminy == lmaxy: lmaxy = lmaxy + 1/24.
-       loc, fmt = date_ticker_factory(lmaxy - lminy, numticks=6)
-       gca().yaxis_date()
-       gca().yaxis.set_major_formatter(fmt)
-       gca().yaxis.set_major_locator(loc)
+       loc, fmt = dates.date_ticker_factory(lmaxy - lminy, numticks=6)
+       plt.gca().yaxis_date()
+       plt.gca().yaxis.set_major_formatter(fmt)
+       plt.gca().yaxis.set_major_locator(loc)
       else:
        # determine yaxis range, used to determine tick labels if y-axis is time
        if lmaxy is not None:
          dtrange = lmaxy-lminy
          if dtrange < 1827 and yyearticks: dtrange =  1827 # force y-axis tick labels to be at least years
          ltime = (lmaxy+lminy)/2
-         pylabutil.adaptive_date_ticks(gca().yaxis,dtrange = dtrange, ltime = ltime, debug=False, formatm=yformatstringm, format=yformatstring, lformat=r'%s' % var)
+         pylabutil.adaptive_date_ticks(plt.gca().yaxis,dtrange = dtrange, ltime = ltime, debug=False, formatm=yformatstringm, format=yformatstring, lformat=r'%s' % var)
        else:
          dtrange = None
          ltime = None
-       setp(gca().get_yticklabels(), fontsize=8)
-       setp(gca().get_yticklabels(minor=True), fontsize=8)
+       plt.setp(plt.gca().get_yticklabels(), fontsize=8)
+       plt.setp(plt.gca().get_yticklabels(minor=True), fontsize=8)
 
     # set the ylabel
-    ylabel(r'%s' % (var,), size='smaller') 
+    plt.ylabel(r'%s' % (var,), size='smaller')
     # set the subplot xlabel if it is specified
 
     # handle time tick labels using a helper function in pylabutil
     if i+1 == n or dxlblflag:
       if x_is_time:
         if kwargs.get('timetick','') == '':
-          setp(gca().get_xticklabels(), 'rotation', 20,
+          plt.setp(plt.gca().get_xticklabels(), 'rotation', 20,
           'horizontalalignment', 'right', fontsize=8)
         else:
           # set the formatter and tick locator
           # adjust the font size
-          setp(gca().get_xticklabels(), fontsize=8)
-          setp(gca().get_xticklabels(minor=True), fontsize=8)
+          plt.setp(plt.gca().get_xticklabels(), fontsize=8)
+          plt.setp(plt.gca().get_xticklabels(minor=True), fontsize=8)
           # get_xlabel returns a string, rather than a handle object
-        xlabel(r'%s' % (gca().get_xlabel()), size='smaller') 
+        plt.xlabel(r'%s' % (plt.gca().get_xlabel()), size='smaller')
       elif dxlblflag:
-        xlabel(r'%s' % (dxlbl,), size='smaller') 
-        setp(gca().get_xticklabels(), fontsize=8)
+        plt.xlabel(r'%s' % (dxlbl,), size='smaller')
+        plt.setp(plt.gca().get_xticklabels(), fontsize=8)
       else:
-        xlabel(r'%s' % (xlbl,), size='smaller') 
-        setp(gca().get_xticklabels(), fontsize=8)
-      
+        plt.xlabel(r'%s' % (xlbl,), size='smaller')
+        plt.setp(plt.gca().get_xticklabels(), fontsize=8)
+
     else:
       if x_is_time:
         # set the formatter and tick locator
-        setp(gca().get_xticklabels(minor=True),visible=False)
-        xlabel('')
-      setp(gca().get_xticklabels(),visible=False)
-          
+        plt.setp(plt.gca().get_xticklabels(minor=True),visible=False)
+        plt.xlabel('')
+      plt.setp(plt.gca().get_xticklabels(),visible=False)
+
 
     # turn on the grid
-    grid(True)
+    plt.grid(True)
 
     # shrink the size of the tick labels
-    labels = gca().get_xticklabels() + gca().get_yticklabels()
+    labels = plt.gca().get_xticklabels() + plt.gca().get_yticklabels()
     for label in labels:
       label.set_size( 8 )
 
   # set the title
-  if titlestr: 
+  if titlestr:
      sps[0][0].set_title(titlestr,size='x-small')
 
   # adjust the spacing and margins for the plots
@@ -608,18 +609,18 @@ Optional keyword arguments are:
   if kwargs.has_key('legendwidth'):
      max_legend_width = kwargs['legendwidth']
      while 5.5*0.15/figure_width > 1-max_legend_width/figure_width:
-        max_legend_width -= 1   
-  subplots_adjust(left=5.5*0.15/figure_width, right=1-max_legend_width/figure_width, top=1-topmargin/thefig.get_figheight(), bottom=0.5/thefig.get_figheight(), hspace=hspace)
-  #subplots_adjust(left=5.5*0.15/figure_width, right=1-max_legend_width/figure_width, top=1-topmargin/thefig.get_figheight(), bottom=0.5/thefig.get_figheight(), hspace=0.1)
-    
+        max_legend_width -= 1
+  plt.subplots_adjust(left=5.5*0.15/figure_width, right=1-max_legend_width/figure_width, top=1-topmargin/thefig.get_figheight(), bottom=0.5/thefig.get_figheight(), hspace=hspace)
+  #plt.subplots_adjust(left=5.5*0.15/figure_width, right=1-max_legend_width/figure_width, top=1-topmargin/thefig.get_figheight(), bottom=0.5/thefig.get_figheight(), hspace=0.1)
+
   # Refresh the axes.  Needs to be done after everything else is ready
   for p,imgi,c in sps:
-    axes(p)
+    plt.axes(p)
     if c is not None:
        lims = p.get_position().get_points()
-    
-       clims = [lims[1][0]+0.05, lims[0][1], 1- (lims[1][0]+0.05), lims[1][1]- lims[0][1]] 
+
+       clims = [lims[1][0]+0.05, lims[0][1], 1- (lims[1][0]+0.05), lims[1][1]- lims[0][1]]
        c.ax.set_position(clims)
-  
-  # return the figure 
-  return thefig 
+
+  # return the figure
+  return thefig
