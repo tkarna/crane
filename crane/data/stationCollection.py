@@ -538,19 +538,9 @@ class StationCollection(tinyDB) :
     dataDir/tag/station_variable_msldepth_startTime_endTime.nc
     All necessary directories are created as needed
     """
-    from data.dirTreeManager import netcdfTree, oldTreeRule, defaultTreeRule
     for k in self.getKeys() :
       dc = self.getSample( **k )
-      tag = dc.getMetaData('tag')
-      sta = dc.getMetaData('location')
-      var = dc.getMetaData('variable')
-      dep = dc.getMetaData('msldepth',suppressError=True)
-      bra = dc.getMetaData('bracket',suppressError=True)
-      dat = dc.getMetaData('dataType')
-
-      rule = oldTreeRule(dataDir=dataDir) if treeType=='old' else defaultTreeRule(dataDir=dataDir)
-      tree = netcdfTree( dataType=dat, tag=tag, location=sta, variable=var, msldepth=dep, bracket=bra, rule=rule )
-      tree.write( dc, overwrite=True )
+      dirTreeManager.saveDataContainerInTree(dc, rule=treeType, overwrite=True)
 
   @classmethod
   def loadFromNetCDFCollection( cls, tag, startTime=None, endTime=None,
