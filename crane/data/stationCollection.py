@@ -21,6 +21,7 @@ from crane.data import harmonicAnalysis
 from crane.plotting.plotBase import createDirectory
 from crane.data import timeSeriesFilters
 from crane.data import dirTreeManager
+from crane.files import csvStationFile
 
 #-------------------------------------------------------------------------------
 # Constants
@@ -114,46 +115,9 @@ def fetchAvailableObservations( startTime, endTime, obsTag='obs',
       print e
   return sc
 
-def fetchHindcastFromDatFiles( tag, hindcastStr, offerings, startTime, endTime,
-  removeBadValues=False, stationFile=None ) :
-  """Fetches model data from the hindcast database *.dat files.
-  3D variables are interpolated to the correct depth.
-  Returns a StationCollection object."""
-  from files.stationFile import StationFile
-  sc = StationCollection( startTime, endTime )
-  baseDir =  '/home/workspace/ccalmr/hindcasts/'
-
-  # group offerings based on station
-  groupedOff = {}
-  for off in offerings :
-    sta = off['location']
-    if off['variable'] not in EXTRACT_VARS :
-      continue
-    groupedOff.setdefault( sta , [] ).append( off )
-  stations = groupedOff.keys()
-
-  csvReader = csvStationFile()
-  csvReader.readFromFile(stationFile)
-  for sta in stations :
-    try :
-      x,y = csvReader.getLocation( sta )
-      extractRequest = []
-      for off in groupedOff[sta] :
-        z = -float(off['msldepth'])/100.0
-        extractRequest.append( (off['variable'],z,off['bracket']) )
-      dcs = loadHindcastStations.readDateRange(baseDir, hindcastStr, sta, extractRequest, startTime, endTime, x, y, 'spcs', removeBadValues)
-      for dc in dcs :
-        dc.setMetaData( 'tag',tag )
-        sc.addSample( dc )
-    except Exception as e :
-      print 'Extraction failed for station',sta
-      print e
-  return sc
-
 def extractForOfferings( tag, dataDir, offerings, startTime, endTime,
                           modelCoordSys='spcs', stationFile=None, profile=False, netcdf=False ) :
   """Extracts station time series from the model output files stored in dataDir, based on the given StationCollection."""
-  import data.extractStation as es
   sc = StationCollection( startTime, endTime )
   # sort offerings for each variable
   offForVar = dict()
@@ -168,11 +132,12 @@ def extractForOfferings( tag, dataDir, offerings, startTime, endTime,
     # extract
     try :
       if netcdf :
-        import data.ncExtract as nce
+        import crane.data.ncExtract as nce
         dataContainers = nce.extractForOfferings( dataDir, var, offForVar[var],
                                                   startTime, endTime,
                                                   stationFile=stationFile )
       else :
+        import crane.data.extractStation as es
         dataContainers = es.extractForOfferings( dataDir, var, offForVar[var],
                                                 startTime, endTime,
                                                 profile=profile,
@@ -187,36 +152,13 @@ def extractForOfferings( tag, dataDir, offerings, startTime, endTime,
       traceback.print_exc(file=sys.stdout)      
   return sc
 
-def extractTrackFromModelOutputs( tag, dataDir, sColl, startTime, endTime,
-                          modelCoordSys='spcs') :
-  """Extracts track data from model outputs stored in dataDir, based on the track samples available in sColl (other stationCollection)."""
-  import data.extractTrack as et
-  import data.extractStation as es
-  sc = StationCollection( startTime, endTime )
-  # extract track data
-  for key in sColl.getKeys() :
-    trackDC = sColl.getSample(**key)
-    if not trackDC.isTrack() :
-      continue
-    # TODO FIXME
-    #dc = et.extractForDataContainer( dataDir, trackDC )
-    var = key[-1]
-    offerings = [trackDC.description]
-    dcs = es.extractForOfferings( dataDir, var, offerings, startTime, endTime, profile=True )
-    dc = dcs[0]
-    dc.setMetaData( 'tag',tag )
-    sc.addSample( dc )
-  return sc
-
 def extractProfiles( tag, dataDir, varList, startTime, endTime,
                      stationFile, stationNames=[], modelCoordSys='spcs', netcdf=False) :
   """Extracts vertical profiles for all stations in the stationFile for the given variable."""
-  import data.extractStation as es
-  from files.csvStationFile import csvStationFile
   sc = StationCollection( startTime, endTime )
 
   # all stations
-  csvReader = csvStationFile()
+  csvReader = csvStationFile.csvStationFile()
   csvReader.readFromFile(stationFile)
 
   if len(stationNames)==0 :
@@ -239,11 +181,12 @@ def extractProfiles( tag, dataDir, varList, startTime, endTime,
     try :
       print ' *',var
       if netcdf :
-        import data.ncExtract as nce
+        import crane.data.ncExtract as nce
         pe = nce.selfeExtract(dataDir,var=var)
         dataContainers = pe.extractVerticalProfile(startTime,endTime,
                                                    var,x,y,stationNames)
       else :
+        import crane.data.extractStation as es
         ee = es.extractStation(dataDir,var,profile=True,modelCoordSys=modelCoordSys)
         ee.setStations( stationNames, x,y )
         dataContainers = ee.extractDates( startTime, endTime )
@@ -648,9 +591,9 @@ class StationCollection(tinyDB) :
 
   def fetchCoastalUpwellingData( self, filename=None ) :
     """Fetches costal upwelling index from default file and stores it in the collection."""
-    from files.cuiFileParser import cuiParser
+    from crane.files import cuiFileParser
     try :
-      dc = cuiParser(filename).getDataContainer( self.startTime, self.endTime )
+      dc = cuiFileParser.cuiParser(filename).getDataContainer( self.startTime, self.endTime )
     except Exception as e :
       print 'CUI data could not be retrieved for period :',self.startTime, self.endTime
       print e
@@ -671,7 +614,7 @@ class StationCollection(tinyDB) :
 
   def generateSaturn01ProfilerData( self, tag, var ) :
     """Uses saturn01 pressure data, and temp/salt data to generate a temp/salt dataContainer with correct depth information in z coordinate."""
-    import data.wprofiler as wp
+    import crane.data.wprofiler as wp
     import time as timeMod
     if tag == self.getObsTag() :
       # TODO what is the correct dataType for raw profiler data?

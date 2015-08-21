@@ -18,8 +18,7 @@ import subprocess as sub
 from crane.data import dataContainer
 from crane.data import timeArray
 from crane.data import extractStation
-
-from files.buildPoints import BuildPoint
+from crane.files import buildPoints
 
 #-------------------------------------------------------------------------------
 # Functions
@@ -43,10 +42,10 @@ def extractForDataContainer( dataDir, trackDC, var=None, name=None, bpFile=None)
   # Overwrite x,y coordinate if using alternative coordinate system (open channels) 
   if bpFile is not None:
     print 'Overwriting xy from buildpoint'
-    bp = BuildPoint()
-    bp.readFileFromDisk( bpFile )
+    bp = buildPoints.BuildPoint()
+    bp.readFileFromDisk(bpFile)
     x = bp.getX()
-    y = bp.getY()  
+    y = bp.getY()
 
   # expand scalar coordinates to time-dep track
   nx = max( max( len(x), len(y) ), len(z) )

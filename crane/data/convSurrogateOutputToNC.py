@@ -10,14 +10,16 @@ import os
 import sys
 import traceback
 import numpy as np
+import glob
+import datetime
+from scipy.io.matlab import loadmat
+from scipy.interpolate import interp1d
+
 from crane.data import timeArray
 from crane.data import dataContainer
-import glob
-from scipy.io.matlab import loadmat
-import datetime
-from data.coordSys import *
-import data.dirTreeManager as dtm
-from scipy.interpolate import interp1d
+from crane.data import dirTreeManager
+from crane.files import csvStationFile
+from crane.data import collection
 
 #-----------------------------------------------------------------------------
 # Functions
@@ -270,10 +272,10 @@ def getTSFromProfile(runTag, location, var, z=None, k=None,
 
   """
   if var == 'elev' :
-    return dtm.getDataContainer(location=location, tag=runTag,
+    return dirTreeManager.getDataContainer(location=location, tag=runTag,
                                 dataType='timeseries', variable=var, rule=rule)
 
-  prof = dtm.getDataContainer(location=location, tag=runTag,
+  prof = dirTreeManager.getDataContainer(location=location, tag=runTag,
                               dataType='profile', variable=var, rule=rule)
   if k==None and z==None :
     raise Exception('either k or z must be given')
@@ -382,7 +384,7 @@ def gatherProfiles(runTag,baseDir,varList,stationsToExtract,startTime,endTime,
     raise IOError('directory not found: '+dataDir)
   dcs = []
   for var in varList :
-    varStations = uniqueList( v[0] for v in
+    varStations = collection.uniqueList( v[0] for v in
                              stationsToExtract.getTuples(variable=var) )
     for loc in varStations :
       try :
@@ -411,7 +413,7 @@ def gatherSIL(runTag,baseDir,startTime,endTime) :
   return dcs
 
 def extractTimeSeriesFromProfiles(runTag,stationsToExtract,
-                                  rule=dtm.defaultTreeRule()):
+                                  rule='montlyFile'):
   """Extracts time series at a certain depth from vertical profiles"""
   dcs = []
   for key in stationsToExtract.getTuples() :
@@ -430,12 +432,10 @@ def extractTimeSeriesFromProfiles(runTag,stationsToExtract,
 #-----------------------------------------------------------------------------
 # Main routine
 #-----------------------------------------------------------------------------
-from files.csvStationFile import csvStationFile,csvStationFileWithDepth
-from data.collection import uniqueList
 
 def gatherAndExtract(runTag,dataDir,startTime,endTime,extractFile,
                      dataSetName='test',dataSetType='ms') :
-  stationsToExtract = csvStationFileWithDepth()
+  stationsToExtract = csvStationFile.csvStationFileWithDepth()
   stationsToExtract.readFromFile(extractFile)
 
   rule = 'montlyFile'
@@ -445,7 +445,7 @@ def gatherAndExtract(runTag,dataDir,startTime,endTime,extractFile,
     dcs = gatherProfiles(runTag,dataDir, ['elev','salt','temp','hvel'],
                          stationsToExtract, startTime,endTime,
                          dataSetName,dataSetType)
-    dtm.saveDataContainerInTree(dcs, rule=rule, dtype=np.float32,
+    dirTreeManager.saveDataContainerInTree(dcs, rule=rule, dtype=np.float32,
                                 overwrite=True, compress=True)
   except Exception as e:
     print 'Could not read station profiles'
@@ -454,7 +454,7 @@ def gatherAndExtract(runTag,dataDir,startTime,endTime,extractFile,
   # SIL
   try :
     dcs = gatherSIL(runTag,dataDir,startTime,endTime)
-    dtm.saveDataContainerInTree(dcs, rule=rule, dtype=np.float32,
+    dirTreeManager.saveDataContainerInTree(dcs, rule=rule, dtype=np.float32,
                                 overwrite=True)
   except Exception as e:
     print 'Could not read SIL'
@@ -463,7 +463,7 @@ def gatherAndExtract(runTag,dataDir,startTime,endTime,extractFile,
   # plume metrics
   try :
     dcs = gatherPlumeMetrics(runTag,dataDir,startTime,endTime)
-    dtm.saveDataContainerInTree(dcs, rule=rule, dtype=np.float32,
+    dirTreeManager.saveDataContainerInTree(dcs, rule=rule, dtype=np.float32,
                                 overwrite=True)
   except Exception as e:
     print 'Could not read plume metrics'
@@ -471,7 +471,7 @@ def gatherAndExtract(runTag,dataDir,startTime,endTime,extractFile,
 
   # Extract time series at known (x,y,z) locations and store
   dcs = extractTimeSeriesFromProfiles(runTag,stationsToExtract)
-  dtm.saveDataContainerInTree(dcs, rule=rule, dtype=np.float32,
+  dirTreeManager.saveDataContainerInTree(dcs, rule=rule, dtype=np.float32,
                               overwrite=True)
 
 #-------------------------------------------------------------------------------

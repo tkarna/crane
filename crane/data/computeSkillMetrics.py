@@ -9,12 +9,12 @@ import numpy as np
 import datetime
 import sys
 from optparse import OptionParser
-import data.statistics as stat
-from data.stationCollection import tinyDB
-from data.collection import *
-from data.timeSeriesFilters import *
-import data.dirTreeManager as dtm
-from files.csvStationFile import *
+from crane.data import statistics
+from crane.data import stationCollection
+from crane.data import collection
+from crane.data import timeSeriesFilters
+from crane.data import dirTreeManager
+from crane.files import csvStationFile
 import traceback
 
 #-------------------------------------------------------------------------------
@@ -43,14 +43,14 @@ def computeStats( reference, signal ):
   r = getDataArray(reference)
   s = getDataArray(signal)
   d = {}
-  d['bias'] = stat.bias( r, s )
-  d['rmse'] = stat.rootMeanSquareError( r, s, centered=False )
-  d['nmse'] = stat.normalizedMeanSquareError( r, s )
-  d['stde'] = stat.standardDeviation( s-r )
-  d['std'] = stat.standardDeviation( s )
-  d['ioa'] = stat.indexOfAgreement( r,s )
-  d['corr'] = stat.correlationCoefficient( r,s )
-  d['murphy'] = stat.murphySkillScore( r,s )
+  d['bias'] = statistics.bias( r, s )
+  d['rmse'] = statistics.rootMeanSquareError( r, s, centered=False )
+  d['nmse'] = statistics.normalizedMeanSquareError( r, s )
+  d['stde'] = statistics.standardDeviation( s-r )
+  d['std'] = statistics.standardDeviation( s )
+  d['ioa'] = statistics.indexOfAgreement( r,s )
+  d['corr'] = statistics.correlationCoefficient( r,s )
+  d['murphy'] = statistics.murphySkillScore( r,s )
   return d
 
 def getStats( reference, other ) :
@@ -58,8 +58,8 @@ def getStats( reference, other ) :
   r,o = reference.alignTimes( other )
   stats = computeStats( r, o )
 
-  lp_r = removeTides( r )
-  lp_o = removeTides( o )
+  lp_r = timeSeriesFilters.removeTides( r )
+  lp_o = timeSeriesFilters.removeTides( o )
   lp_stats = computeStats( lp_r, lp_o )
 
   hp_r = r.computeError(lp_r)
@@ -107,7 +107,7 @@ def printStationStats( fid, allStats, refTag, runTags ) :
 
   # find all unique station,variable,depth combinations
   entries = [ (loc,var,msld) for tag,loc,var,msld in allStats.getTuples() ]
-  entries = uniqueList(entries)
+  entries = collection.uniqueList(entries)
   # sort by var,loc,msldepth
   entries = sorted(entries, key=lambda s: s[2])
   entries = sorted(entries, key=lambda s: s[0])
@@ -185,11 +185,11 @@ def processStats(refTag, runTags, stationFile, startTime=None, endTime=None,
         os.makedirs(path)
     fid = open(outFile,'w')
 
-  defRule = dtm.defaultTreeRule()
+  defRule = 'monthlyFile'
 
   if isinstance(stationFile, str) and stationFile[-4:]=='.csv' :
     # read station file and convert to a filter (list of dict)
-    stations = csvStationFileWithDepth()
+    stations = csvStationFile.csvStationFileWithDepth()
     stations.readFromFile(stationFile)
     stationFilter = []
     for loc,x,y,z,zType,var in stations.getTuples():
@@ -204,12 +204,12 @@ def processStats(refTag, runTags, stationFile, startTime=None, endTime=None,
 
   # loop over data sets and store statistics in structure:
   # stationStats[('db31','saturn01','salt')]['lowpass']['rmse']
-  stationStats=tinyDB(['tag','location','variable','msldepth'])
+  stationStats = stationCollection.tinyDB(['tag','location','variable','msldepth'])
   # concatenate all time series to one array for global metrics
   # allData[('db31','salt','sig')] # aligned signal
   # allData[('db31','salt','ref')] # aligned reference signal
   allData = {}
-  murphyScores = tinyDB(['tag','location','variable','msldepth'])
+  murphyScores = stationCollection.tinyDB(['tag','location','variable','msldepth'])
   #for loc,x,y,z,zType,var in stations.getTuples() :
     #print ' * ',loc,z,zType,var
   for filt in stationFilter :
@@ -220,7 +220,7 @@ def processStats(refTag, runTags, stationFile, startTime=None, endTime=None,
     try :
       #msldepth = str(int(round(abs(z)*100)))
       # load reference and other time series
-      ref = dtm.getDataContainer(tag=refTag,location=loc,dataType='timeseries',
+      ref = dirTreeManager.getDataContainer(tag=refTag,location=loc,dataType='timeseries',
                                   msldepth=msldepth,variable=var,rule=defRule,
                                   startTime=startTime,endTime=endTime)
       stationStats.addSample(getStats(ref,ref), tag=refTag,
@@ -228,7 +228,7 @@ def processStats(refTag, runTags, stationFile, startTime=None, endTime=None,
       modSignals = {}
       for runTag in runTags :
         try :
-          sig = dtm.getDataContainer(tag=runTag,location=loc,
+          sig = dirTreeManager.getDataContainer(tag=runTag,location=loc,
                                     dataType='timeseries',
                                     msldepth=msldepth,variable=var,rule=defRule,
                                     startTime=startTime,endTime=endTime)
@@ -266,7 +266,7 @@ def processStats(refTag, runTags, stationFile, startTime=None, endTime=None,
           r = r.data.ravel()
           s1 = s1.data.ravel()
           s2 = s2.data.ravel()
-          mur = stat.murphySkillScore(r, s1, reference_model=s2)
+          mur = statistics.murphySkillScore(r, s1, reference_model=s2)
           s = {'original':{}}
           s['original']['MS'] = mur
           murphyScores.addSample(s, tag=runTags[0]+' vs '+runTags[1],
@@ -280,7 +280,7 @@ def processStats(refTag, runTags, stationFile, startTime=None, endTime=None,
     allData[k] = np.hstack( tuple(allData[k]) )
 
   # compute global statistics
-  globalStats = tinyDB(['tag','variable'])
+  globalStats = stationCollection.tinyDB(['tag','variable'])
   allVars = uniqueList([t[1] for t in allData ])
   for var in allVars:
     for tag in runTags :

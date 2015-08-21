@@ -6,7 +6,7 @@ import re
 import time
 import datetime
 
-from files.paramParser import ParamParser
+from crane.files import paramParser
 #-------------------------------------------------------------------------------
 # Constants
 #-------------------------------------------------------------------------------
@@ -36,7 +36,7 @@ class RunInfo(object):
     self.path = path
     file = path+'/param.in'
     if os.path.isfile(file):
-      self.param = ParamParser(file)
+      self.param = paramParser.ParamParser(file)
     else:
       raise Exception('File does not exist: '+param)
 
