@@ -12,18 +12,10 @@ Tuomas Karna 2012-11-29
 import os
 import numpy as np
 import datetime
-import matplotlib
-if 'TACC_SYSTEM' in os.environ and os.environ['TACC_SYSTEM'] == 'stampede':
-    # change backend if no display present (e.g. on supercomputers)
-    matplotlib.use("Agg", warn=False)
-elif 'stccmop' in os.environ.get('HOSTNAME', []):
-    matplotlib.use("Agg", warn=False)
-elif 'edison' in os.environ.get('HOSTNAME', []):
-    matplotlib.use("Agg", warn=False)
-elif 'hopper' in os.environ.get('HOSTNAME', []):
-    matplotlib.use("Agg", warn=False)
 
-import matplotlib.pyplot as plt
+from crane import matplotlib
+from crane import plt
+
 import matplotlib.dates
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 

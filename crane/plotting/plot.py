@@ -6,7 +6,9 @@ High-level class to create timeseries and Taylor Diagrams.
 #-------------------------------------------------------------------------------
 import os
 import numpy as np
-import matplotlib.pyplot as plt
+
+from crane import matplotlib
+from crane import plt
 
 from crane.data import timeArray
 from crane.plotting import plotBase
