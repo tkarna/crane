@@ -246,7 +246,7 @@ def parseCommandLine() :
     dc.setMetaData( 'tag', runTag )
     dc.setMetaData( 'variable', 'sed_1' )
     dc.fieldNames = ['sed_1']
-    dtm.saveDataContainerInTree( dc, path=outDir, rule=rule, dtype=np.float32,
+    dtm.saveDataContainerInTree( dc, rootPath=outDir, rule=rule, dtype=np.float32,
                                  overwrite=True  )
     # Combines sediment files into one
     if numTracers > 1 :
@@ -259,13 +259,12 @@ def parseCommandLine() :
         tmp.setMetaData( 'tag', runTag )
         tmp.setMetaData( 'variable', 'sed_%d' % sed_class)
         tmp.fieldNames = ['sed_%d' % sed_class] 
-              #rule = dtm.defaultTreeRule()
-        dtm.saveDataContainerInTree( tmp, path=outDir, rule=rule, dtype=np.float32,
+        dtm.saveDataContainerInTree( tmp, rootPath=outDir, rule=rule, dtype=np.float32,
                                      overwrite=True  )
     dc.setMetaData( 'tag', runTag )
     dc.setMetaData( 'variable', 'sed' )
     dc.fieldNames = ['sed'] 
-    dtm.saveDataContainerInTree( dc, path=outDir, rule=rule, dtype=np.float32,
+    dtm.saveDataContainerInTree( dc, rootPath=outDir, rule=rule, dtype=np.float32,
                                  overwrite=True  )
   else :
     for var in varList :

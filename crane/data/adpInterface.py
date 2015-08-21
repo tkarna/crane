@@ -12,9 +12,10 @@ import datetime
 
 import data.netcdfCacheInterface as netcdfCacheInterface
 from data.netcdfCacheInterface import netcdfCacheReader as ncCacheReader
-from files.stationFile import StationFile
+from crane.files import stationFile
 from crane.data import dataContainer
 from crane.data import timeArray
+from crane.data import dirTreeManager
 #-------------------------------------------------------------------------------
 # Constants
 #-------------------------------------------------------------------------------
@@ -68,7 +69,7 @@ def getADPData(offering, sT, eT, var) :
   ncreader = netcdfCacheADPReader( off )
   # Get data as 1D arrays 
   t, v, u, binsize = ncreader.getData(sT, eT)
-  sta = StationFile()
+  sta = stationFile.StationFile()
   x,y = sta.getLocation( ncreader.station )
   z = v['bindepth']
   # Reshape time, x, y, and data
@@ -138,11 +139,9 @@ def parseCommandLine() :
 
   dc = getADPData( offering, sT, eT, var)
   dc.setMetaData( 'tag', runTag )
-  import data.dirTreeManager as dtm
-  rule = dtm.oldTreeRule()
-  #rule = dtm.defaultTreeRule()
-  dtm.saveDataContainerInTree( dc, path=outDir, rule=rule, dtype=np.float32,
-                               overwrite=True  )
+  rule = 'singleFile'
+  dirTreeManager.saveDataContainerInTree(dc, rootPath=outDir, rule=rule,
+                                         dtype=np.float32, overwrite=True)
 
 if __name__=='__main__' :
 

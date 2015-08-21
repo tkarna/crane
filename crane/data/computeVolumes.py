@@ -667,8 +667,7 @@ def parseCommandLine() :
     dc.setMetaData('tag',runTag)
 
   import data.dirTreeManager as dtm
-  #rule = dtm.oldTreeRule()
-  rule = dtm.defaultTreeRule()
+  rule = 'monthlyFile'
   dtm.saveDataContainerInTree( dcs, rule=rule, dtype=np.float32,
                                overwrite=True )
 

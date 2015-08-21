@@ -150,9 +150,8 @@ def parseCommandLine() :
   dc = getAUVData( missionNB, var )
   dc.setMetaData( 'tag', runTag )
   import data.dirTreeManager as dtm
-  rule = dtm.oldTreeRule()
-  #rule = dtm.defaultTreeRule()
-  dtm.saveDataContainerInTree( dc, path=outDir, rule=rule, dtype=np.float32,
+  rule = 'singleFile'
+  dtm.saveDataContainerInTree( dc, rootPath=outDir, rule=rule, dtype=np.float32,
                                overwrite=True  )
 
 if __name__=='__main__' :

@@ -93,16 +93,6 @@ def computeSaltIntrusion( transectDC, salt_threshold_list ) :
     output_dc_list.append(dailyMaxDC)
   return output_dc_list
 
-def readSILTransect( tag, startTime, endTime ) :
-  # load transect dataContainer
-  rule = oldTreeRule()
-  #rule = defaultTreeRule()
-  tree = netcdfTree( dataType='transect', tag=tag, location=TRANSECT_NAME, variable='salt', rule=rule )
-  dc = tree.read(startTime,endTime)
-  if dc == None:
-    raise Exception('salt intrusion_length transect could no be read')
-  return dc
-
 #-------------------------------------------------------------------------------
 # Main: Commandline interface
 #-------------------------------------------------------------------------------
@@ -199,8 +189,7 @@ def parseCommandLine() :
     print dc
 
   import data.dirTreeManager as dtm
-  #rule = dtm.oldTreeRule()
-  rule = dtm.defaultTreeRule()
+  rule = 'monthlyFile'
   dtm.saveDataContainerInTree( silDCs, rule=rule, dtype=np.float32,
                                overwrite=True )
 

@@ -438,14 +438,14 @@ def gatherAndExtract(runTag,dataDir,startTime,endTime,extractFile,
   stationsToExtract = csvStationFileWithDepth()
   stationsToExtract.readFromFile(extractFile)
 
-  rule = dtm.defaultTreeRule()
+  rule = 'montlyFile'
 
   # read profile data and store in dataContainer format
   try :
     dcs = gatherProfiles(runTag,dataDir, ['elev','salt','temp','hvel'],
                          stationsToExtract, startTime,endTime,
                          dataSetName,dataSetType)
-    dtm.saveDataContainerInTree(dcs, path='', rule=rule, dtype=np.float32,
+    dtm.saveDataContainerInTree(dcs, rule=rule, dtype=np.float32,
                                 overwrite=True, compress=True)
   except Exception as e:
     print 'Could not read station profiles'
@@ -454,7 +454,7 @@ def gatherAndExtract(runTag,dataDir,startTime,endTime,extractFile,
   # SIL
   try :
     dcs = gatherSIL(runTag,dataDir,startTime,endTime)
-    dtm.saveDataContainerInTree(dcs, path='', rule=rule, dtype=np.float32,
+    dtm.saveDataContainerInTree(dcs, rule=rule, dtype=np.float32,
                                 overwrite=True)
   except Exception as e:
     print 'Could not read SIL'
@@ -463,7 +463,7 @@ def gatherAndExtract(runTag,dataDir,startTime,endTime,extractFile,
   # plume metrics
   try :
     dcs = gatherPlumeMetrics(runTag,dataDir,startTime,endTime)
-    dtm.saveDataContainerInTree(dcs, path='', rule=rule, dtype=np.float32,
+    dtm.saveDataContainerInTree(dcs, rule=rule, dtype=np.float32,
                                 overwrite=True)
   except Exception as e:
     print 'Could not read plume metrics'
@@ -471,7 +471,7 @@ def gatherAndExtract(runTag,dataDir,startTime,endTime,extractFile,
 
   # Extract time series at known (x,y,z) locations and store
   dcs = extractTimeSeriesFromProfiles(runTag,stationsToExtract)
-  dtm.saveDataContainerInTree(dcs, path='', rule=rule, dtype=np.float32,
+  dtm.saveDataContainerInTree(dcs, rule=rule, dtype=np.float32,
                               overwrite=True)
 
 #-------------------------------------------------------------------------------

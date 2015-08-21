@@ -765,9 +765,9 @@ def parseCommandLine() :
 
     import data.dirTreeManager as dtm
     if saveInTree :
-      rule = dtm.defaultTreeRule()
+      rule = 'monthlyFile'
     else :
-      rule = dtm.oldTreeRule()
+      rule = 'singleFile'
     dtm.saveDataContainerInTree(dcs, rule=rule, dtype=np.float32,
                                 overwrite=True, compress=True)
 
