@@ -12,6 +12,7 @@ import numpy as np
 import datetime
 import sys
 import traceback
+import time as timeMod
 
 from crane.data import dataContainer
 from crane.data import timeArray
@@ -728,11 +729,11 @@ class HAManager( object ) :
     tc.saveToASCII( fname, path=path )
 
   def compute( self, signal ) :
-    t0 = time.clock()
+    t0 = timeMod.clock()
     sys.stdout.write( 'computing harmonic analysis: %s... '%(signal.description) )
     sys.stdout.flush()
     tc =  harmonicAnalysis.tidalConstituents.computeFromData( signal )
-    sys.stdout.write( '%.2f s\n'%(time.clock()-t0) )
+    sys.stdout.write( '%.2f s\n'%(timeMod.clock()-t0) )
     return tc
 
   def get( self, key, obsKey=None, useErrorSignal=False ) :
