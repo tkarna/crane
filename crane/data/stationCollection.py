@@ -19,7 +19,7 @@ from crane.data import timeArray
 import crane.data.netcdfCacheInterface as netcdfDB
 import crane.data.loadHindcastStations as loadHindcastStations
 from crane.data import harmonicAnalysis
-from crane.plotting.plotBase import createDirectory
+from crane.utility import createDirectory
 from crane.data import timeSeriesFilters
 from crane.data import dirTreeManager
 from crane.files import csvStationFile

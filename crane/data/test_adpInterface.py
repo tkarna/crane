@@ -3,7 +3,7 @@ import time
 import datetime
 from crane.data import adpInterface
 from crane.plotting import profilePlot
-from crane.plotting.plotBase import saveFigure
+from crane.utility import saveFigure
 
 class TestNetCDFInterface(unittest.TestCase) :
 

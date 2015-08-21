@@ -15,8 +15,10 @@ import sys
 # TODO import only modules
 from crane.data import statistics
 from crane.data.dataContainer import dataContainer
-from crane.plotting.plotBase import *
+from crane import matplotlib
+from crane import plt
 
+# TODO inherit from plotBase?
 class diagramBase(object) :
   """Base class for statistics diagrams"""
   def __init__(self, refStd, refLabel='Reference', normalized=False, **defArgs) :

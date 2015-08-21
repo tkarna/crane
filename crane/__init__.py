@@ -18,7 +18,7 @@ elif 'hopper' in os.environ.get('HOSTNAME', []):
     matplotlib.use('Agg', warn=False)
 import matplotlib.pyplot as plt
 
-# TODO import createDirectory (utils.py)
-# TODO import parseTimeStr (utils.py)
+# bring useful functions/variables to highest level in namespace
+from utility import *
 # TODO import addTracers (utils.py)
 # TODO import VARS, UNITS (physicalVariables.py)

@@ -23,8 +23,9 @@ from crane.data import timeSeriesFilters
 
 from crane.plotting import trackPlot
 from crane.plotting.plot import VARS, UNITS
-from crane.plotting.plotBase import createDirectory, saveFigure
-from crane.plotting.plotBase import parseTimeStr
+from crane.utility import createDirectory
+from crane.utility import saveFigure
+from crane.utility import parseTimeStr
 
 fontsize=20
 matplotlib.rcParams['font.size']=fontsize

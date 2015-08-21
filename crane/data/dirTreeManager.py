@@ -26,7 +26,7 @@ from glob import glob
 import traceback
 import sys
 
-from crane.plotting.plotBase import createDirectory
+from crane.utility import createDirectory
 from crane.data import netcdfIO
 
 ruleAlias = {'singleFile': ['singleFile', 'old', ],

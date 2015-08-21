@@ -9,7 +9,7 @@ import numpy as np
 import datetime
 from scipy.interpolate import interp1d
 from crane.data import timeArray
-from crane.plotting.plotBase import parseTimeStr
+from crane.utility import parseTimeStr
 
 def resampleThFile(infile, outfile, simStartDate, startTime, endTime,dt=None, colIx=None, scalar=1.0) :
 

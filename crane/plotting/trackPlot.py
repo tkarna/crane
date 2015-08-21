@@ -6,13 +6,11 @@ A class for plotting time dependent tracks, where x = x(t) etc., e.g. AUV, glide
 Tuomas Karna 2012-11-02
 """
 
-# TODO import only modules
-from crane.data.dataContainer import dataContainer
-from crane.data.timeArray import *
+from crane.data import timeArray
+from crane.plotting import plotBase
+from crane import plt
 
-from crane.plotting.plotBase import *
-
-class trackTimeSeriesPlot(colorPlotBase) :
+class trackTimeSeriesPlot(plotBase.colorPlotBase) :
   """trackTimeSeriesPlot class"""
   def __init__(self, **defaultArgs) :
     # default plot options for all diagrams
@@ -30,9 +28,9 @@ class trackTimeSeriesPlot(colorPlotBase) :
     self.logScale = defaultArgs.pop('logScale',False)
     if self.logScale and self.unit :
       self.unit = 'log10('+self.unit+')'
-    colorPlotBase.__init__(self,**defaultArgs)
+    super(trackTimeSeriesPlot, self).__init__(**defaultArgs)
     if self.xlim and self.xIsTime :
-      self.xlim = [ convertEpochToPlotTime( timeArray.datetimeToEpochTime( dt ) ) for dt in self.xlim ]
+      self.xlim = [ timeArray.convertEpochToPlotTime( timeArray.datetimeToEpochTime( dt ) ) for dt in self.xlim ]
 
   def setAxes(self, ax) :
     """Set axes for the diagram. All data will be plotted in these axes.
@@ -51,7 +49,7 @@ class trackTimeSeriesPlot(colorPlotBase) :
   def addSample(self, time, zCoord, variable, **kwargs) :
     """Add signal to the diagram. Time is assumed to be in epoch format."""
     if self.xIsTime :
-      time = convertEpochToPlotTime( time )
+      time = timeArray.convertEpochToPlotTime( time )
     kw = dict(self.defaultArgs)
     kw.update(kwargs)
     
@@ -90,14 +88,14 @@ class trackTimeSeriesPlotDC(trackTimeSeriesPlot) :
     data = dc.data[:,0,:].flatten()
     trackTimeSeriesPlot.addSample( self, t, z, data, **kwargs )
 
-class stackTrackPlot(stackPlotBase) :
+class stackTrackPlot(plotBase.stackPlotBase) :
   """A class for stacking multiple tracks in the same plot."""
   def addPlot(self, tag, **kwargs) :
     """Adds a new subplot to the diagram"""
     kw = self.defArgs
     kw.update(kwargs)
     plot = trackTimeSeriesPlot(**kw)
-    stackPlotBase.addPlot(self,plot,tag)
+    super(stackTrackPlot, self).addPlot(self,plot,tag)
 
   def addSample( self, tag, *args, **kwargs ) :
     if not tag in self.tags :
@@ -128,10 +126,10 @@ class stackTrackPlotDC(stackTrackPlot) :
 
 
 if __name__ == '__main__' :
-  #dataDir = '/home/tuomas/workspace/cmop/projects/AUV_comp/f22/f22/data/track/'
-  #d0 = dataContainer.loadFromNetCDF(dataDir+'AUV71_salt_trck_2012-11-01_2012-11-01.nc')
+  from crane.data import dataContainer
+
   dataDir = '/home/tuomas/workspace/cmop/projects/AUV_comp/AUV/data/'
-  d0 = dataContainer.loadFromNetCDF(dataDir+'AUV71_salt_auv_2012-11-01_2012-11-01.nc')
+  d0 = dataContainer.dataContainer.loadFromNetCDF(dataDir+'AUV71_salt_auv_2012-11-01_2012-11-01.nc')
 
   t = d0.time.asEpoch().array
   z = -d0.z.flatten()

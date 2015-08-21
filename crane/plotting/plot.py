@@ -21,6 +21,7 @@ from crane.plotting import tidalConstPlot
 from crane.plotting import profilePlot
 from crane.plotting import trackPlot
 from crane.files import stationFile
+from crane.utility import saveFigure
 
 #-------------------------------------------------------------------------------
 # Constants
@@ -385,7 +386,7 @@ class Plots(object):
     kw = dict(kwargs)
     kw.setdefault('verbose', True)
     kw.setdefault('bbox_tight', True)
-    plotBase.saveFigure(self.path, filename, extensions, **kw)
+    saveFigure(self.path, filename, extensions, **kw)
 
   def makeSaltIntrusion(self, filetype='png', fPrefix='sil', varPrefix=None, ylim=None, err_ylim=None, **kwargs) :
     """Creates timeseries of salt intrusion length and saves to image directory.

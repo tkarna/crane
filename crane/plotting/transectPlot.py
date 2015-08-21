@@ -12,7 +12,8 @@ import datetime
 from crane import plt
 from crane.data import timeArray
 from crane.plotting import plotBase
-from crane.plotting.plotBase import saveFigure, createDirectory
+from crane.utility import createDirectory
+from crane.utility import saveFigure
 
 STA_MIN_DIST = 800
 

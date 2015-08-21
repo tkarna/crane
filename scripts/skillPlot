@@ -21,7 +21,7 @@ from crane.data.loadHindcastStations import readDateRange
 from crane.files.stationFile import StationFile
 
 from crane.plotting.plot import Plots
-from crane.plotting.plotBase import createDirectory
+from crane.utility import createDirectory
 from crane.data.extractStation import tracerModelObsVariables
 
 #-------------------------------------------------------------------------------

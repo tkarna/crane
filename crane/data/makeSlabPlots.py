@@ -26,8 +26,8 @@ from crane import plt
 from crane import matplotlib
 from crane.plotting.plot import VARS, UNITS
 from crane.plotting import slabPlot
-from crane.plotting.plotBase import createDirectory
-from crane.plotting.plotBase import saveFigure
+from crane.utility import createDirectory
+from crane.utility import saveFigure
 
 import multiprocessing
 # NOTE this must not be a local function in runTasksInQueue

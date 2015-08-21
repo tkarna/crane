@@ -155,42 +155,6 @@ def updateYAxis(ax, yIsTime=False, ylim=None, minticks=3, maxticks=12, prune=Non
       loc = matplotlib.ticker.MaxNLocator(nbins=maxticks, prune=prune)
       ax.yaxis.set_major_locator(loc)
 
-
-def parseTimeStr( timeStr ):
-  if len(timeStr.split('-')) == 3 :
-    dt = datetime.datetime.strptime( timeStr ,'%Y-%m-%d')
-  elif len(timeStr.split('-')) == 4 :
-    dt = datetime.datetime.strptime( timeStr ,'%Y-%m-%d-%H')
-  elif len(timeStr.split('-')) == 5 :
-    dt = datetime.datetime.strptime( timeStr ,'%Y-%m-%d-%H-%M')
-  elif len(timeStr.split('-')) == 6 :
-    dt = datetime.datetime.strptime( timeStr ,'%Y-%m-%d-%H-%M-%S')
-  else :
-    raise Exception( 'Could not parse date string:',timeStr )
-  return dt
-
-def createDirectory(path) :
-  if os.path.exists(path) :
-    if not os.path.isdir(path) :
-      raise Exception( 'file with same name exists',path )
-  else :
-    os.makedirs(path)
-  return path
-
-def saveFigure( path, filename, extensions, verbose=False, dpi=200, bbox_tight=False ) :
-  """Saves currently open figure in the given format.
-  If extensions is a list, figure is saved in multiple formats."""
-  kw = {}
-  if bbox_tight :
-    kw['bbox_inches'] = 'tight'
-  if not isinstance( extensions, list ) :
-    extensions = [ extensions ]
-  for ext in extensions :
-    f = os.path.join(path,filename+'.'+ext )
-    if verbose :
-      print 'saving to', f
-    plt.savefig(f, dpi=dpi, **kw)
-
 def convertEpochToPlotTime( t ) :
   """Converts python datetime epoch value to num used in matplotlib.
   Epoch time is always in UTC (see data.timeArray)"""

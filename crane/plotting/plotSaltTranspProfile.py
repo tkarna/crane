@@ -21,8 +21,9 @@ from crane.data import dirTreeManager
 from crane.data import pca
 from crane.plotting import profilePlot
 from crane.plotting.plot import VARS, UNITS
-from crane.plotting.plotBase import createDirectory, saveFigure
-from crane.plotting.plotBase import parseTimeStr
+from crane.utility import createDirectory
+from crane.utility import saveFigure
+from crane.utility import parseTimeStr
 
 fontsize=14
 matplotlib.rcParams['font.size']=fontsize

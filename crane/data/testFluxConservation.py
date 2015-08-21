@@ -13,7 +13,8 @@ from crane.data import timeArray
 from crane.data import dirTreeManager
 from crane.data import extractStation
 from crane.plotting import timeSeriesPlot
-from crane.plotting.plotBase import createDirectory, saveFigure
+from crane.utility import createDirectory
+from crane.utility import saveFigure
 from crane.plotting.plot import VARS, UNITS
 
 def processFluxes(runTag, var, location, imgDir):

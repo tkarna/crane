@@ -11,10 +11,9 @@ import numpy as np
 import traceback
 import sys
 from matplotlib.ticker import FuncFormatter
-# TODO import only modules
 from crane import matplotlib
+from crane import plt
 from crane.data.dataContainer import dataContainer
-from crane.plotting.plotBase import *
 import crane.data.statistics as statMod
 
 def tickLabelToPercent(y, position):

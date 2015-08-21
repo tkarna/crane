@@ -16,7 +16,9 @@ from optparse import OptionParser
 from crane.data import dataContainer
 
 from crane.plotting.plot import VARS, UNITS
-from crane.plotting.plotBase import createDirectory, saveFigure, parseTimeStr
+from crane.utility import createDirectory
+from crane.utility import saveFigure
+from crane.utility import parseTimeStr
 from crane.plotting import trackPlot
 import crane.plotting.colormap
 
