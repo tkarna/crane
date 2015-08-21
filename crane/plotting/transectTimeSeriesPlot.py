@@ -4,18 +4,20 @@ A class for plotting transect timeseries derived from transectPlot.py
 
 Jesse Lopez 2014-06-04
 """
-#------------------------------------------------------------------------------
-# Imports
-#------------------------------------------------------------------------------
-from plotting.plotBase import *
-from data.dataContainer import dataContainer
-from plotting.transectPlot import projectXYOnTransect
+import datetime
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+from crane.data import timeArray
+from crane.data import dataContainer
+from crane.plotting import plotBase
 
 
 #------------------------------------------------------------------------------
-# Classes 
+# Classes
 #------------------------------------------------------------------------------
-class transectTimeSeriesSnapShot(colorPlotBase) :
+class transectTimeSeriesSnapShot(plotBase.colorPlotBase) :
   """transectTimeSeriesSnapShot class"""
   def __init__(self, **defaultArgs) :
     # More legible for plotting
@@ -35,7 +37,7 @@ class transectTimeSeriesSnapShot(colorPlotBase) :
     defaultArgs.setdefault('yIsTime',False)
     if self.logScale :
       self.unit = 'log10('+self.unit+')'
-    colorPlotBase.__init__(self,**defaultArgs)
+    super(transectTimeSeriesSnapShot, self).__init__(**defaultArgs)
     self.ax = None
     self.pax = None
     self.cax = None
@@ -58,11 +60,11 @@ class transectTimeSeriesSnapShot(colorPlotBase) :
     """Add transect to the diagram"""
     kw = dict(self.defaultArgs)
     kw.update(kwargs)
-    
+
     plotType = kw.pop('plotType', 'contourf')
 
     # convert inputs for plot here!
-    t = convertEpochToPlotTime(time)
+    t = plotBase.convertEpochToPlotTime(time)
     x_conv = x.copy()
     if not self.xIsTime and self.xunit == 'km':
         x_conv /= 1000.0
@@ -88,7 +90,7 @@ class transectTimeSeriesSnapShot(colorPlotBase) :
       kw['cmap'] = plt.get_cmap(kw['cmap'])
     if plotType == 'contour' and 'colors' in kw:
         kw.pop('cmap', None)
-    #self.pax = self.ax.pcolormesh(data, shading='gouraud', **kw)
+#    self.pax = self.ax.pcolormesh(data, shading='gouraud', **kw)
     if self.xIsTime:
         if plotType == 'contourf':
             self.cax = self.ax.contourf(t, x_conv, data, shading='gouraud', **kw)
@@ -143,20 +145,20 @@ class transectTimeSeriesSnapShot(colorPlotBase) :
     # Default levels here are for salt.  Put at module level
     SALT_LEVELS = np.arange(5, 31, 5)
     # Day tick factory?
-    DAILY_TICKS = np.arange(24, 24*(ndays+1), 24) 
+    DAILY_TICKS = np.arange(24, 24*(ndays+1), 24)
     XLABEL_FONTSIZE = 14
     YLABEL_FONTSIZE = 14
     CMIN, CMAX = 0.0, 0.1
 
     kw = dict(self.defaultArgs)
     kw.update(kwargs)
-    kw.setdefault('levels', SALT_LEVELS) 
-    self.pax.axes.set_yticklabels(np.floor(dist[::N]))
-    self.pax.axes.set_yticks(np.arange(nNodes)[::N])
+    kw.setdefault('levels', SALT_LEVELS)
+#    self.pax.axes.set_yticklabels(np.floor(dist[::N]))
+#    self.pax.axes.set_yticks(np.arange(nNodes)[::N])
 
-    # XXX: Assuming days along x-axis, place 
-    self.pax.axes.set_xticks(DAILY_TICKS)
-    self.pax.axes.set_xticklabels(dates[1:])
+    # XXX: Assuming days along x-axis, place
+#    self.pax.axes.set_xticks(DAILY_TICKS)
+#    self.pax.axes.set_xticklabels(dates[1:])
 
     self.ax.set_ylabel(self.ylabel, fontsize=YLABEL_FONTSIZE)
     self.ax.set_xlabel(self.xlabel, fontsize=XLABEL_FONTSIZE)
@@ -169,24 +171,24 @@ class transectTimeSeriesSnapShot(colorPlotBase) :
       data[ data < cmin] = cmin
       data[ data > cmax] = cmax
     else :
-      cmin, cmax = CMIN, CMAX 
-    self.pax.set_clim(vmin=cmin, vmax=cmax)
+      cmin, cmax = CMIN, CMAX
+#    self.pax.set_clim(vmin=cmin, vmax=cmax)
     N = kw.pop('N', 10)
     kw.setdefault('levels', SALT_LEVELS)
 
 
 #------------------------------------------------------------------------------
-# Functions 
+# Functions
 #------------------------------------------------------------------------------
 def generateTransectTimeSeriesFromDC( dc, level, iComp, average=4):
   """ Unravel dataContainer arrays for transect time series plots.
-  
-  params: 
+
+  params:
   -------
   dc : dataContainer
     dataContainer of transect data
   level : int
-    Vertical level of transect to plot (bottom=, ..., surface=-1) 
+    Vertical level of transect to plot (bottom=, ..., surface=-1)
   iComp : int
     dataContainer field to process (scalar=0, u=0, v=1)
   average : int
@@ -231,9 +233,9 @@ def generateTransectTimeSeriesFromDC( dc, level, iComp, average=4):
   if NVert[0] != NVert [-1]:
     raise Exception('This method cannot handle varying numbers of vertical levels')
   T = dc.time.array
-  ix = np.arange(level, dc.data.shape[0], NVert[0]) 
-  
-  # Reshape data to (nPoints, time) with averaging over 'average' time steps 
+  ix = np.arange(level, dc.data.shape[0], NVert[0])
+
+  # Reshape data to (nPoints, time) with averaging over 'average' time steps
   C = dc.data[ix, iComp, :].reshape(nPoints, average, -1).mean(axis=1)
   T = dc.time[::average]
 
@@ -243,7 +245,7 @@ def generateTransectTimeSeriesFromDC( dc, level, iComp, average=4):
 def calcDistanceAlongTransect(dc) :
   """Calculate the distances along the transect """
   xpos, ix = np.unique(dc.x, return_index=True)
-  ypos = dc.y[ix] 
+  ypos = dc.y[ix]
   dpos = np.hypot(np.diff(xpos), np.diff(ypos))
   # In KM
   dist = np.cumsum(dpos)/1000.0
@@ -259,12 +261,12 @@ def calcDateStrings(dc) :
 
   dates = [baseDate + datetime.timedelta(days=d) for d in range(ndays+1)]
   dates = [d.strftime('%b %d') for d in dates]
-  
+
   return dates, ndays
 
 
 def calcNumberTransectPoints(dc) :
-  """Calculate number of points in transect""" 
+  """Calculate number of points in transect"""
   x = dc.x
   y = dc.y
   # find unique x,y pairs
@@ -290,7 +292,7 @@ def calcNumberTransectPoints(dc) :
   return nPoints
 
 #------------------------------------------------------------------------------
-# Main 
+# Main
 #------------------------------------------------------------------------------
 if __name__ == '__main__':
   import os
@@ -302,23 +304,23 @@ if __name__ == '__main__':
   field = 0
   # Average over 4 timesteps (hourly)
   avg = 4
-  sed = dataContainer.loadFromNetCDF(sed_path)
+  sed = dataContainer.dataContainer.loadFromNetCDF(sed_path)
   sed_trans, sed_time = generateTransectTimeSeriesFromDC(sed, bottom_level, field,
                                                          average=avg)
   dist = calcDistanceAlongTransect(sed)
   dates, ndays = calcDateStrings(sed)
   nPoints = calcNumberTransectPoints(sed)
 
-  salt = dataContainer.loadFromNetCDF(salt_path)
+  salt = dataContainer.dataContainer.loadFromNetCDF(salt_path)
   salt_trans, salt_time = generateTransectTimeSeriesFromDC(salt, bottom_level, field,
                                                            average=avg)
 
   fig = plt.figure(figsize=(10,8))
   dia = transectTimeSeriesSnapShot(clabel='SSC', unit='kg/m3')
   dia.setupAxes( fig )
-  dia.addSample(sed_trans)
+  dia.addSample(sed_time, np.unique(sed.x), sed_trans)
   dia.showColorBar()
-  dia.addContourSample(salt_trans)
+  #dia.addContourSample(salt_trans)
   dia.addTitle('North Channel\nNear-bottom suspended sediment')
-  dia.makePlotPretty(nPoints, dist, ndays, dates)
+  #dia.makePlotPretty(nPoints, dist, ndays, dates)
   plt.show()

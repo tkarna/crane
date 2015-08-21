@@ -203,7 +203,7 @@ def convertEpochToPlotTime( t ) :
   """Converts python datetime epoch value to num used in matplotlib.
   Epoch time is always in UTC (see data.timeArray)"""
   tzCorrection = -8.0*3600 # time zone correction for PST
-  return matplotlib.dates.epoch2num( t + tzCorrection )
+  return matplotlib.dates.epoch2num( t ) + tzCorrection
 
 def convertPlotToEpochTime( t ) :
   """Converts python matplotlib num to datetime epoch time format.
