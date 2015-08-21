@@ -22,8 +22,8 @@ from crane.data.selfeGridUtils import readAnyMeshFile
 
 import traceback
 
-import matplotlib.pyplot as plt
-import matplotlib
+from crane import plt
+from crane import matplotlib
 from crane.plotting.plot import VARS, UNITS
 from crane.plotting import slabPlot
 from crane.plotting.plotBase import createDirectory

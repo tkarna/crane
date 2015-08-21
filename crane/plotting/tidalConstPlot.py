@@ -8,9 +8,9 @@ Uses matplotlib bar plotting routine.
 Tuomas Karna 2012-09-17
 """
 import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
 
+from crane import matplotlib
+from crane import plt
 from crane.plotting import plotBase
 
 # class that takes the data (error time series) and plots the histogram

@@ -19,7 +19,7 @@ import sys
 from optparse import OptionParser
 
 import numpy as np
-import matplotlib.pyplot as plt
+from crane import plt
 
 from crane.data import dirTreeManager as dtm
 from crane.data import stationCollection

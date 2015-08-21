@@ -8,8 +8,8 @@ from crane.data import timeArray
 from crane.data import collection
 from crane.files import csvStationFile
 
-import matplotlib
-import matplotlib.pyplot as plt
+from crane import matplotlib
+from crane import plt
 from crane.plotting.plot import VARS,UNITS
 from crane.plotting.plotBase import saveFigure, createDirectory
 from crane.plotting import transectPlot

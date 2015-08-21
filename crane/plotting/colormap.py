@@ -3,11 +3,14 @@ Various colormaps and related routines
 
 Tuomas Karna 2014-06-04
 """
-from crane.plotting import plotBase
 import numpy as np
+
+from crane import matplotlib
+from crane import plt
+from crane.plotting import plotBase
+
 import matplotlib.colors as colors
 import matplotlib.cm as cm
-import matplotlib
 
 def cmap_discretize(cmap, N):
   """Return a discrete colormap from the continuous colormap cmap.

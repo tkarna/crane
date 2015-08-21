@@ -3,7 +3,7 @@ import matplotlib
 import numpy as np
 import numpy.ma as ma
 
-import matplotlib.pyplot as plt
+from crane import plt
 from matplotlib import cm
 from matplotlib import dates
 

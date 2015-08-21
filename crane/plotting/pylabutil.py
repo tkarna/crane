@@ -3,7 +3,7 @@ import urllib
 import tempfile
 
 import numpy as np
-import matplotlib.pyplot as plt
+from crane import plt
 from matplotlib import dates
 from matplotlib.cbook import silent_list
 

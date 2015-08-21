@@ -444,7 +444,7 @@ class stackSlabPlotDC(stackSlabPlot) :
 
 
 if __name__ == '__main__' :
-  import matplotlib.pyplot as plt
+  from crane import plt
   # generate dummy data
   # First create the x and y coordinates of the points.
   n_angles = 36

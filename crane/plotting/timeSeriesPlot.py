@@ -9,7 +9,7 @@ Tuomas Karna 2012-08-20
 import sys
 
 import numpy as np
-import matplotlib.pyplot as plt
+from crane import plt
 
 from crane.data import dataContainer
 from crane.data import timeArray

@@ -10,9 +10,9 @@ Tuomas Karna 2012-09-14
 import numpy as np
 import traceback
 import sys
-import matplotlib
 from matplotlib.ticker import FuncFormatter
 # TODO import only modules
+from crane import matplotlib
 from crane.data.dataContainer import dataContainer
 from crane.plotting.plotBase import *
 import crane.data.statistics as statMod

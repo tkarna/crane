@@ -7,7 +7,7 @@ Jesse Lopez 2014-06-04
 import datetime
 
 import numpy as np
-import matplotlib.pyplot as plt
+from crane import plt
 
 from crane.data import timeArray
 from crane.data import dataContainer

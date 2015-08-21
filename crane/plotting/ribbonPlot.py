@@ -13,8 +13,9 @@ from optparse import OptionParser
 import glob
 from scipy.interpolate import interp1d, griddata, splev, splrep
 import matplotlib.gridspec as gridspec
-import matplotlib
-import matplotlib.pyplot as plt
+
+from crane import matplotlib
+from crane import plt
 
 from crane.data import dirTreeManager
 from crane.data import dataContainer

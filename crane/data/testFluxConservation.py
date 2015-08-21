@@ -7,7 +7,7 @@ Tuomas Karna 2014-10-29
 import os
 import numpy as np
 
-import matplotlib.pyplot as plt
+from crane import plt
 
 from crane.data import timeArray
 from crane.data import dirTreeManager

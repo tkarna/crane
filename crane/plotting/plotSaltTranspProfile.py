@@ -12,8 +12,8 @@ from scipy.interpolate import interp1d, griddata
 from scipy.spatial import cKDTree
 import matplotlib.gridspec as gridspec
 
-import matplotlib
-import matplotlib.pyplot as plt
+from crane import matplotlib
+from crane import plt
 
 from crane.data import dataContainer
 from crane.data import timeArray

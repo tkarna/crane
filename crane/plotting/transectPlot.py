@@ -9,7 +9,7 @@ Tuomas Karna 2012-11-16
 import numpy as np
 import datetime
 
-import matplotlib.pyplot as plt
+from crane import plt
 from crane.data import timeArray
 from crane.plotting import plotBase
 from crane.plotting.plotBase import saveFigure, createDirectory
