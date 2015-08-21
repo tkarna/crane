@@ -1,9 +1,9 @@
 import unittest
 import time
 import datetime
-from adpInterface import getADPData
-from plotting.profilePlot import *
-#from netcdfCacheInterface import *
+from crane.data import adpInterface
+from crane.plotting import profilePlot
+from crane.plotting.plotBase import saveFigure
 
 class TestNetCDFInterface(unittest.TestCase) :
 
@@ -11,14 +11,14 @@ class TestNetCDFInterface(unittest.TestCase) :
         Vs = 'vel_mag'
         sT = datetime.datetime(2012, 11, 1)
         eT = datetime.datetime(2012, 11, 30)
-        dc = getADPData('saturn01.1950.A.ADP', sT, eT, Vs)
+        dc = adpInterface.getADPData('saturn01.1950.A.ADP', sT, eT, Vs)
         print dc
 
      def test_twoMonths(self) :
         Vs = 'vel_mag'
         sT = datetime.datetime(2011, 11, 1)
         eT = datetime.datetime(2011, 12, 30)
-        dc = getADPData('saturn01.1950.A.ADP', sT, eT, Vs)
+        dc = adpInterface.getADPData('saturn01.1950.A.ADP', sT, eT, Vs)
         print dc
 
      def test_2013(self) :
@@ -32,19 +32,19 @@ class TestNetCDFInterface(unittest.TestCase) :
         Vs = 'vel_N'
         sT = datetime.datetime(2012, 11, 1)
         eT = datetime.datetime(2012, 11, 30)
-        dc = getADPData('saturn01.1950.A.ADP', sT, eT, Vs)
+        dc = adpInterface.getADPData('saturn01.1950.A.ADP', sT, eT, Vs)
         print dc
         Vs = 'vel_E'
-        dc = getADPData('saturn01.1950.A.ADP', sT, eT, Vs)
+        dc = adpInterface.getADPData('saturn01.1950.A.ADP', sT, eT, Vs)
         print dc
         Vs = 'alongvel'
-        dc = getADPData('saturn01.1950.A.ADP', sT, eT, Vs)
+        dc = adpInterface.getADPData('saturn01.1950.A.ADP', sT, eT, Vs)
         print dc
         Vs = 'crossvel'
-        dc = getADPData('saturn01.1950.A.ADP', sT, eT, Vs)
+        dc = adpInterface.getADPData('saturn01.1950.A.ADP', sT, eT, Vs)
         print dc
         Vs = 'vel_vert'
-        dc = getADPData('saturn01.1950.A.ADP', sT, eT, Vs)
+        dc = adpInterface.getADPData('saturn01.1950.A.ADP', sT, eT, Vs)
         print dc
 
      def test_plot(self) :
@@ -52,7 +52,7 @@ class TestNetCDFInterface(unittest.TestCase) :
         Vs = 'vel_mag'
         sT = datetime.datetime(2011, 11, 15)
         eT = datetime.datetime(2011, 12, 4)
-        dc = getADPData('saturn01.1950.A.ADP', sT, eT, Vs)
+        dc = adpInterface.getADPData('saturn01.1950.A.ADP', sT, eT, Vs)
 
         print dc
 
@@ -65,7 +65,7 @@ class TestNetCDFInterface(unittest.TestCase) :
         sT = time.mktime(datetime.datetime(2012, 11, 1).timetuple())
         eT = time.mktime(datetime.datetime(2012, 11, 30).timetuple())
         Vs = ['vel_mag', 'bindepth']
-        (t, v, u) = getADPData('saturn01', 'saturn01.1950.A.ADP', sT, eT, Vs)
+        (t, v, u) = adpInterface.getADPData('saturn01', 'saturn01.1950.A.ADP', sT, eT, Vs)
 
         self.assertTrue(u.has_key('bindepth'))
         self.assertTrue(v['bindepth'].size>0)
