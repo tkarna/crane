@@ -5,21 +5,29 @@ Reads *_salt.63.nc files. Only netcdf output files are supported.
 
 Tuomas Karna 2013-11-08
 """
-
-from data.meshContainer import *
-import files.gr3Interface as gr3Interface
-from netCDF4 import Dataset as NetCDFFile
-from data.ncExtract import *
+import sys
+import numpy as np
+import datetime
+import traceback
 import time as timeMod
+from netCDF4 import Dataset as NetCDFFile
 
-class plumeStatsComputer(selfeNCFile) :
+from crane.data import meshContainer
+from crane.data import dataContainer
+from crane.data import timeArray
+from crane.files import gr3Interface
+from crane.data import ncExtract
+from crane.data import dirTreeManager
+
+
+class plumeStatsComputer(object) :
   """Class that computes the default plume statistics from SELFE netcdf
   outputs.
   """
   def __init__(self, path, plumeRegionGR3File, saltThreshold) :
     """Initializes data structures for the given plume region file."""
     # read salt field from netcdf file
-    self.extractor = selfeExtractBase(path, var='salt')
+    self.extractor = ncExtract.selfeExtractBase(path, var='salt')
     self.extractor.initialize()
     self.ncReader = self.extractor.dataFile
     self.saltThreshold = saltThreshold
@@ -48,7 +56,7 @@ class plumeStatsComputer(selfeNCFile) :
     self.faceNodes = self.nodesToMiniMesh[ self.ncReader.faceNodes ]
     self.faceNodes = self.faceNodes[goodElems]
 
-    self.areas = computeAreas(self.faceNodes,self.nodeX,self.nodeY)
+    self.areas = meshContainer.computeAreas(self.faceNodes,self.nodeX,self.nodeY)
     self.elem_center_x = self.nodeX[self.faceNodes].mean(axis=1)
     self.elem_center_y = self.nodeY[self.faceNodes].mean(axis=1)
     self.bath = self.ncReader.bath[self.plume_mask]
@@ -278,9 +286,8 @@ def parseCommandLine() :
   for dc in dcs :
     dc.setMetaData('tag',runTag)
   
-  import data.dirTreeManager as dtm
   rule = 'monthlyFile'
-  dtm.saveDataContainerInTree( dcs, rule=rule, dtype=np.float32,
+  dirTreeManager.saveDataContainerInTree( dcs, rule=rule, dtype=np.float32,
                                overwrite=True )
 
 if __name__=='__main__' :

@@ -6,17 +6,25 @@ Generalized version of computePlumeMetrics.py
 #-----------------------------------------------------------------------------
 # Imports
 #-----------------------------------------------------------------------------
-from data.meshContainer import *
-import files.gr3Interface as gr3Interface
-from netCDF4 import Dataset as NetCDFFile
-from data.ncExtract import *
+import sys
+import numpy as np
+import datetime
+import traceback
 import time as timeMod
+from netCDF4 import Dataset as NetCDFFile
+
+from crane.data import meshContainer
+from crane.data import dataContainer
+from crane.data import timeArray
+from crane.files import gr3Interface
+from crane.data import ncExtract
+from crane.data import dirTreeManager
 
 
 #-----------------------------------------------------------------------------
 # Classes
 #-----------------------------------------------------------------------------
-class volumeComputer(ncExtractBase):
+class volumeComputer(object):
   """Volumetric computations from SELFE netCDF outputs"""
   def __init__(self, path, volumeFile, volumeVar,
                volumeThresholdLow=None, volumeThresholdHi=None,
@@ -53,11 +61,11 @@ class volumeComputer(ncExtractBase):
     self.regionName = regionName
 
     # Read headers from netcdf files
-    self.volumeNCReader = ncExtractBase(path, volumeFile)
+    self.volumeNCReader = ncExtract.ncExtractBase(path, volumeFile)
     self.volumeNCReader.readHeader()
 
     if criteriaFile is not None:
-      self.criteriaNCReader = ncExtractBase(path, criteriaFile)
+      self.criteriaNCReader = ncExtract.ncExtractBase(path, criteriaFile)
       self.criteriaNCReader.readHeader()
     else:
       self.criteriaNCReader = None
@@ -137,7 +145,7 @@ class volumeComputer(ncExtractBase):
     self.faceNodes = self.nodesToMiniMesh[ self.volumeNCReader.faceNodes ]
     self.faceNodes = self.faceNodes[goodElems]
 
-    self.areas = computeAreas(self.faceNodes,self.nodeX,self.nodeY)
+    self.areas = meshContainer.computeAreas(self.faceNodes,self.nodeX,self.nodeY)
     self.elem_center_x = self.nodeX[self.faceNodes].mean(axis=1)
     self.elem_center_y = self.nodeY[self.faceNodes].mean(axis=1)
     self.bath = self.volumeNCReader.bath[self.region_mask]
@@ -666,9 +674,8 @@ def parseCommandLine() :
   for dc in dcs :
     dc.setMetaData('tag',runTag)
 
-  import data.dirTreeManager as dtm
   rule = 'monthlyFile'
-  dtm.saveDataContainerInTree( dcs, rule=rule, dtype=np.float32,
+  dirTreeManager.saveDataContainerInTree( dcs, rule=rule, dtype=np.float32,
                                overwrite=True )
 
 if __name__=='__main__' :
