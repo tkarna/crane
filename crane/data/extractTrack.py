@@ -19,6 +19,7 @@ from crane.data import dataContainer
 from crane.data import timeArray
 from crane.data import extractStation
 from crane.files import buildPoints
+from crane.physicalVariableDefs import addTracers
 
 #-------------------------------------------------------------------------------
 # Functions

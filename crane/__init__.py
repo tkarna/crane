@@ -20,5 +20,4 @@ import matplotlib.pyplot as plt
 
 # bring useful functions/variables to highest level in namespace
 from utility import *
-# TODO import addTracers (utils.py)
-# TODO import VARS, UNITS (physicalVariables.py)
+from physicalVariableDefs import *

@@ -10,7 +10,8 @@ from crane.files import csvStationFile
 
 from crane import matplotlib
 from crane import plt
-from crane.plotting.plot import VARS,UNITS
+from crane.physicalVariableDefs import VARS
+from crane.physicalVariableDefs import UNITS
 from crane.utility import saveFigure
 from crane.utility import createDirectory
 from crane.plotting import transectPlot

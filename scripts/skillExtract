@@ -23,7 +23,8 @@ import sys
 from optparse import OptionParser
 
 from crane.data import stationCollection
-from crane.data.extractStation import addTracers, tracerModelObsVariables
+from crane.physicalVariableDefs import addTracers
+from crane.physicalVariableDefs import tracerModelObsVariables
 
 #-------------------------------------------------------------------------------
 # Constants

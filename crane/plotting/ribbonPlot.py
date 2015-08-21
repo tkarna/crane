@@ -22,7 +22,8 @@ from crane.data import dataContainer
 from crane.data import timeSeriesFilters
 
 from crane.plotting import trackPlot
-from crane.plotting.plot import VARS, UNITS
+from crane.physicalVariableDefs import VARS
+from crane.physicalVariableDefs import UNITS
 from crane.utility import createDirectory
 from crane.utility import saveFigure
 from crane.utility import parseTimeStr

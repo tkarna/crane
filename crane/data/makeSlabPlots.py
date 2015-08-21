@@ -24,7 +24,8 @@ import traceback
 
 from crane import plt
 from crane import matplotlib
-from crane.plotting.plot import VARS, UNITS
+from crane.physicalVariableDefs import VARS
+from crane.physicalVariableDefs import UNITS
 from crane.plotting import slabPlot
 from crane.utility import createDirectory
 from crane.utility import saveFigure

@@ -22,7 +22,7 @@ from crane.files.stationFile import StationFile
 
 from crane.plotting.plot import Plots
 from crane.utility import createDirectory
-from crane.data.extractStation import tracerModelObsVariables
+from crane.physicalVariableDefs import tracerModelObsVariables
 
 #-------------------------------------------------------------------------------
 # Main routine

@@ -14,7 +14,6 @@ from crane.data import selfeGridUtils
 
 from crane.utility import createDirectory
 from crane.utility import saveFigure
-from crane.plotting.plot import VARS, UNITS
 from crane.plotting import slabPlot
 
 def generateCdPlot( dataDir, runTag, imgDir, mainChannel, clim=[0.00,0.006] ) :

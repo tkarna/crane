@@ -20,7 +20,8 @@ from crane.data import timeArray
 from crane.data import dirTreeManager
 from crane.data import pca
 from crane.plotting import profilePlot
-from crane.plotting.plot import VARS, UNITS
+from crane.physicalVariableDefs import VARS
+from crane.physicalVariableDefs import UNITS
 from crane.utility import createDirectory
 from crane.utility import saveFigure
 from crane.utility import parseTimeStr

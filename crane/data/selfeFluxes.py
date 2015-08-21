@@ -31,6 +31,7 @@ from crane.data import timeArray
 from crane.data import gridUtils
 from crane.data import extractStation
 from crane.data import dirTreeManager
+from crane.physicalVariableDefs import addTracers
 
 # -----------------------------------------------------------------------------
 #  classes
@@ -728,7 +729,7 @@ def parseCommandLine() :
         if not numTracers and tracerModel.split('.')[0] in ['sed','generic']:
             parser.print_help()
             error(2, 'numTracers must be provided if sed or generic tracer models are used.')
-        extraTrcrFiles = extractStation.addTracers( tracerModel, numTracers=numTracers)
+        extraTrcrFiles = addTracers( tracerModel, numTracers=numTracers)
     if startStr and endStr:
         startTime = datetime.datetime.strptime( startStr ,'%Y-%m-%d')
         endTime = datetime.datetime.strptime( endStr ,'%Y-%m-%d')

@@ -15,7 +15,9 @@ from crane.data import extractStation
 from crane.plotting import timeSeriesPlot
 from crane.utility import createDirectory
 from crane.utility import saveFigure
-from crane.plotting.plot import VARS, UNITS
+from crane.physicalVariableDefs import VARS
+from crane.physicalVariableDefs import UNITS
+from crane.physicalVariableDefs import addTracers
 
 def processFluxes(runTag, var, location, imgDir):
     fluxname = 'flux'
@@ -244,7 +246,7 @@ def parseCommandLine() :
         if not numTracers and tracerModel.split('.')[0] in ['sed','generic']:
             parser.print_help()
             parser.error('numTracers must be provided if sed or generic tracer models are used.')
-        extractStation.addTracers( tracerModel, numTracers=numTracers)
+        addTracers( tracerModel, numTracers=numTracers)
 
     print 'Parsed options:'
     print ' - runTag:', runTag

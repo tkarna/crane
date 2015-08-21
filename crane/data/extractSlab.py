@@ -20,6 +20,7 @@ import subprocess as sub
 from crane.data import meshContainer
 from crane.data import timeArray
 from crane.data import extractStation
+from crane.physicalVariableDefs import addTracers
 
 #-------------------------------------------------------------------------------
 # Functions
