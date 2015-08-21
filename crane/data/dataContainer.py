@@ -603,7 +603,7 @@ class dataContainer(object) :
     if dtype == None :
       dtype = self.dtype
 
-    nc = netcdfIO(filename)
+    nc = netcdfIO.netcdfIO(filename)
     nc.saveDataContainer( self, dtype, overwrite, compress, digits )
 
   @classmethod
