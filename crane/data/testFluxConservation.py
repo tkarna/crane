@@ -6,34 +6,36 @@ Tuomas Karna 2014-10-29
 """
 import os
 import numpy as np
-import files.gr3Interface as gr3Interface
-from data.ncExtract import selfeNCFile, selfeExtractBase, getNCVariableName
-from crane.data import dataContainer
-from plotting.timeSeriesPlot import *
-from plotting.plot import VARS, UNITS
-import data.dirTreeManager as dtm
-from extractStation import addTracers
+
+import matplotlib.pyplot as plt
+
+from crane.data import timeArray
+from crane.data import dirTreeManager
+from crane.data import extractStation
+from crane.plotting import timeSeriesPlot
+from crane.plotting.plotBase import createDirectory, saveFigure
+from crane.plotting.plot import VARS, UNITS
 
 def processFluxes(runTag, var, location, imgDir):
     fluxname = 'flux'
     volname = 'volume'
     fluxname = var+fluxname
-    fluxes = dtm.getDataContainer(rule='old', tag=runTag, dataType='flux',
+    rule = 'singleFile'
+    fluxes = dirTreeManager.getDataContainer(rule=rule, tag=runTag, dataType='flux',
                                   location=location,variable=fluxname)
-    corrfluxes = dtm.getDataContainer(rule='old', tag=runTag, dataType='flux',
+    corrfluxes = dirTreeManager.getDataContainer(rule=rule, tag=runTag, dataType='flux',
                                       location=location,
                                       variable='corr'+fluxname)
-    vol = dtm.getDataContainer(rule='old', tag=runTag, dataType='flux',
+    vol = dirTreeManager.getDataContainer(rule=rule, tag=runTag, dataType='flux',
                                location=location, variable=volname)
     if var != 'volume':
         trcrvolname = 'mean'+var
-        trcr = dtm.getDataContainer(rule='old', tag=runTag, dataType='flux',
+        trcr = dirTreeManager.getDataContainer(rule=rule, tag=runTag, dataType='flux',
                                     location=location, variable=trcrvolname)
         volume = trcr.copy()
         volume.data = vol.data*trcr.data
     else:
         volume = vol
-
 
     print volume
     print fluxes
@@ -107,7 +109,7 @@ def processFluxes(runTag, var, location, imgDir):
 
     # plot volumes and volume conservation
     for i in range(nBoxes):
-        dia = stackTimeSeriesPlotDC(figwidth=15)
+        dia = timeSeriesPlot.stackTimeSeriesPlotDC(figwidth=15)
         var = volume.getMetaData('variable')
         volunit = 'm3'
         vollabel = 'volume'
@@ -158,7 +160,7 @@ def processFluxes(runTag, var, location, imgDir):
     for i in range(nFluxes):
         if np.abs(corrfluxes.data[0,i,:]).max() < 1.0:
             continue
-        dia = stackTimeSeriesPlotDC(figwidth=15)
+        dia = timeSeriesPlot.stackTimeSeriesPlotDC(figwidth=15)
         var = fluxes.getMetaData('variable')
         primaryVar = var.replace('flux','')
         varStr = var.replace('flux',' flux')
@@ -241,7 +243,7 @@ def parseCommandLine() :
         if not numTracers and tracerModel.split('.')[0] in ['sed','generic']:
             parser.print_help()
             parser.error('numTracers must be provided if sed or generic tracer models are used.')
-        addTracers( tracerModel, numTracers=numTracers)
+        extractStation.addTracers( tracerModel, numTracers=numTracers)
 
     print 'Parsed options:'
     print ' - runTag:', runTag

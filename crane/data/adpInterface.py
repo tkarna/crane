@@ -9,25 +9,24 @@ import numpy as np
 import os
 import sys
 import datetime
+import time as timeMod
 
-import data.netcdfCacheInterface as netcdfCacheInterface
-from data.netcdfCacheInterface import netcdfCacheReader as ncCacheReader
+from crane.data import netcdfCacheInterface
 from crane.files import stationFile
 from crane.data import dataContainer
 from crane.data import timeArray
 from crane.data import dirTreeManager
-#-------------------------------------------------------------------------------
-# Constants
-#-------------------------------------------------------------------------------
-import pdb
+
 #-------------------------------------------------------------------------------
 # Classes
 #-------------------------------------------------------------------------------
-class netcdfCacheADPReader(ncCacheReader) :
+
+
+class netcdfCacheADPReader(netcdfCacheInterface.netcdfCacheReader) :
   """ Child object overrides getData method to read ADP data"""
 
   def __init__(self, o) :
-     ncCacheReader.__init__(self, o)
+     super(netcdfCacheADPReader, self).__init__(o)
 
   def getData(self, starttime, endtime) :
      if not self.db:
@@ -39,7 +38,8 @@ class netcdfCacheADPReader(ncCacheReader) :
      t, v, u = netcdfCacheInterface.getncdatastation(self.station, self.nc_offering, starttime, endtime, variables, quality='PD0') 
 
      if t.shape[0]==0:
-       raise Exception("Empty files found for %s - %s time range" % (time.gmtime(starttime), time.gmtime(endtime)))
+       raise Exception("Empty files found for %s - %s time range" % (timeMod.gmtime(starttime),
+                                                                     timeMod.gmtime(endtime)))
 
      # ambigous about following line, but is faster than a query to DB
      binsize = np.max(v['height'])

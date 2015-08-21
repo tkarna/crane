@@ -1041,50 +1041,6 @@ class Plots(object):
     return makeMarkersForTaylor(self.coll)
 
 #-------------------------------------------------------------------------------
-# Tests 
-#-------------------------------------------------------------------------------
-def test_Plots():
-  """Test class creation and plotting"""
-  import time
-  from data.stationSet import StationSet
-  from data.stationCollection import StationCollection, createDirectory
-  startTime = time.time()
-
-  I_PATH='tmp_images'
-  M_FILE='/home/workspace/users/lopezj/data/test/process/stationSet_model_2012-04-23-2012-05-20.npz'
-  O_FILE='/home/workspace/users/lopezj/data/test/process/stationSet_obs_2012-04-23-2012-05-20.npz'
-
-  createDirectory(I_PATH)
-  print 'Loading data'
-  oSet = StationSet.loadFromDisk(O_FILE)
-  mSet = StationSet.loadFromDisk(M_FILE)
-  sc = StationCollection( oSet.startTime, oSet.endTime )
-  sc.addStationSet( 'obs', oSet )
-  sc.addStationSet( 'model', mSet )
-  loadTime = time.time()
-
-  print 'Creating plots'
-  tsTime = time.time()
-  plot = Plots(I_PATH, sc)
-  plot.makeTimeSeries() 
-  etsTime = time.time()
-
-  tdTime = time.time()
-  plot.makeTaylorDiagrams()
-  etdTime = time.time()
-
-  tdvTime = time.time()
-  plot.makeTaylorDiagramsVar()
-  endTime = time.time()
-
-  print '\n Times \n'
-  print 'Elapsed time (Loading data) %s' % (loadTime - startTime)
-  print 'Elapsed time (Time series) %s' % (etsTime - tsTime)
-  print 'Elapsed time (Taylor diagram) %s' % (etdTime - tdvTime)
-  print 'Elapsed time (Taylor diagram (var)) %s' % (endTime - tdvTime)
-  print 'Elapsed time (Total) %s' % (endTime - startTime)
-
-#-------------------------------------------------------------------------------
 # Main 
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':

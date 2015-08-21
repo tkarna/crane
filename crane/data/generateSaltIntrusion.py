@@ -13,8 +13,8 @@ import time as timeMod
 
 from crane.data import timeArray
 from crane.data import dataContainer
-from data.dirTreeManager import netcdfTree, oldTreeRule, defaultTreeRule
-from plotting.transectPlot import generateTransectFromDataContainer
+from crane.data import dirTreeManager
+from crane.plotting import transectPlot
 
 TRANSECT_NAME = 'mainChannel'
 TRANSECT_BPFILE = '/home/workspace/users/pturner/db29/processing.dev/scripts.working/intrusion_length.bp'
@@ -29,7 +29,7 @@ def computeSaltIntrusion( transectDC, salt_threshold_list ) :
   # for each time step
   for it in range(nTime) :
     # convert transect to array
-    Xalong, Z, salt, time, uniqueXYCoords = generateTransectFromDataContainer(transectDC,it)
+    Xalong, Z, salt, time, uniqueXYCoords = transectPlot.generateTransectFromDataContainer(transectDC,it)
     Xalong = Xalong[0,:]
     # compute max salt in each column
     maxSalt = salt.max(axis=0)
@@ -172,11 +172,11 @@ def parseCommandLine() :
   name = TRANSECT_NAME
   dcs = []
   if readNetcdf :
-    from data.ncExtract import extractTransectForBPFile
+    from crane.data.ncExtract import extractTransectForBPFile
     dcs = extractTransectForBPFile( bpFile, dataDir, varList,
                                     startTime, endTime, name )
   else :
-    from data.extractTransect import extractTransectForBPFile
+    from crane.data.extractTransect import extractTransectForBPFile
     dcs = extractTransectForBPFile( bpFile, dataDir, varList,
                                     startTime, endTime, name=name,
                                     modelCoordSys=modelCoordSys )
@@ -188,10 +188,9 @@ def parseCommandLine() :
   for dc in silDCs :
     print dc
 
-  import data.dirTreeManager as dtm
   rule = 'monthlyFile'
-  dtm.saveDataContainerInTree( silDCs, rule=rule, dtype=np.float32,
-                               overwrite=True )
+  dirTreeManager.saveDataContainerInTree( silDCs, rule=rule, dtype=np.float32,
+                                         overwrite=True )
 
 if __name__=='__main__' :
   parseCommandLine()

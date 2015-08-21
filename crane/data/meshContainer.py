@@ -105,14 +105,6 @@ class meshContainer(dataContainer.dataContainer) :
     return meshContainer( self.description, self.time, self.x, self.y, self.z, data,
                 self.connectivity, fieldNames, self.coordSys, self.metaData)
 
-  #def saveAsNetCDF( self, filename, dtype=None, overwrite=True ) :
-    #"""Saves data in netCDF format """
-    #if dtype == None :
-      #dtype = dataContainer.dtype
-
-    #nc = netcdfIO(filename)
-    #nc.saveDataContainer( self, dtype, overwrite )
-
   def convertToNodalMC( self ) :
     """If data is at elements, returns a new object with average value at each node."""
     if self.dataByElement :
@@ -125,16 +117,6 @@ class meshContainer(dataContainer.dataContainer) :
         nodal_data[ n,:,: ] += self.data[iElem,:,:]
         nodal_multiplicity[ n ] += 1
       nodal_data = nodal_data/nodal_multiplicity
-
-      #from data.selfeGridUtils import constructNodeToElemTable
-      #node2elem = constructNodeToElemTable(self.connectivity)
-      #nNodes = self.x.shape[0]
-      #nElems = self.connectivity.shape[0]
-      #nFields = self.data.shape[1]
-      #nTime = self.data.shape[2]
-      #nodal_data = np.zeros((nNodes,nFields,nTime))
-      #for i in range(nNodes) :
-        #nodal_data[i,:,:] = np.mean( self.data[node2elem[i],:,:], axis=0 )
 
       mc = meshContainer( self.description, self.time, self.x, self.y, self.z,
                         nodal_data, self.connectivity, self.fieldNames,

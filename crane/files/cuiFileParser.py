@@ -7,9 +7,10 @@ Tuomas Karna 2012-10-18
 #-------------------------------------------------------------------------------
 # Imports
 #-------------------------------------------------------------------------------
+import numpy as np
 import datetime
 from crane.data import timeArray
-from data.dataContainer import dataContainer
+from crane.data import dataContainer
 
 #-------------------------------------------------------------------------------
 # Constants
@@ -89,7 +90,7 @@ class cuiParser(object) :
     #meta['instrument'] = 'CUI'
     meta['bracket'] = 'A'
     meta['tag'] = 'obs'
-    dc = dataContainer.fromTimeSeries( '', self.time, self.data, ['cui'],
+    dc = dataContainer.dataContainer.fromTimeSeries( '', self.time, self.data, ['cui'],
                                        x,y,z, 'epoch', coordSys, metaData=meta )
     if startTime and endTime :
       dc = dc.timeWindow( startTime, endTime, includeEnd=True )
@@ -99,5 +100,4 @@ if __name__=='__main__' :
   st = datetime.datetime(2000,1,1)
   et = datetime.datetime(2012,8,31)
   dc = cuiParser().getDataContainer(st,et)
-  #dc = cuiParser().getDataContainer()
   print dc

@@ -13,23 +13,17 @@ from optparse import OptionParser
 import glob
 from scipy.interpolate import interp1d, griddata, splev, splrep
 import matplotlib.gridspec as gridspec
+import matplotlib
+import matplotlib.pyplot as plt
 
-import data.dirTreeManager as dtm
-from data.dataContainer import dataContainer
-from crane.data import timeArray
-from files.stationFile import StationFile
-from files.buildPoints import BuildPoint
-import data.netcdfCacheInterface as netcdfDB
-from data.timeSeriesFilters import *
+from crane.data import dirTreeManager
+from crane.data import dataContainer
+from crane.data import timeSeriesFilters
 
-from plotting.plot import VARS,UNITS
-from plotting.timeSeriesPlot import *
-from plotting.transectPlot import *
-from plotting.trackPlot import *
-from plotting.slabPlot import *
-from plotting.plotBase import createDirectory,saveFigure
-
-from data.auvInterface import alongTrBPFile, eastTrBPFile, westTrBPFile, ETMStationFile, transectFilesBaseDir
+from crane.plotting import trackPlot
+from crane.plotting.plot import VARS, UNITS
+from crane.plotting.plotBase import createDirectory, saveFigure
+from crane.plotting.plotBase import parseTimeStr
 
 fontsize=20
 matplotlib.rcParams['font.size']=fontsize
@@ -51,7 +45,7 @@ def cmap_discretize(cmap, N):
   """
 
   if type(cmap) == str:
-    cmap = get_cmap(cmap)
+    cmap = plt.get_cmap(cmap)
   colors_i = np.concatenate((np.linspace(0, 1., N), (0.,0.,0.,0.)))
   colors_rgba = cmap(colors_i)
   indices = np.linspace(0, 1., N+1)
@@ -64,7 +58,7 @@ def cmap_discretize(cmap, N):
 def getDischarge(tag,loc,st,et) :
   """Loads discharge data from disk using given tag, station name and time
   range and applies low pass filter. Variable is assumed to be \'flux\'."""
-  disch = dtm.getDataContainer(tag=tag,dataType='timeseries',
+  disch = dirTreeManager.getDataContainer(tag=tag,dataType='timeseries',
                                location=loc,variable='flux',
                                startTime=st,endTime=et)
 
@@ -77,11 +71,11 @@ def getTidalRange(tag,loc,st,et) :
   range and computes tidal range."""
   T = 44714. # M2 period in seconds
   pad = datetime.timedelta(seconds=3*T)
-  tideDC = dtm.getDataContainer(tag=tag,dataType='timeseries',
+  tideDC = dirTreeManager.getDataContainer(tag=tag,dataType='timeseries',
                                 location=loc,variable='elev',
                                 startTime=st-pad,endTime=et+pad)
-  tidalRange = runningRange(tideDC,T=2*T)
-  tidalRange = removeTides(tidalRange) #,T=3*T)
+  tidalRange = timeSeriesFilters.runningRange(tideDC,T=2*T)
+  tidalRange = timeSeriesFilters.removeTides(tidalRange) #,T=3*T)
   tidalRange.setMetaData('variable','tidal_range')
   return tidalRange
 
@@ -113,7 +107,7 @@ def plotScatter( ax, xDC, yDC, color=None, typ='both', cbarArgs={}, **kwargs ) :
     if color == None :
       color=np.linspace(0,1,len(x))[::-1]
       colorData=True
-    elif isinstance( color, dataContainer ) :
+    elif isinstance( color, dataContainer.dataContainer ) :
       color = np.squeeze( color.data )[::-1]
       colorData=True
     #plt.scatter( x, y, c=color, edgecolors='none',s=40 )
@@ -126,7 +120,7 @@ def plotScatter( ax, xDC, yDC, color=None, typ='both', cbarArgs={}, **kwargs ) :
     kw.setdefault('xunit','m')
     kw.setdefault('xIsTime',False)
     kw.setdefault('s',30)
-    dia = trackTimeSeriesPlot(**kw)
+    dia = trackPlot.trackTimeSeriesPlot(**kw)
     dia.setAxes( ax )
     dia.addSample( x[::-1], y[::-1], color, zorder=zorder )
     if colorData :
@@ -207,12 +201,12 @@ def loadAndPrepareData(tideStation,tideTag,dischargeStation,dischargeTag,
   cmap = cmap_discretize(plt.get_cmap(),64)
 
   # load data for comparison
-  rule=dtm.defaultTreeRule()
+  rule='montlyFile'
   dataType = 'sil' if variable[:3]=='sil' else 'timeseries'
-  refDC = dtm.getDataContainer(tag=referenceTag,dataType=dataType,
+  refDC = dirTreeManager.getDataContainer(tag=referenceTag,dataType=dataType,
                               location=station,variable=variable,rule=rule,
                               msldepth=msldepth, startTime=startTime,endTime=endTime)
-  testDC = dtm.getDataContainer(tag=testTag,dataType=dataType,
+  testDC = dirTreeManager.getDataContainer(tag=testTag,dataType=dataType,
                               location=station,variable=variable,rule=rule,
                               msldepth=msldepth, startTime=startTime,endTime=endTime)
   diff = getDiff( refDC, testDC, absolute=True)
@@ -240,7 +234,7 @@ def doRibbonPlot(tideStation,tideTag,dischargeStation,dischargeTag,
     #makePlot(ax,xdata,ydata,colorDC,xdata2,ydata2,None, prefix='Error')
     #saveRibbonPlot(xdata,ydata,colorDC, imgDir,prefix='ribbon',fpref='err')
 
-    colorDC = removeTides(colorDC) #,T=2*44714.)
+    colorDC = timeSeriesFilters.removeTides(colorDC) #,T=2*44714.)
     fig = plt.figure(figsize=(8,8))
     ax = fig.add_subplot(111)
     makePlot(ax,xdata,ydata,colorDC,xdata2,ydata2,clim, prefix='LP Error')

@@ -5,20 +5,24 @@ velocity and salinity profiles.
 Tuomas Karna 2013-11-08
 """
 
+import string
+import datetime
 import numpy as np
-from crane.data import dataContainer
-from crane.data import timeArray
-from data.stationCollection import *
-import data.dirTreeManager as dtm
-from data.pca import *
-from data.eqState import *
 from scipy.interpolate import interp1d, griddata
 from scipy.spatial import cKDTree
-from plotting.plotBase import convertEpochToPlotTime
-from plotting.profilePlot import *
-from plotting.plot import VARS, UNITS
 import matplotlib.gridspec as gridspec
-import string
+
+import matplotlib
+import matplotlib.pyplot as plt
+
+from crane.data import dataContainer
+from crane.data import timeArray
+from crane.data import dirTreeManager
+from crane.data import pca
+from crane.plotting import profilePlot
+from crane.plotting.plot import VARS, UNITS
+from crane.plotting.plotBase import createDirectory, saveFigure
+from crane.plotting.plotBase import parseTimeStr
 
 fontsize=14
 matplotlib.rcParams['font.size']=fontsize
@@ -38,7 +42,7 @@ def doPCAprof( dc ) :
   """Computes PCA directions for the given uv dataContainer"""
   A = np.swapaxes( dc.data[:,:2,:], 1,2 )
   A = np.reshape( A, (-1,dc.data.shape[1]) )
-  p = PCA(A,fraction=0.9)
+  p = pca.PCA(A,fraction=0.9)
   #print "PCA:", p.npc
   #print "% variance:", p.sumvariance * 100
   #print 'dir:',p.Vt
@@ -116,7 +120,7 @@ def makeSubPlot( ax, dcs, startTime,endTime ) :
   legendProp={'loc':'upper left','bbox_to_anchor':(1.01,1.00)}
   var = dcs[0].getMetaData('variable')
   loc = dcs[0].getMetaData('location')
-  dia = verticalProfilePlotDC(xunit=UNITS.get(var,'-'),xlabel=VARS.get(var,var))
+  dia = profilePlot.verticalProfilePlotDC(xunit=UNITS.get(var,'-'),xlabel=VARS.get(var,var))
   dia.setAxes(ax)
   colorDict = {}
   for dc in dcs :
@@ -154,7 +158,7 @@ def computeAndPlotSaltTransport(tags,locs,imgDir,startTime,endTime):
   if isinstance(locs,str) :
     locs = [locs]
 
-  rule=dtm.defaultTreeRule()
+  rule = 'monthlyFile'
 
   fPrefix = 'resProf'
   filetype='png'
@@ -164,10 +168,10 @@ def computeAndPlotSaltTransport(tags,locs,imgDir,startTime,endTime):
   for loc in locs :
     dcs = []
     for tag in tags :
-      saltPr = dtm.getDataContainer(tag=tag,dataType='profile',
+      saltPr = dirTreeManager.getDataContainer(tag=tag,dataType='profile',
                                 location=loc,variable='salt',
                                 startTime=startTime,endTime=endTime)
-      hvelUV = dtm.getDataContainer(tag=tag,dataType='profile',
+      hvelUV = dirTreeManager.getDataContainer(tag=tag,dataType='profile',
                                 location=loc,variable='hvel',
                                 startTime=startTime,endTime=endTime)
       hvelPr = doPCAprof( hvelUV.copy() )
