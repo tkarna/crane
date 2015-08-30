@@ -74,7 +74,7 @@ def parseCommandLine() :
 
   meshFile = args[0]
 
-  if options.maxAngle == None and options.minQuality == None :
+  if options.maxAngle is None and options.minQuality is None :
     parser.print_help()
     parser.error('either maxAngle or minQuality must be given')
 

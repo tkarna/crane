@@ -42,7 +42,7 @@ class skillAssessmentStats(object) :
     #self.stats[(label,'stddev')] = standardDeviation( sample, ddof = 0 )
     #self.stats[(label,'crmse')] = rootMeanSquareError( self.reference, sample, centered=True )
     #self.stats[(label,'corr')] = correlationCoefficient( self.reference, sample )
-    if reference == None :
+    if reference is None :
       reference = self.reference
     res = computeSkillStatistics( reference, sample )
     for key in res:

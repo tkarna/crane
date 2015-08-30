@@ -69,7 +69,7 @@ def generateTSPlot(startTime, endTime, dcs, imgDir=None, ylim={},
   modelColors = plot.makeColorsForModels(sc)
   comKeys = sc.getComparableKeys(requireObs=False, requireMod=False)
   for c in comKeys :
-    if c[0][2] == None :
+    if c[0][2] is None :
       print c
       c[0] = (c[0][0],c[0][1],'0')
   # fancy sort: sort by 'entry' tuple with msldepth converted to float
@@ -205,10 +205,10 @@ def parseCommandLine() :
   if not csvStationFile :
     parser.print_help()
     parser.error('csvStationFile must be given')
-  if startStr == None:
+  if startStr is None:
     parser.print_help()
     parser.error('Start date undefined')
-  if endStr == None:
+  if endStr is None:
     parser.print_help()
     parser.error('End date undefined')
 

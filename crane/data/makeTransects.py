@@ -312,7 +312,7 @@ def parseCommandLine() :
   maxPlotSize = options.maxPlotSize
   matplotlib.rcParams['font.size'] = options.fontSize
 
-  if imgDir == None:
+  if imgDir is None:
     parser.print_help()
     parser.error('imgDir undefined')
   if len(args) < 1 :

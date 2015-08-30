@@ -56,7 +56,7 @@ def quote(v):
       return "'%s'" % (escape(v),)
     else:
       return v
-  if v == None:
+  if v is None:
     return 'NULL'
   else:
     return v

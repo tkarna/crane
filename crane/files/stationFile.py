@@ -33,7 +33,7 @@ class StationFile(object):
     Args:
         file -- String of path to station.sta file
     """ 
-    if file == None: file = self.path
+    if file is None: file = self.path
     if not os.path.isfile(file):
       raise Exception('File does not exist: '+file)
     self.file = file

@@ -166,13 +166,13 @@ def writeGR3File( filename, description ,nodes, nodalValues, connectivity, bound
   print 'Writing '+filename+' ...'
   triangles = connectivity+1
   outfile = open(filename,'w')
-  if description == None or len(description) == 0 :
+  if description is None or len(description) == 0 :
     description = os.path.split(filename)[1] # take filename without path
   outfile.write( description+'\n' )
   ne = triangles.shape[0]
   nPoints = nodes.shape[0]
   outfile.write( '{ne:d} {nPoints:d}\n'.format(ne=ne,nPoints=nPoints) )
-  if nodalValues == None :
+  if nodalValues is None :
      nodalValues = nodes[:,2]
   triType = 3
   for i in range(nPoints) :

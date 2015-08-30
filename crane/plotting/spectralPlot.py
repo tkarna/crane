@@ -57,7 +57,7 @@ class tidalConstituents(object) :
 class spectralPlot(object) :
   """Plots signals in frequency domain"""
   def __init__(self, frequencies=None, TMin=3*3600, TMax=32*3600, fN=2000, **kwargs) :
-    if frequencies == None :
+    if frequencies is None :
       frequencies = np.linspace( 1./TMax,1./TMin, fN )
     self.defArgs = kwargs
     self.frequencies = frequencies

@@ -436,8 +436,12 @@ class monthlyFileTree(fileTree):
             print 'saving to', fn
             createDirectory(os.path.split(fn)[0])
             # crop data dataContainer
-            cropped_dc = dc.timeWindow(win_start, win_end, includeEnd=False)
-            # save
+            try:
+                cropped_dc = dc.timeWindow(win_start, win_end, includeEnd=False)
+            except:
+                print 'Given time window out of range'
+                continue
+            #  save
             netcdfIO.netcdfIO(fn).saveDataContainer(cropped_dc, dtype,
                                                     overwrite, compress,
                                                     digits)

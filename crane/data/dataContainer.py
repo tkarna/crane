@@ -118,7 +118,7 @@ class dataContainer(object) :
 
   def getMetaData( self, name=None, suppressError=False ) :
     """Returns metaData corresponding to the given name. Raises error if metadata is not found. If suppressError=True, returns None instead of raising an error."""
-    if name == None :
+    if name is None :
       return dict(self.metaData)
     if suppressError :
       return self.metaData.get( name, None )
@@ -421,7 +421,7 @@ class dataContainer(object) :
     newDC      -- (array) subsampled version of this dataContainer
     """
     if timeStamps==None :
-      if skipFactor == None and targetDt == None :
+      if skipFactor is None and targetDt is None :
         raise Exception('Either skipFactor or targetDt is required',skipFactor,targetDt)
       # detect gaps
       gaps,ranges,t = self.detectGaps(currentDt,gapFactor)
@@ -439,7 +439,7 @@ class dataContainer(object) :
         print ranges[0,0],ranges[0,1]
         print self.time[ ranges[0,0]:ranges[0,1] ]
         raise Exception('weird dt:'+str(dt))
-      if skipFactor == None :
+      if skipFactor is None :
         skipFactor = int(round(targetDt/dt))
       if skipFactor <= 1 :
         print dt, targetDt, skipFactor
@@ -600,7 +600,7 @@ class dataContainer(object) :
     compress=True sets lossless zlib compression for netcdf4 dataset
     digits rounds data to given decimals before storing
     """
-    if dtype == None :
+    if dtype is None :
       dtype = self.dtype
 
     nc = netcdfIO.netcdfIO(filename)

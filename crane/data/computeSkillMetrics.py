@@ -173,7 +173,7 @@ def printGlobalStats( fid, allStats, refTag, runTags ) :
 def processStats(refTag, runTags, stationFile, startTime=None, endTime=None,
                  outFile=None):
 
-  if outFile == None :
+  if outFile is None :
     fid = sys.stdout
   else :
     path = os.path.split(outFile)[0]
@@ -334,10 +334,10 @@ def parseCommandLine() :
 
   runTags = args
 
-  if refTag == None:
+  if refTag is None:
     parser.print_help()
     parser.error('refTag undefined')
-  if csvStationFile == None:
+  if csvStationFile is None:
     parser.print_help()
     parser.error('csvStationFile undefined')
   

@@ -537,7 +537,7 @@ class selfeExtractBase(object) :
     self.path = path
     self.varStr = var
     self.externalMeshSeachObj = meshSearchObj
-    if fileTypeStr == None :
+    if fileTypeStr is None :
       try :
         self.fileName = extractStation.fieldNameToFilename[var]
         self.fileTypeStr = self.fileName.split('.')[1]
@@ -571,8 +571,8 @@ class selfeExtractBase(object) :
   def generateFileName(self, iStack=None, fileName=None) :
     """Returns full path to the netcdf file for iStack.
     If iStack==None, returns a pattern with '*' as a wildcard."""
-    if fileName == None : fileName = self.fileName
-    stackStr = '*' if iStack == None else '{0:d}'.format(iStack) 
+    if fileName is None : fileName = self.fileName
+    stackStr = '*' if iStack is None else '{0:d}'.format(iStack) 
     fname = '{stack:s}_{typeStr:s}.nc'.format(
                         typeStr=fileName,stack=stackStr )
     return os.path.join(self.path,fname)
@@ -580,7 +580,7 @@ class selfeExtractBase(object) :
   def getNCFile( self, iStack=None, fileName=None ) :
     """Opens netcdf file corresponding to the given stack number.
     If no stack number is given opens first matching file."""
-    if fileName == None : fileName = self.fileName
+    if fileName is None : fileName = self.fileName
     f = self.generateFileName(iStack, fileName)
     if iStack==None :
       # try to find a file that matches file name pattern
@@ -893,7 +893,7 @@ class selfeExtractBase(object) :
       nDataNodes = self.dataFile.nDataNodes # dataFile may have different nodes
       vals = np.ma.ones((nDataNodes,nTime))*np.nan
       zSlab = np.ma.ones((nDataNodes,nTime))*np.nan
-      if k == None and z == None :
+      if k is None and z is None :
         raise Exception('either k or z must be specified for 3D fields')
       # compute z coords for all time steps
       zDim = nVert-1 if self.dataFile.vertDiscrType == 'half' else nVert
@@ -921,7 +921,7 @@ class selfeExtractBase(object) :
       elif self.dataFile.discrType == 'edge' :
         dryEdges = self.dataFile.meshSearch2d.convertNodalValuesToEdges(dryNodes,np.min)
         dryDataNodes = dryEdges
-      alongSLevel = z == None
+      alongSLevel = z is None
       # do not read bottom value if data at half levels
       kOffset = 1 if self.dataFile.vertDiscrType == 'half' else 0
       if alongSLevel :
@@ -1256,7 +1256,7 @@ class selfeExtract(selfeExtractBase) :
     # build dataContainer for each station
     dcs = []
     for iSta in range(len(staX)) :
-      staName = '' if stationNames == None else stationNames[iSta]
+      staName = '' if stationNames is None else stationNames[iSta]
       staStr = '{x:f} {y:f} {name:s}'.format(x=staX[iSta],y=staY[iSta],name=staName)
       # remove time steps with all bad values
       goodIxTime = np.logical_and( ~np.all( vals[iSta,:,:].mask, axis=0 ),

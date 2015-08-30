@@ -216,7 +216,7 @@ Optional keyword arguments are:
         if X is not None:
            X = np.array([X])
            lox, hix = np.nanmin(X), np.nanmax(X)
-           if minx == None: minx, maxx = lox, hix
+           if minx is None: minx, maxx = lox, hix
            if lox < minx: minx = lox
            if hix > maxx: maxx = hix
 

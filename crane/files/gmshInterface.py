@@ -308,11 +308,11 @@ class gmshMesh(object) :
       return findBoundarySegments( self.lines, self.lineTags, self.physicalNames )
 
   def getMeshContainer( self, nodalValues=None, fieldNames=None, fromFile=None ) :
-    if nodalValues == None and fromFile == None :
+    if nodalValues is None and fromFile is None :
       raise Exception('either nodalValues or fromFile must be specified')
-    if nodalValues != None and fieldNames == None :
+    if nodalValues != None and fieldNames is None :
       raise Exception('fieldNames unspecified')
-    if nodalValues == None :
+    if nodalValues is None :
       try :
         nodalValues,fieldName,time,it,nScalars = self.readNodalValues(fromFile)
       except Exception as e1:
@@ -325,7 +325,7 @@ class gmshMesh(object) :
           print e1
           print e2
           raise Exception('Could not read nodal values')
-      if fieldNames == None :
+      if fieldNames is None :
         fieldNames = [fieldName]
       #except Exception as e :
         #print 'Warning: could not read nodal values, assigning zeros'

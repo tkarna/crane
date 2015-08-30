@@ -42,7 +42,7 @@ def updateXAxis(ax, xIsTime=False, xlim=None, minticks=3, maxticks=12, prune=Non
     """
     if xlim == 'tight' :
       xlim = [ ax.dataLim.xmin, ax.dataLim.xmax ]
-    if xlim == None :
+    if xlim is None :
       xlim = ax.get_xlim()
     if xIsTime :
       if xlim[0]==xlim[1] :
@@ -104,7 +104,7 @@ def updateYAxis(ax, yIsTime=False, ylim=None, minticks=3, maxticks=12, prune=Non
     """
     if ylim == 'tight' :
       ylim = [ ax.dataLim.ymin, ax.dataLim.ymax ]
-    if ylim == None :
+    if ylim is None :
       ylim = ax.get_ylim()
     if yIsTime :
       if ylim[0]==ylim[1] :
@@ -393,13 +393,13 @@ class stackPlotBase(object) :
 
   def addTitle(self, titleStr, tag=None, **kwargs) :
     """Adds a title in the axes. Optional arguments are passed to set_title routine"""
-    if tag == None :
+    if tag is None :
       tag = self.tags[0]
     self.plots[tag].addTitle(titleStr, **kwargs)
 
   def updateTitle(self, titleStr, tag=None, **kwargs) :
     """Updates the title string"""
-    if tag == None :
+    if tag is None :
       tag = self.tags[0]
     self.plots[tag].updateTitle(titleStr)
 

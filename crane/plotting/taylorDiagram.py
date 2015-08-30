@@ -520,7 +520,7 @@ class normalizedStatisticsDiagram(object) :
   """Taylor and bias diagrams where the dimensional measures (std, crmse and bias) have been normalized."""
   def __init__(self, figsize=None, normalizeBias=False) :
     """Creates a new empty normalized diagram"""
-    if figsize == None:
+    if figsize is None:
       figsize=(9,5)
     self.fig = plt.figure(figsize=figsize)
     self.fig.subplots_adjust(top=1.00,bottom=0.20) # for (9,5) fig
@@ -547,7 +547,7 @@ class normalizedStatisticsDiagram(object) :
     self.biasDiags[tag] = BiasNMSEDiagram(refStd, refLabel, normalized=True,
                                       normalizeBias=self.normalizeBias, **defArgs)
     
-    if self.taylorAx == None :
+    if self.taylorAx is None :
       # first dataSet, create axes
       ax, pax = self.taylorDiags[tag].setupAxes(self.fig, 121)
       self.taylorAx = ax

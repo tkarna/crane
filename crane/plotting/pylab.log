@@ -1,0 +1,1076 @@
+************* Module crane.plotting.pylabutil
+C:  1, 0: Trailing whitespace (trailing-whitespace)
+C:  4, 0: Exactly one space required after comma
+import numpy,matplotlib
+            ^ (bad-whitespace)
+C:  6, 0: Line too long (133/100) (line-too-long)
+C:  6, 0: Exactly one space required after comma
+from matplotlib.dates import WeekdayLocator,DateFormatter,SecondLocator,MinuteLocator,HourLocator,DayLocator,MonthLocator,YearLocator
+                                           ^ (bad-whitespace)
+C:  6, 0: Exactly one space required after comma
+from matplotlib.dates import WeekdayLocator,DateFormatter,SecondLocator,MinuteLocator,HourLocator,DayLocator,MonthLocator,YearLocator
+                                                         ^ (bad-whitespace)
+C:  6, 0: Exactly one space required after comma
+from matplotlib.dates import WeekdayLocator,DateFormatter,SecondLocator,MinuteLocator,HourLocator,DayLocator,MonthLocator,YearLocator
+                                                                       ^ (bad-whitespace)
+C:  6, 0: Exactly one space required after comma
+from matplotlib.dates import WeekdayLocator,DateFormatter,SecondLocator,MinuteLocator,HourLocator,DayLocator,MonthLocator,YearLocator
+                                                                                     ^ (bad-whitespace)
+C:  6, 0: Exactly one space required after comma
+from matplotlib.dates import WeekdayLocator,DateFormatter,SecondLocator,MinuteLocator,HourLocator,DayLocator,MonthLocator,YearLocator
+                                                                                                 ^ (bad-whitespace)
+C:  6, 0: Exactly one space required after comma
+from matplotlib.dates import WeekdayLocator,DateFormatter,SecondLocator,MinuteLocator,HourLocator,DayLocator,MonthLocator,YearLocator
+                                                                                                            ^ (bad-whitespace)
+C:  6, 0: Exactly one space required after comma
+from matplotlib.dates import WeekdayLocator,DateFormatter,SecondLocator,MinuteLocator,HourLocator,DayLocator,MonthLocator,YearLocator
+                                                                                                                         ^ (bad-whitespace)
+C: 22, 0: Trailing whitespace (trailing-whitespace)
+W: 39, 0: Found indentation with tabs instead of spaces (mixed-indentation)
+W: 45, 0: Found indentation with tabs instead of spaces (mixed-indentation)
+W: 48, 0: Found indentation with tabs instead of spaces (mixed-indentation)
+W: 60, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W: 61, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+C: 62, 0: Trailing whitespace (trailing-whitespace)
+W: 62, 0: Bad indentation. Found 4 spaces, expected 8 (bad-indentation)
+W: 63, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W: 64, 0: Bad indentation. Found 4 spaces, expected 8 (bad-indentation)
+W: 67, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W: 68, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W: 69, 0: Bad indentation. Found 4 spaces, expected 8 (bad-indentation)
+W: 70, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W: 71, 0: Bad indentation. Found 4 spaces, expected 8 (bad-indentation)
+C: 73, 0: Exactly one space required after comma
+def secondaxes(ax=None,position=True,sharedside = 'x'):
+                      ^ (bad-whitespace)
+C: 73, 0: Exactly one space required after comma
+def secondaxes(ax=None,position=True,sharedside = 'x'):
+                                    ^ (bad-whitespace)
+C: 73, 0: No space allowed around keyword argument assignment
+def secondaxes(ax=None,position=True,sharedside = 'x'):
+                                                ^ (bad-whitespace)
+C: 76, 0: Trailing whitespace (trailing-whitespace)
+C: 79, 0: Trailing whitespace (trailing-whitespace)
+C: 82, 0: Trailing whitespace (trailing-whitespace)
+C: 86, 0: Exactly one space required around assignment
+        ax=pylab.gca()
+          ^ (bad-whitespace)
+W: 94, 0: Bad indentation. Found 6 spaces, expected 8 (bad-indentation)
+C: 94, 0: Exactly one space required after comma
+      choose_axes(axn,position=position,side='y')
+                     ^ (bad-whitespace)
+C: 94, 0: Exactly one space required after comma
+      choose_axes(axn,position=position,side='y')
+                                       ^ (bad-whitespace)
+W: 96, 0: Bad indentation. Found 6 spaces, expected 8 (bad-indentation)
+C: 96, 0: Exactly one space required after comma
+      choose_axes(axn,position=position,side='x')
+                     ^ (bad-whitespace)
+C: 96, 0: Exactly one space required after comma
+      choose_axes(axn,position=position,side='x')
+                                       ^ (bad-whitespace)
+C: 99, 0: Exactly one space required after comma
+def adjust_axis(axn=None,c='r',step=0,side='x',position=True):
+                        ^ (bad-whitespace)
+C: 99, 0: Exactly one space required after comma
+def adjust_axis(axn=None,c='r',step=0,side='x',position=True):
+                              ^ (bad-whitespace)
+C: 99, 0: Exactly one space required after comma
+def adjust_axis(axn=None,c='r',step=0,side='x',position=True):
+                                     ^ (bad-whitespace)
+C: 99, 0: Exactly one space required after comma
+def adjust_axis(axn=None,c='r',step=0,side='x',position=True):
+                                              ^ (bad-whitespace)
+W:110, 0: Bad indentation. Found 6 spaces, expected 8 (bad-indentation)
+C:117, 0: Exactly one space required after comma
+    choose_axes(axn,position=position,side=side)
+                   ^ (bad-whitespace)
+C:117, 0: Exactly one space required after comma
+    choose_axes(axn,position=position,side=side)
+                                     ^ (bad-whitespace)
+C:118, 0: Exactly one space required after comma
+    yt = pylab.getp(axn,side + 'ticklabels')
+                       ^ (bad-whitespace)
+C:119, 0: Exactly one space required after comma
+    ticklabels = pylab.getp(axn,side + 'ticklabels')
+                               ^ (bad-whitespace)
+C:120, 0: Exactly one space required after comma
+    pylab.setp(ticklabels,'color',c)
+                         ^ (bad-whitespace)
+C:120, 0: Exactly one space required after comma
+    pylab.setp(ticklabels,'color',c)
+                                 ^ (bad-whitespace)
+C:121, 0: Exactly one space required after comma
+    pylab.setp(eval('axn.' + side + 'axis.label'),color=c)
+                                                 ^ (bad-whitespace)
+C:122, 0: Exactly one space required after comma
+    yt = pylab.getp(axn,side + 'ticklines')
+                       ^ (bad-whitespace)
+C:123, 0: Exactly one space required after comma
+    pylab.setp(yt,color=c)
+                 ^ (bad-whitespace)
+C:125, 0: Trailing whitespace (trailing-whitespace)
+W:127, 0: Found indentation with tabs instead of spaces (mixed-indentation)
+W:128, 0: Found indentation with tabs instead of spaces (mixed-indentation)
+W:129, 0: Found indentation with tabs instead of spaces (mixed-indentation)
+W:130, 0: Found indentation with tabs instead of spaces (mixed-indentation)
+W:131, 0: Found indentation with tabs instead of spaces (mixed-indentation)
+W:132, 0: Found indentation with tabs instead of spaces (mixed-indentation)
+W:133, 0: Found indentation with tabs instead of spaces (mixed-indentation)
+W:134, 0: Found indentation with tabs instead of spaces (mixed-indentation)
+W:135, 0: Bad indentation. Found 10 spaces, expected 12 (bad-indentation)
+W:137, 0: Bad indentation. Found 10 spaces, expected 12 (bad-indentation)
+W:138, 0: Bad indentation. Found 10 spaces, expected 12 (bad-indentation)
+W:139, 0: Bad indentation. Found 10 spaces, expected 12 (bad-indentation)
+W:140, 0: Found indentation with tabs instead of spaces (mixed-indentation)
+W:141, 0: Found indentation with tabs instead of spaces (mixed-indentation)
+C:141, 0: Exactly one space required after comma
+	ticklabels = pylab.getp(axn,side + 'ticklabels')
+                            ^ (bad-whitespace)
+C:142, 0: Exactly one space required after comma
+        pylab.setp(ticklabels,dashdirection=ddir, dashlength=dlen, dashrotation=drot,dashpad=dpad)
+                             ^ (bad-whitespace)
+C:142, 0: Exactly one space required after comma
+        pylab.setp(ticklabels,dashdirection=ddir, dashlength=dlen, dashrotation=drot,dashpad=dpad)
+                                                                                    ^ (bad-whitespace)
+C:146, 0: Exactly one space required after comma
+def choose_axes(axn,position=True,side='x'):
+                   ^ (bad-whitespace)
+C:146, 0: Exactly one space required after comma
+def choose_axes(axn,position=True,side='x'):
+                                 ^ (bad-whitespace)
+C:148, 0: Trailing whitespace (trailing-whitespace)
+C:153, 0: Exactly one space required around assignment
+        axn=pylab.gca()
+           ^ (bad-whitespace)
+W:156, 0: Bad indentation. Found 11 spaces, expected 12 (bad-indentation)
+W:158, 0: Bad indentation. Found 11 spaces, expected 12 (bad-indentation)
+W:161, 0: Bad indentation. Found 11 spaces, expected 12 (bad-indentation)
+W:163, 0: Bad indentation. Found 11 spaces, expected 12 (bad-indentation)
+C:168, 0: Line too long (146/100) (line-too-long)
+C:168, 0: Exactly one space required after comma
+def adaptive_date_ticks(axx,dtrange=None,format = None, formatm = None, nticks = 0, label=True,lformat=None,ltime=None,debug = True,yearstr='%Y'):
+                           ^ (bad-whitespace)
+C:168, 0: Exactly one space required after comma
+def adaptive_date_ticks(axx,dtrange=None,format = None, formatm = None, nticks = 0, label=True,lformat=None,ltime=None,debug = True,yearstr='%Y'):
+                                        ^ (bad-whitespace)
+C:168, 0: No space allowed around keyword argument assignment
+def adaptive_date_ticks(axx,dtrange=None,format = None, formatm = None, nticks = 0, label=True,lformat=None,ltime=None,debug = True,yearstr='%Y'):
+                                                ^ (bad-whitespace)
+C:168, 0: No space allowed around keyword argument assignment
+def adaptive_date_ticks(axx,dtrange=None,format = None, formatm = None, nticks = 0, label=True,lformat=None,ltime=None,debug = True,yearstr='%Y'):
+                                                                ^ (bad-whitespace)
+C:168, 0: No space allowed around keyword argument assignment
+def adaptive_date_ticks(axx,dtrange=None,format = None, formatm = None, nticks = 0, label=True,lformat=None,ltime=None,debug = True,yearstr='%Y'):
+                                                                               ^ (bad-whitespace)
+C:168, 0: Exactly one space required after comma
+def adaptive_date_ticks(axx,dtrange=None,format = None, formatm = None, nticks = 0, label=True,lformat=None,ltime=None,debug = True,yearstr='%Y'):
+                                                                                              ^ (bad-whitespace)
+C:168, 0: Exactly one space required after comma
+def adaptive_date_ticks(axx,dtrange=None,format = None, formatm = None, nticks = 0, label=True,lformat=None,ltime=None,debug = True,yearstr='%Y'):
+                                                                                                           ^ (bad-whitespace)
+C:168, 0: Exactly one space required after comma
+def adaptive_date_ticks(axx,dtrange=None,format = None, formatm = None, nticks = 0, label=True,lformat=None,ltime=None,debug = True,yearstr='%Y'):
+                                                                                                                      ^ (bad-whitespace)
+C:168, 0: No space allowed around keyword argument assignment
+def adaptive_date_ticks(axx,dtrange=None,format = None, formatm = None, nticks = 0, label=True,lformat=None,ltime=None,debug = True,yearstr='%Y'):
+                                                                                                                             ^ (bad-whitespace)
+C:168, 0: Exactly one space required after comma
+def adaptive_date_ticks(axx,dtrange=None,format = None, formatm = None, nticks = 0, label=True,lformat=None,ltime=None,debug = True,yearstr='%Y'):
+                                                                                                                                   ^ (bad-whitespace)
+C:171, 0: Trailing whitespace (trailing-whitespace)
+C:172, 0: Trailing whitespace (trailing-whitespace)
+C:174, 0: Trailing whitespace (trailing-whitespace)
+C:178, 0: Trailing whitespace (trailing-whitespace)
+W:169, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:186, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:187, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:188, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:188, 0: Exactly one space required after comma
+     bounds = pylab.getp(axx,'data_interval')
+                            ^ (bad-whitespace)
+W:189, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:190, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:191, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:192, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:193, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:194, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:195, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:196, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:197, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:198, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:198, 0: Exactly one space required after comma
+     tloc = SecondLocator(bysecond=range(bt,60,bt))
+                                           ^ (bad-whitespace)
+C:198, 0: Exactly one space required after comma
+     tloc = SecondLocator(bysecond=range(bt,60,bt))
+                                              ^ (bad-whitespace)
+W:199, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:200, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:201, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:202, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:203, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:204, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:205, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:205, 0: Exactly one space required after comma
+     tloc = SecondLocator(bysecond=range(15,60,15))
+                                           ^ (bad-whitespace)
+C:205, 0: Exactly one space required after comma
+     tloc = SecondLocator(bysecond=range(15,60,15))
+                                              ^ (bad-whitespace)
+W:206, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:207, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:208, 0: Trailing whitespace (trailing-whitespace)
+W:208, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:209, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:210, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+C:210, 0: Exactly one space required after comparison
+  elif trange/nticks <90:
+                     ^ (bad-whitespace)
+W:211, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:212, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:213, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:214, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:215, 0: Trailing whitespace (trailing-whitespace)
+W:215, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:216, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:217, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:218, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:218, 0: Exactly one space required after comma
+     tlocm = MinuteLocator(byminute=range(0,60,2))
+                                           ^ (bad-whitespace)
+C:218, 0: Exactly one space required after comma
+     tlocm = MinuteLocator(byminute=range(0,60,2))
+                                              ^ (bad-whitespace)
+W:219, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:219, 0: Exactly one space required after comma
+     tloc = SecondLocator(bysecond=(0,30))
+                                     ^ (bad-whitespace)
+W:220, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:221, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:222, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:223, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:224, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:225, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:226, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:227, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:228, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:229, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:230, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:231, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:232, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:233, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:234, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:235, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:236, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:237, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:238, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:239, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:240, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:240, 0: Exactly one space required after comma
+     tloc = MinuteLocator(byminute=range(15,60,15))
+                                           ^ (bad-whitespace)
+C:240, 0: Exactly one space required after comma
+     tloc = MinuteLocator(byminute=range(15,60,15))
+                                              ^ (bad-whitespace)
+W:241, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:242, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:243, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:244, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:245, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:246, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:247, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:248, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:249, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:250, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:251, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:252, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:253, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:254, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:255, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:256, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:257, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:258, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:259, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:260, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:260, 0: Exactly one space required after comma
+     tlocm = HourLocator(byhour=range(0,24,3))
+                                       ^ (bad-whitespace)
+C:260, 0: Exactly one space required after comma
+     tlocm = HourLocator(byhour=range(0,24,3))
+                                          ^ (bad-whitespace)
+W:261, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:262, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:263, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:264, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:265, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:266, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:267, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:267, 0: Exactly one space required after comma
+     tlocm = HourLocator(byhour=range(0,24,12))
+                                       ^ (bad-whitespace)
+C:267, 0: Exactly one space required after comma
+     tlocm = HourLocator(byhour=range(0,24,12))
+                                          ^ (bad-whitespace)
+W:268, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:268, 0: Exactly one space required after comma
+     tloc = HourLocator(byhour=range(0,24,6))
+                                      ^ (bad-whitespace)
+C:268, 0: Exactly one space required after comma
+     tloc = HourLocator(byhour=range(0,24,6))
+                                         ^ (bad-whitespace)
+W:269, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:270, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:271, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:272, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:273, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:274, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:275, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:276, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:277, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:278, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:279, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:280, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:281, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:282, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:282, 0: Exactly one space required after comma
+     tloc = HourLocator(byhour=range(0,24,12))
+                                      ^ (bad-whitespace)
+C:282, 0: Exactly one space required after comma
+     tloc = HourLocator(byhour=range(0,24,12))
+                                         ^ (bad-whitespace)
+W:283, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:284, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:285, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:286, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:287, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:288, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:289, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+W:290, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+W:291, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:292, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+W:293, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+W:294, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:295, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+W:296, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+W:297, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:298, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+W:299, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+W:300, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:301, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+W:302, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+W:303, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:304, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+W:305, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+W:306, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:307, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+W:308, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+W:309, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:310, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:311, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:312, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:313, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:314, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:315, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:316, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:317, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:318, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+W:319, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+W:320, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:321, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+W:322, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+W:323, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:324, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+W:325, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+W:326, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:327, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+C:328, 0: Trailing whitespace (trailing-whitespace)
+W:328, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+C:328, 0: Exactly one space required after assignment
+       endv =30 
+            ^ (bad-whitespace)
+W:329, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:330, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+W:331, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+C:331, 0: Exactly one space required around assignment
+       endv=28
+           ^ (bad-whitespace)
+W:332, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:333, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+W:334, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+C:334, 0: Exactly one space required after assignment
+       endv =30
+            ^ (bad-whitespace)
+C:335, 0: Trailing whitespace (trailing-whitespace)
+W:335, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:336, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+W:337, 0: Bad indentation. Found 7 spaces, expected 12 (bad-indentation)
+C:337, 0: Exactly one space required around assignment
+       endv=30
+           ^ (bad-whitespace)
+W:338, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:338, 0: Exactly one space required after comma
+     tloc = MonthLocator(bymonthday=range(interv,endv,interv))
+                                                ^ (bad-whitespace)
+C:338, 0: Exactly one space required after comma
+     tloc = MonthLocator(bymonthday=range(interv,endv,interv))
+                                                     ^ (bad-whitespace)
+W:339, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:340, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:341, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:342, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:343, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:344, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:344, 0: Exactly one space required after comma
+     tlocm = MonthLocator(bymonth=range(1,13,2))
+                                         ^ (bad-whitespace)
+C:344, 0: Exactly one space required after comma
+     tlocm = MonthLocator(bymonth=range(1,13,2))
+                                            ^ (bad-whitespace)
+W:345, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:345, 0: Exactly one space required after comma
+     tloc = MonthLocator(bymonth=range(2,13,2))
+                                        ^ (bad-whitespace)
+C:345, 0: Exactly one space required after comma
+     tloc = MonthLocator(bymonth=range(2,13,2))
+                                           ^ (bad-whitespace)
+W:346, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:347, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:348, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:349, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:350, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:351, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:351, 0: Exactly one space required after comma
+     tlocm = MonthLocator(bymonth=range(1,13,6))
+                                         ^ (bad-whitespace)
+C:351, 0: Exactly one space required after comma
+     tlocm = MonthLocator(bymonth=range(1,13,6))
+                                            ^ (bad-whitespace)
+W:352, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:353, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:354, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:355, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:356, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:357, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:358, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:358, 0: Exactly one space required after comma
+     tlocm = MonthLocator(bymonth=range(1,13,6))
+                                         ^ (bad-whitespace)
+C:358, 0: Exactly one space required after comma
+     tlocm = MonthLocator(bymonth=range(1,13,6))
+                                            ^ (bad-whitespace)
+W:359, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:359, 0: Exactly one space required after comma
+     tloc = MonthLocator(bymonth=range(1,13,2))
+                                        ^ (bad-whitespace)
+C:359, 0: Exactly one space required after comma
+     tloc = MonthLocator(bymonth=range(1,13,2))
+                                           ^ (bad-whitespace)
+W:360, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:361, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:362, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:363, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:364, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:364, 0: Exactly one space required after comma
+     tlocm = MonthLocator(bymonth=range(1,13,6))
+                                         ^ (bad-whitespace)
+C:364, 0: Exactly one space required after comma
+     tlocm = MonthLocator(bymonth=range(1,13,6))
+                                            ^ (bad-whitespace)
+W:365, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:365, 0: Exactly one space required after comma
+     tloc = MonthLocator(bymonth=range(1,13,2))
+                                        ^ (bad-whitespace)
+C:365, 0: Exactly one space required after comma
+     tloc = MonthLocator(bymonth=range(1,13,2))
+                                           ^ (bad-whitespace)
+W:366, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:367, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:368, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:369, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:370, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:371, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:372, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:373, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:374, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:375, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:376, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:377, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:378, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:379, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:379, 0: Exactly one space required after comma
+     tloc = MonthLocator(bymonth=(1,7))
+                                   ^ (bad-whitespace)
+W:380, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:381, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:382, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:383, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:384, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:385, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:386, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:386, 0: Exactly one space required after comma
+     tloc = MonthLocator(bymonth=(1,7))
+                                   ^ (bad-whitespace)
+W:387, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:388, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:389, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:390, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:391, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:392, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:393, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:394, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:395, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:396, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:397, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:398, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:399, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:400, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:401, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:402, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:403, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:404, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:405, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:406, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:407, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:408, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:409, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:410, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:411, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:412, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:413, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:414, 0: Line too long (288/100) (line-too-long)
+W:414, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:414, 0: Exactly one space required after comma
+     interv = int(numpy.round(pylab.matplotlib.numerix.power(10,int(pylab.matplotlib.numerix.log10(interv)*3)/3.)/(pylab.matplotlib.numerix.power(10,int(pylab.matplotlib.numerix.log10(interv)*3)/3)))*(pylab.matplotlib.numerix.power(10,int(pylab.matplotlib.numerix.log10(interv)*3)/3)*1.))
+                                                               ^ (bad-whitespace)
+C:414, 0: Exactly one space required after comma
+     interv = int(numpy.round(pylab.matplotlib.numerix.power(10,int(pylab.matplotlib.numerix.log10(interv)*3)/3.)/(pylab.matplotlib.numerix.power(10,int(pylab.matplotlib.numerix.log10(interv)*3)/3)))*(pylab.matplotlib.numerix.power(10,int(pylab.matplotlib.numerix.log10(interv)*3)/3)*1.))
+                                                                                                                                                    ^ (bad-whitespace)
+C:414, 0: Exactly one space required after comma
+     interv = int(numpy.round(pylab.matplotlib.numerix.power(10,int(pylab.matplotlib.numerix.log10(interv)*3)/3.)/(pylab.matplotlib.numerix.power(10,int(pylab.matplotlib.numerix.log10(interv)*3)/3)))*(pylab.matplotlib.numerix.power(10,int(pylab.matplotlib.numerix.log10(interv)*3)/3)*1.))
+                                                                                                                                                                                                                                          ^ (bad-whitespace)
+W:415, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:416, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:417, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:418, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:419, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:420, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:421, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:422, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:423, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:424, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:425, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:426, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:427, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:428, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:429, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:430, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+C:430, 0: No space allowed before comma
+  if debug: print 'format strings are: ' , lformat,formatm, format
+                                         ^ (bad-whitespace)
+C:430, 0: Exactly one space required after comma
+  if debug: print 'format strings are: ' , lformat,formatm, format
+                                                  ^ (bad-whitespace)
+W:431, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:432, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:433, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:434, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:434, 0: Exactly one space required after comma
+     print "dtrange: %s\nnticks: %s" % (dtrange,nticks)
+                                               ^ (bad-whitespace)
+W:435, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:436, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:437, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:438, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:439, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:440, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:441, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+W:442, 0: Bad indentation. Found 8 spaces, expected 12 (bad-indentation)
+W:443, 0: Bad indentation. Found 8 spaces, expected 12 (bad-indentation)
+C:443, 0: Exactly one space required after comma
+        tlabel = dateform.strftime(pylab.num2date(ltime),lformat)
+                                                        ^ (bad-whitespace)
+W:444, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:444, 0: Exactly one space required around comparison
+     elif lformat.find('%')>=0:
+                           ^^ (bad-whitespace)
+W:445, 0: Bad indentation. Found 8 spaces, expected 12 (bad-indentation)
+C:447, 0: Line too long (134/100) (line-too-long)
+C:449, 0: Trailing whitespace (trailing-whitespace)
+W:450, 0: Bad indentation. Found 5 spaces, expected 8 (bad-indentation)
+C:450, 0: Exactly one space required after comma
+     pylab.setp(axx.get_label(),text=tlabel)
+                               ^ (bad-whitespace)
+W:451, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+C:451, 0: Exactly one space required after comma
+  enlarge_allticklines(axx,factor=1.5)
+                          ^ (bad-whitespace)
+C:452, 0: Trailing whitespace (trailing-whitespace)
+W:453, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+C:455, 0: No space allowed around keyword argument assignment
+def my_date_ticker_factory(span, tz=None, numticks=5, debug = False):
+                                                            ^ (bad-whitespace)
+C:463, 0: Exactly one space required around comparison
+    if span==0: span = 1/24.
+           ^^ (bad-whitespace)
+C:468, 0: Exactly one space required before assignment
+    hours  = span*24
+           ^ (bad-whitespace)
+C:469, 0: Exactly one space required before assignment
+    hours2  = span*12
+            ^ (bad-whitespace)
+C:470, 0: Exactly one space required before assignment
+    hours3  = span*8
+            ^ (bad-whitespace)
+C:471, 0: Trailing whitespace (trailing-whitespace)
+C:471, 0: Exactly one space required before assignment
+    hours6  = span*4 
+            ^ (bad-whitespace)
+C:472, 0: Exactly one space required before assignment
+    days   = span
+           ^ (bad-whitespace)
+C:473, 0: Exactly one space required before assignment
+    days2   = span/2
+            ^ (bad-whitespace)
+C:474, 0: Exactly one space required before assignment
+    days3   = span/3
+            ^ (bad-whitespace)
+C:475, 0: Exactly one space required before assignment
+    weeks  = span/7.
+           ^ (bad-whitespace)
+C:480, 0: Exactly one space required before assignment
+    years  = span/365.
+           ^ (bad-whitespace)
+C:482, 0: Exactly one space required around comparison
+    if years>numticks:
+            ^ (bad-whitespace)
+C:483, 0: Trailing whitespace (trailing-whitespace)
+C:486, 0: Trailing whitespace (trailing-whitespace)
+W:487, 0: Bad indentation. Found 11 spaces, expected 12 (bad-indentation)
+C:487, 0: Exactly one space required after comma
+           print 'years %d > numticks %d, year interval = %d' % (years,numticks,int(years/numticks))
+                                                                      ^ (bad-whitespace)
+C:487, 0: Exactly one space required after comma
+           print 'years %d > numticks %d, year interval = %d' % (years,numticks,int(years/numticks))
+                                                                               ^ (bad-whitespace)
+C:488, 0: Exactly one space required around comparison
+    elif months>numticks:
+               ^ (bad-whitespace)
+C:489, 0: Exactly one space required after comma
+        locator = MonthLocator(interval=int(months/numticks),tz=tz)
+                                                            ^ (bad-whitespace)
+C:491, 0: Trailing whitespace (trailing-whitespace)
+W:492, 0: Bad indentation. Found 11 spaces, expected 12 (bad-indentation)
+C:492, 0: Exactly one space required after comma
+           print 'months %d > numticks %d, month interval = %d' % (months,numticks,1)
+                                                                         ^ (bad-whitespace)
+C:492, 0: Exactly one space required after comma
+           print 'months %d > numticks %d, month interval = %d' % (months,numticks,1)
+                                                                                  ^ (bad-whitespace)
+C:493, 0: Exactly one space required around comparison
+    elif weeks>numticks:
+              ^ (bad-whitespace)
+C:494, 0: Exactly one space required after comma
+        locator = MonthLocator(bymonthday=range(1,28,int(weeks/numticks)*7),tz=tz)
+                                                 ^ (bad-whitespace)
+C:494, 0: Exactly one space required after comma
+        locator = MonthLocator(bymonthday=range(1,28,int(weeks/numticks)*7),tz=tz)
+                                                    ^ (bad-whitespace)
+C:494, 0: Exactly one space required after comma
+        locator = MonthLocator(bymonthday=range(1,28,int(weeks/numticks)*7),tz=tz)
+                                                                           ^ (bad-whitespace)
+C:496, 0: Trailing whitespace (trailing-whitespace)
+W:497, 0: Bad indentation. Found 11 spaces, expected 12 (bad-indentation)
+C:497, 0: Exactly one space required after comma
+           print 'weeks %d > numticks %d, week interval = %d' % (weeks,numticks,1)
+                                                                      ^ (bad-whitespace)
+C:497, 0: Exactly one space required after comma
+           print 'weeks %d > numticks %d, week interval = %d' % (weeks,numticks,1)
+                                                                               ^ (bad-whitespace)
+C:498, 0: Exactly one space required around comparison
+    elif days>numticks:
+             ^ (bad-whitespace)
+C:501, 0: Trailing whitespace (trailing-whitespace)
+C:502, 0: Line too long (107/100) (line-too-long)
+W:502, 0: Bad indentation. Found 11 spaces, expected 12 (bad-indentation)
+C:502, 0: Exactly one space required after comma
+           print 'days %d > numticks %d, day interval = %d' % (days,numticks,int(math.ceil(days/numticks)))
+                                                                   ^ (bad-whitespace)
+C:502, 0: Exactly one space required after comma
+           print 'days %d > numticks %d, day interval = %d' % (days,numticks,int(math.ceil(days/numticks)))
+                                                                            ^ (bad-whitespace)
+C:503, 0: Exactly one space required around comparison
+    elif hours>numticks:
+              ^ (bad-whitespace)
+C:506, 0: Trailing whitespace (trailing-whitespace)
+C:507, 0: Line too long (111/100) (line-too-long)
+W:507, 0: Bad indentation. Found 11 spaces, expected 12 (bad-indentation)
+C:507, 0: Exactly one space required after comma
+           print 'hours %d > numticks %d, hour interval = %d' % (hours,numticks,int(math.ceil(hours/numticks)))
+                                                                      ^ (bad-whitespace)
+C:507, 0: Exactly one space required after comma
+           print 'hours %d > numticks %d, hour interval = %d' % (hours,numticks,int(math.ceil(hours/numticks)))
+                                                                               ^ (bad-whitespace)
+C:508, 0: Exactly one space required around comparison
+    elif minutes>numticks:
+                ^ (bad-whitespace)
+C:511, 0: Trailing whitespace (trailing-whitespace)
+C:512, 0: Line too long (119/100) (line-too-long)
+W:512, 0: Bad indentation. Found 11 spaces, expected 12 (bad-indentation)
+C:512, 0: Exactly one space required after comma
+           print 'minutes %d > numticks %d, minute interval = %d' % (minutes,numticks,int(math.ceil(minutes/numticks)))
+                                                                            ^ (bad-whitespace)
+C:512, 0: Exactly one space required after comma
+           print 'minutes %d > numticks %d, minute interval = %d' % (minutes,numticks,int(math.ceil(minutes/numticks)))
+                                                                                     ^ (bad-whitespace)
+C:516, 0: Trailing whitespace (trailing-whitespace)
+W:517, 0: Bad indentation. Found 11 spaces, expected 12 (bad-indentation)
+C:517, 0: Exactly one space required after comma
+           print 'minutes %d < numticks %d, minute interval = %d' % (minutes,numticks,1)
+                                                                            ^ (bad-whitespace)
+C:517, 0: Exactly one space required after comma
+           print 'minutes %d < numticks %d, minute interval = %d' % (minutes,numticks,1)
+                                                                                     ^ (bad-whitespace)
+C:522, 0: Exactly one space required after comma
+def enlarge_minorticklines(axx,length=2):
+                              ^ (bad-whitespace)
+W:523, 0: Bad indentation. Found 8 spaces, expected 4 (bad-indentation)
+W:524, 0: Bad indentation. Found 8 spaces, expected 4 (bad-indentation)
+W:525, 0: Bad indentation. Found 8 spaces, expected 4 (bad-indentation)
+W:526, 0: Bad indentation. Found 12 spaces, expected 8 (bad-indentation)
+C:526, 0: Exactly one space required after comma
+            pylab.setp(tick.tick1line,ms=length)
+                                     ^ (bad-whitespace)
+W:527, 0: Bad indentation. Found 12 spaces, expected 8 (bad-indentation)
+C:527, 0: Exactly one space required after comma
+            pylab.setp(tick.tick2line,ms=length)
+                                     ^ (bad-whitespace)
+C:528, 0: Exactly one space required after comma
+def enlarge_allticklines(axx,factor=2):
+                            ^ (bad-whitespace)
+W:529, 0: Bad indentation. Found 8 spaces, expected 4 (bad-indentation)
+W:530, 0: Bad indentation. Found 8 spaces, expected 4 (bad-indentation)
+W:531, 0: Bad indentation. Found 8 spaces, expected 4 (bad-indentation)
+W:532, 0: Bad indentation. Found 12 spaces, expected 8 (bad-indentation)
+C:532, 0: Exactly one space required after comma
+            xt = pylab.getp(tick.tick1line,'ms')
+                                          ^ (bad-whitespace)
+W:533, 0: Bad indentation. Found 12 spaces, expected 8 (bad-indentation)
+C:533, 0: Exactly one space required after comma
+            pylab.setp(tick.tick2line,ms=xt*factor)
+                                     ^ (bad-whitespace)
+W:534, 0: Bad indentation. Found 12 spaces, expected 8 (bad-indentation)
+C:534, 0: Exactly one space required after comma
+            xt = pylab.getp(tick.tick2line,'ms')
+                                          ^ (bad-whitespace)
+W:535, 0: Bad indentation. Found 12 spaces, expected 8 (bad-indentation)
+C:535, 0: Exactly one space required after comma
+            pylab.setp(tick.tick1line,ms=xt*factor)
+                                     ^ (bad-whitespace)
+W:536, 0: Bad indentation. Found 8 spaces, expected 4 (bad-indentation)
+W:537, 0: Bad indentation. Found 12 spaces, expected 8 (bad-indentation)
+C:537, 0: Exactly one space required after comma
+            xt = pylab.getp(tick.tick1line,'ms')
+                                          ^ (bad-whitespace)
+W:538, 0: Bad indentation. Found 12 spaces, expected 8 (bad-indentation)
+C:538, 0: Exactly one space required after comma
+            pylab.setp(tick.tick2line,ms=xt*factor)
+                                     ^ (bad-whitespace)
+W:539, 0: Bad indentation. Found 12 spaces, expected 8 (bad-indentation)
+C:539, 0: Exactly one space required after comma
+            xt = pylab.getp(tick.tick2line,'ms')
+                                          ^ (bad-whitespace)
+W:540, 0: Bad indentation. Found 12 spaces, expected 8 (bad-indentation)
+C:540, 0: Exactly one space required after comma
+            pylab.setp(tick.tick1line,ms=xt*factor)
+                                     ^ (bad-whitespace)
+W:544, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:545, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+C:547, 0: No space allowed around keyword argument assignment
+def plot_from_url(url, ax = None, suffix = '.png', plotflag = True):
+                          ^ (bad-whitespace)
+C:547, 0: No space allowed around keyword argument assignment
+def plot_from_url(url, ax = None, suffix = '.png', plotflag = True):
+                                         ^ (bad-whitespace)
+C:547, 0: No space allowed around keyword argument assignment
+def plot_from_url(url, ax = None, suffix = '.png', plotflag = True):
+                                                            ^ (bad-whitespace)
+W:548, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:549, 0: Bad indentation. Found 4 spaces, expected 8 (bad-indentation)
+W:550, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:551, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+C:551, 0: Exactly one space required after comma
+  im = urllib.urlretrieve(url,fname)
+                             ^ (bad-whitespace)
+W:552, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:553, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+W:554, 0: Bad indentation. Found 4 spaces, expected 8 (bad-indentation)
+W:555, 0: Bad indentation. Found 4 spaces, expected 8 (bad-indentation)
+W:556, 0: Bad indentation. Found 4 spaces, expected 8 (bad-indentation)
+W:557, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+C:559, 0: Exactly one space required after comma
+def figure_title(f,titlestr, **kwargs):
+                  ^ (bad-whitespace)
+W:560, 0: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+C:560, 0: Exactly one space required after comma
+  f.text(0.5,0.9,titlestr,ha='center',**kwargs)
+            ^ (bad-whitespace)
+C:560, 0: Exactly one space required after comma
+  f.text(0.5,0.9,titlestr,ha='center',**kwargs)
+                ^ (bad-whitespace)
+C:560, 0: Exactly one space required after comma
+  f.text(0.5,0.9,titlestr,ha='center',**kwargs)
+                         ^ (bad-whitespace)
+C:560, 0: Exactly one space required after comma
+  f.text(0.5,0.9,titlestr,ha='center',**kwargs)
+                                     ^ (bad-whitespace)
+C:570, 0: Trailing whitespace (trailing-whitespace)
+C:581, 0: Exactly one space required after comma
+            leg = pylab.legend(loc=(0,0), *args, **kwargs)
+                                     ^ (bad-whitespace)
+C:591, 0: Wrong continued indentation.
+currentAxesPos[1],
+^                                         | (bad-continuation)
+C:593, 0: Wrong continued indentation.
+(1-plotScaling),
+^                                         | (bad-continuation)
+C:  1, 0: Missing module docstring (missing-docstring)
+C: 19, 0: Invalid argument name "x" (invalid-name)
+C: 19, 0: Invalid argument name "y" (invalid-name)
+C: 19, 0: Invalid argument name "x0" (invalid-name)
+C: 49, 4: Invalid variable name "lo" (invalid-name)
+C: 50, 4: Invalid variable name "hi" (invalid-name)
+C: 59, 0: Invalid argument name "xs" (invalid-name)
+C: 66, 0: Invalid argument name "xs" (invalid-name)
+C: 73, 0: Invalid argument name "ax" (invalid-name)
+C: 99, 0: Invalid argument name "c" (invalid-name)
+C:118, 4: Invalid variable name "yt" (invalid-name)
+W:121,15: Use of eval (eval-used)
+C:122, 4: Invalid variable name "yt" (invalid-name)
+W:140, 1: Use of eval (eval-used)
+W:143, 4: Use of eval (eval-used)
+W:164, 4: Use of eval (eval-used)
+W:165, 4: Use of eval (eval-used)
+W:168,41: Redefining built-in 'format' (redefined-builtin)
+R:168, 0: Too many arguments (10/5) (too-many-arguments)
+R:168, 0: Too many local variables (22/15) (too-many-locals)
+E:189,15: Module 'pylab' has no 'diff' member (no-member)
+E:192,13: Module 'pylab' has no 'mean' member (no-member)
+C:196, 5: Invalid variable name "bt" (invalid-name)
+C:202,15: More than one statement on a single line (multiple-statements)
+C:209,15: More than one statement on a single line (multiple-statements)
+C:216,15: More than one statement on a single line (multiple-statements)
+C:223,15: More than one statement on a single line (multiple-statements)
+C:230,15: More than one statement on a single line (multiple-statements)
+C:237,15: More than one statement on a single line (multiple-statements)
+C:244,15: More than one statement on a single line (multiple-statements)
+C:251,15: More than one statement on a single line (multiple-statements)
+C:258,15: More than one statement on a single line (multiple-statements)
+C:265,15: More than one statement on a single line (multiple-statements)
+C:272,15: More than one statement on a single line (multiple-statements)
+C:279,15: More than one statement on a single line (multiple-statements)
+C:286,15: More than one statement on a single line (multiple-statements)
+C:314,15: More than one statement on a single line (multiple-statements)
+C:342,15: More than one statement on a single line (multiple-statements)
+C:349,15: More than one statement on a single line (multiple-statements)
+C:356,15: More than one statement on a single line (multiple-statements)
+C:369,15: More than one statement on a single line (multiple-statements)
+C:376,15: More than one statement on a single line (multiple-statements)
+C:383,15: More than one statement on a single line (multiple-statements)
+C:390,15: More than one statement on a single line (multiple-statements)
+C:397,15: More than one statement on a single line (multiple-statements)
+C:404,15: More than one statement on a single line (multiple-statements)
+C:411,15: More than one statement on a single line (multiple-statements)
+E:414,30: Module 'matplotlib' has no 'numerix' member (no-member)
+E:414,68: Module 'matplotlib' has no 'numerix' member (no-member)
+E:414,115: Module 'matplotlib' has no 'numerix' member (no-member)
+E:414,153: Module 'matplotlib' has no 'numerix' member (no-member)
+E:414,201: Module 'matplotlib' has no 'numerix' member (no-member)
+E:414,239: Module 'matplotlib' has no 'numerix' member (no-member)
+C:420,15: More than one statement on a single line (multiple-statements)
+C:423,15: More than one statement on a single line (multiple-statements)
+C:426,15: More than one statement on a single line (multiple-statements)
+C:429,15: More than one statement on a single line (multiple-statements)
+C:430,12: More than one statement on a single line (multiple-statements)
+R:168, 0: Too many branches (79/12) (too-many-branches)
+R:168, 0: Too many statements (293/50) (too-many-statements)
+C:455, 0: Invalid argument name "tz" (invalid-name)
+R:455, 0: Too many local variables (23/15) (too-many-locals)
+C:463,16: More than one statement on a single line (multiple-statements)
+C:478, 4: Invalid variable name "m3" (invalid-name)
+C:479, 4: Invalid variable name "m6" (invalid-name)
+E:499,42: Undefined variable 'math' (undefined-variable)
+E:502,81: Undefined variable 'math' (undefined-variable)
+E:504,43: Undefined variable 'math' (undefined-variable)
+E:507,84: Undefined variable 'math' (undefined-variable)
+E:509,45: Undefined variable 'math' (undefined-variable)
+E:512,90: Undefined variable 'math' (undefined-variable)
+W:476, 4: Unused variable 'halfmonths' (unused-variable)
+W:470, 4: Unused variable 'hours3' (unused-variable)
+W:469, 4: Unused variable 'hours2' (unused-variable)
+W:473, 4: Unused variable 'days2' (unused-variable)
+W:474, 4: Unused variable 'days3' (unused-variable)
+W:471, 4: Unused variable 'hours6' (unused-variable)
+W:479, 4: Unused variable 'm6' (unused-variable)
+W:478, 4: Unused variable 'm3' (unused-variable)
+W:467, 4: Unused variable 'minutes10' (unused-variable)
+W:466, 4: Unused variable 'minutes30' (unused-variable)
+R:455, 0: Too many branches (15/12) (too-many-branches)
+R:455, 0: Too many statements (55/50) (too-many-statements)
+W:524, 8: Unused variable 'lines' (unused-variable)
+C:532,12: Invalid variable name "xt" (invalid-name)
+C:534,12: Invalid variable name "xt" (invalid-name)
+C:537,12: Invalid variable name "xt" (invalid-name)
+C:539,12: Invalid variable name "xt" (invalid-name)
+W:530, 8: Unused variable 'lines' (unused-variable)
+C:543, 0: Missing function docstring (missing-docstring)
+C:547, 0: Invalid argument name "ax" (invalid-name)
+C:547, 0: Missing function docstring (missing-docstring)
+C:551, 2: Invalid variable name "im" (invalid-name)
+C:552, 2: Invalid variable name "d" (invalid-name)
+W:551, 2: Unused variable 'im' (unused-variable)
+C:559, 0: Invalid argument name "f" (invalid-name)
+C:559, 0: Missing function docstring (missing-docstring)
+C:583,12: Invalid variable name "currentAxes" (invalid-name)
+C:584,12: Invalid variable name "currentAxesPos" (invalid-name)
+C:586,12: Invalid variable name "plotScaling" (invalid-name)
+W:596,16: Access to a protected member _loc of a client class (protected-access)
+W:  2, 0: Unused silent_list imported from matplotlib.cbook (unused-import)
+W:  3, 0: Unused import datetime (unused-import)
+W:  4, 0: Unused import matplotlib (unused-import)
+W:  6, 0: Unused WeekdayLocator imported from matplotlib.dates (unused-import)
+
+
+Report
+======
+486 statements analysed.
+
+Statistics by type
+------------------
+
++---------+-------+-----------+-----------+------------+---------+
+|type     |number |old number |difference |%documented |%badname |
++=========+=======+===========+===========+============+=========+
+|module   |1      |1          |=          |0.00        |0.00     |
++---------+-------+-----------+-----------+------------+---------+
+|class    |0      |0          |=          |0           |0        |
++---------+-------+-----------+-----------+------------+---------+
+|method   |0      |0          |=          |0           |0        |
++---------+-------+-----------+-----------+------------+---------+
+|function |14     |14         |=          |78.57       |0.00     |
++---------+-------+-----------+-----------+------------+---------+
+
+
+
+External dependencies
+---------------------
+::
+
+    matplotlib (crane.plotting.pylabutil)
+      \-cbook (crane.plotting.pylabutil)
+      \-dates (crane.plotting.pylabutil)
+    numpy (crane.plotting.pylabutil)
+    pylab (crane.plotting.pylabutil)
+
+
+
+Raw metrics
+-----------
+
++----------+-------+------+---------+-----------+
+|type      |number |%     |previous |difference |
++==========+=======+======+=========+===========+
+|code      |464    |79.32 |464      |=          |
++----------+-------+------+---------+-----------+
+|docstring |82     |14.02 |82       |=          |
++----------+-------+------+---------+-----------+
+|comment   |19     |3.25  |19       |=          |
++----------+-------+------+---------+-----------+
+|empty     |20     |3.42  |20       |=          |
++----------+-------+------+---------+-----------+
+
+
+
+Duplication
+-----------
+
++-------------------------+------+---------+-----------+
+|                         |now   |previous |difference |
++=========================+======+=========+===========+
+|nb duplicated lines      |0     |0        |=          |
++-------------------------+------+---------+-----------+
+|percent duplicated lines |0.000 |0.000    |=          |
++-------------------------+------+---------+-----------+
+
+
+
+Messages by category
+--------------------
+
++-----------+-------+---------+-----------+
+|type       |number |previous |difference |
++===========+=======+=========+===========+
+|convention |250    |250      |=          |
++-----------+-------+---------+-----------+
+|refactor   |7      |7        |=          |
++-----------+-------+---------+-----------+
+|warning    |359    |359      |=          |
++-----------+-------+---------+-----------+
+|error      |14     |14       |=          |
++-----------+-------+---------+-----------+
+
+
+
+Messages
+--------
+
++--------------------+------------+
+|message id          |occurrences |
++====================+============+
+|bad-indentation     |322         |
++--------------------+------------+
+|bad-whitespace      |153         |
++--------------------+------------+
+|multiple-statements |30          |
++--------------------+------------+
+|trailing-whitespace |28          |
++--------------------+------------+
+|invalid-name        |26          |
++--------------------+------------+
+|unused-variable     |13          |
++--------------------+------------+
+|mixed-indentation   |13          |
++--------------------+------------+
+|no-member           |8           |
++--------------------+------------+
+|line-too-long       |7           |
++--------------------+------------+
+|undefined-variable  |6           |
++--------------------+------------+
+|eval-used           |5           |
++--------------------+------------+
+|unused-import       |4           |
++--------------------+------------+
+|missing-docstring   |4           |
++--------------------+------------+
+|too-many-statements |2           |
++--------------------+------------+
+|too-many-locals     |2           |
++--------------------+------------+
+|too-many-branches   |2           |
++--------------------+------------+
+|bad-continuation    |2           |
++--------------------+------------+
+|too-many-arguments  |1           |
++--------------------+------------+
+|redefined-builtin   |1           |
++--------------------+------------+
+|protected-access    |1           |
++--------------------+------------+
+
+
+
+Global evaluation
+-----------------
+Your code has been rated at -4.12/10 (previous run: -4.12/10, +0.00)
+

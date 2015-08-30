@@ -87,9 +87,9 @@ def getDiff( ref, sig, refTag=None, sigTag=None, absolute=False ) :
   diff = ref.computeError( sig )
   if absolute :
     diff.data=np.abs(diff.data)
-  if sigTag == None :
+  if sigTag is None :
     sigTag = sig.getMetaData('tag').split('-')[0]
-  if refTag == None :
+  if refTag is None :
     refTag = ref.getMetaData('tag').split('-')[0]
   tagStr = sigTag+'-'+refTag
   diff.setMetaData('tag',tagStr)
@@ -107,7 +107,7 @@ def plotScatter( ax, xDC, yDC, color=None, typ='both', cbarArgs={}, **kwargs ) :
   y = np.squeeze(yDC.data)
   if typ in ['scatter', 'both'] :
     colorData = False
-    if color == None :
+    if color is None :
       color=np.linspace(0,1,len(x))[::-1]
       colorData=True
     elif isinstance( color, dataContainer.dataContainer ) :

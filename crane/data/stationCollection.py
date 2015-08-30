@@ -271,7 +271,7 @@ class tinyDB( object ) :
     In this case one keyword can be a list.
     Setting exclude=True negates the query.
     """
-    if query == None :
+    if query is None :
       # kwargs is a single dict, one value may be list
       nListArgs = sum( isinstance(v,list) for v in kwargs.values() )
       if nListArgs > 1 :
@@ -405,7 +405,7 @@ class StationCollection(tinyDB) :
 
   def getObsTag(self) :
     """Returns the observation tag in the collection."""
-    if self.obsTag == None :
+    if self.obsTag is None :
       raise Exception( 'obs tag has not been set' )
     return self.obsTag
 
@@ -549,7 +549,7 @@ class StationCollection(tinyDB) :
                                 self.startTime-pad, self.endTime+pad )
     # find tidal range
     import time
-    t0 = time.clock()
+    t0 = timeMod.clock()
     gaps,ranges,t = dc.detectGaps()
     x = np.squeeze(dc.data)
     tRes = np.array([])
@@ -626,7 +626,7 @@ class StationCollection(tinyDB) :
       if not depDC or not varDC :
         print 'Could not find saturn01 profiler obs data',var, varDC==None, depDC==None
         return None
-      cputime0 = time.clock()
+      cputime0 = timeMod.clock()
       sys.stdout.write( 'calculating saturn01 profiler obs data ...' )
       sys.stdout.flush()
       try :

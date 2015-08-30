@@ -337,7 +337,7 @@ def parseCommandLine() :
   bathMeshFile = options.bathMeshFile
   isobathStr = options.isobathStr
 
-  if imgDir == None:
+  if imgDir is None:
     parser.print_help()
     parser.error('imgDir undefined')
   if len(args) < 1 :

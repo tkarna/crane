@@ -197,7 +197,7 @@ class timeSeriesPlotDC(timeSeriesPlot) :
   def __init__(self, varLabel, ref=None, refLabel='Reference', unit='', ylim=None, **kwargs) :
     if 'xlim' in kwargs :
       kwargs['xlim'] = [ plotBase.convertEpochToPlotTime( timeArray.datetimeToEpochTime( dt ) ) for dt in kwargs['xlim'] ]
-    if ref == None :
+    if ref is None :
       tref = yref = None
     else :
       tref = plotBase.convertEpochToPlotTime( ref.time.asEpoch().array )
