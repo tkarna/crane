@@ -404,10 +404,10 @@ class monthlyFileTree(fileTree):
         return pathPattern
 
     def getMonthWindows(self, startTime, endTime):
-        """Returns an interator for time windows."""
+        """Returns a list of monthly time windows."""
         windows = []
-        for dt in rrule.rrule(rrule.MONTHLY, until=endTime,
-                              dtstart=datetime.datetime(startTime.year,startTime.month,1)):
+        dtstart = datetime.datetime(startTime.year, startTime.month, 1)
+        for dt in rrule.rrule(rrule.MONTHLY, until=endTime, dtstart=dtstart):
             windows.append((dt, dt+relativedelta.relativedelta(months=1)))
         return windows
 
@@ -438,8 +438,10 @@ class monthlyFileTree(fileTree):
             # crop data dataContainer
             try:
                 cropped_dc = dc.timeWindow(win_start, win_end, includeEnd=False)
-            except:
-                print 'Given time window out of range'
+            except Exception as e:
+                # NOTE this should not happen as win_start/end come from dc
+                print 'cropping time window failed:'
+                print e
                 continue
             #  save
             netcdfIO.netcdfIO(fn).saveDataContainer(cropped_dc, dtype,
