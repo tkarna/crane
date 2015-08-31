@@ -1,3 +1,7 @@
+"""
+NOTE this module is now OBSOLETE and should be removed ASAP
+NOTE time series plots should be handled by timeSeriesPlotDC2 derived methods
+"""
 import matplotlib
 
 import numpy as np
