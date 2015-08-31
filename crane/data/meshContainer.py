@@ -74,10 +74,14 @@ class meshContainer(dataContainer.dataContainer) :
       raise Exception('Boundary node index exceed number of nodes in the mesh ({0:d} > {1:d})'.format(n.max(),self.x.shape[0]-1) )
     self.boundaries.append( bnd )
 
-  def getFields( self, *fields ) :
+  def extractFields( self, *fields ) :
     """
-    Returns a new dataContainer with the given fields.
-    field can be a field name (str) or index (int) of the fieldNames list.
+    Returns a meshContainer containing only the requested field.
+
+    Parameters
+    ----------
+    fields : str or int
+        fieldName to extract. If int, the index of the field to extract.
     """
     indices = []
     names = []

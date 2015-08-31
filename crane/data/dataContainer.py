@@ -234,8 +234,15 @@ class dataContainer(object) :
                np.array_equal( np.nan_to_num(self.y), np.nan_to_num(other.y) ) and
                np.array_equal( np.nan_to_num(self.z), np.nan_to_num(other.z) ) )
 
-  def getField( self, fieldName ) :
-    """Returns the requested field in an array."""
+  def getFieldArray( self, fieldName ) :
+    """
+    Returns the requested field in an array.
+
+    Parameters
+    ----------
+    fieldName : str or int
+        fieldName to extract. If int, the index of the field to extract.
+    """
     if isinstance(fieldName,str) :
       if fieldName in self.fieldNames :
         return self.data[:,self.fieldNames.index(fieldName),:]
@@ -245,21 +252,28 @@ class dataContainer(object) :
       # assume index
       return self.data[:,fieldName,:]
 
-  def extractField( self, fieldName ) :
-    """Returns a dataContainer containing only the requested field."""
-    iField = None
-    if isinstance(fieldName,str) :
-      if fieldName in self.fieldNames :
-        iField = self.fieldNames.index(fieldName)
+  def extractFields( self, *fields ) :
+    """
+    Returns a dataContainer containing only the requested field.
+
+    Parameters
+    ----------
+    fields : str or int
+        fieldName to extract. If int, the index of the field to extract.
+    """
+    indices = []
+    names = []
+    for f in fields :
+      if isinstance( f, str ) or isinstance( f, unicode ) :
+        # deduce index
+        i = self.fieldNames.index( f )
       else :
-        raise Exception('given field not found',fieldName)
-    else :
-      # assume index
-      iField = fieldName
-    new = self.copy()
-    new.data = self.data[:,[iField],:].copy()
-    new.fieldNames = [ self.fieldNames[iField] ]
-    return new
+        i = f
+      indices.append( i )
+      names.append( self.fieldNames[i] )
+    data = self.data[:,indices,:]
+
+    return dataContainer( self.description, self.time, self.x, self.y, self.z, data, names, self.coordSys, self.metaData, acceptNaNs=True )
 
   def mergeTemporal(self, other, testSanity=True, acceptDuplicates=False) :
     """
@@ -312,25 +326,6 @@ class dataContainer(object) :
     
     self.fieldNames += other.fieldNames
     self.data = np.hstack( ( self.data, other.data ) )
-
-  def getFields( self, *fields ) :
-    """
-    Returns a new dataContainer with the given fields.
-    field can be a field name (str) or index (int) of the fieldNames list.
-    """
-    indices = []
-    names = []
-    for f in fields :
-      if isinstance( f, str ) or isinstance( f, unicode ) :
-        # deduce index
-        i = self.fieldNames.index( f )
-      else :
-        i = f
-      indices.append( i )
-      names.append( self.fieldNames[i] )
-    data = self.data[:,indices,:]
-
-    return dataContainer( self.description, self.time, self.x, self.y, self.z, data, names, self.coordSys, self.metaData, acceptNaNs=True )
     
   def changeTimeFormat(self,timeFormat,startDate=None) :
     """
@@ -537,60 +532,6 @@ class dataContainer(object) :
     return dataContainer(self.description, t, x,y,z, d, self.fieldNames,
                self.coordSys,acceptNaNs=True, metaData=dict(self.metaData),
                checkDataXDim=False)
-
-  # TODO add metaData or remove
-  def saveToDisk( self, filename=None, path='' ) :
-    """Saves the data to disk in numpy npz format."""
-    if not filename :
-      staStr = self.time.getDatetime( 0).strftime('%Y-%m-%d')
-      endStr = self.time.getDatetime(-1).strftime('%Y-%m-%d')
-      varNames = '-'.join( self.fieldNames )
-      filename = '_'.join([self.description,varNames,staStr,endStr])+'.npz'
-    
-    if len(path) and not os.path.isdir(path) :
-      raise Exception( 'given path does not exist: '+path )
-    filename = os.path.join(path,filename)
-    
-    print 'writing to '+filename
-    kwargs = {}
-    kwargs['time'] = self.time.array
-    kwargs['timeFormat'] = self.time.timeFormat
-    if self.time.timeFormat == 'simulation' :
-      kwargs['startDate'] = self.time.startDate
-    kwargs['x'] = self.x
-    kwargs['y'] = self.y
-    kwargs['z'] = self.z
-    kwargs['data'] = self.data
-    kwargs['description'] = self.description
-    kwargs['coordSys'] = self.coordSys
-    kwargs['fieldNames'] = self.fieldNames
-    
-    np.savez( filename, **kwargs )
-  
-  @classmethod
-  def loadFromDisk( cls, filename ) :
-    """Creates a new dataContainer object from a saved npz file.
-    npz extension is automatically added to filename if no extension is given."""
-    print 'loading '+filename
-    # add npz extension if missing
-    stem,extension = os.path.splitext(filename)
-    if not extension :
-      filename += '.npz'
-    
-    bundle = np.load( filename )
-    
-    startDate = None
-    if 'startDate' in bundle.files :
-      startDate = bundle['startDate'].tolist()
-    time = timeArray.timeArray( bundle['time'].astype(cls.dtype), bundle['timeFormat'], startDate, acceptDuplicates=True )
-    fieldNames = bundle['fieldNames'].tolist()
-
-    x = bundle['x'].astype(cls.dtype)
-    y = bundle['y'].astype(cls.dtype)
-    z = bundle['z'].astype(cls.dtype)
-    data = bundle['data'].astype(cls.dtype)
-    return cls(str(bundle['description']), time, x, y, x , data,
-               fieldNames, str(bundle['coordSys']) )
 
   def saveAsNetCDF( self, filename, dtype=None, overwrite=True,
                     compress=False, digits=None) :
