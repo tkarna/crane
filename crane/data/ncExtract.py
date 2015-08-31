@@ -20,7 +20,7 @@ from crane.data import meshContainer
 from crane.data import selfeGridUtils
 from crane.files import buildPoints
 from crane.files import csvStationFile
-from crane.data import extractStation
+from crane import fieldNameList, fieldNameToFilename
 
 #-------------------------------------------------------------------------------
 # High-level functions
@@ -326,9 +326,9 @@ def getNCVariableName( var ) :
   if var in ncVarNames :
     # custom names
     return ncVarNames[var]
-  elif var in extractStation.fieldNameToFilename and extractStation.fieldNameToFilename[var][:5] == 'trcr_' :
+  elif var in fieldNameToFilename and fieldNameToFilename[var][:5] == 'trcr_' :
     # derived from tracer model,trcr_X
-    return extractStation.fieldNameToFilename[var].split('.')[0]
+    return fieldNameToFilename[var].split('.')[0]
   else :
     # default: same name
     return var
@@ -539,7 +539,7 @@ class selfeExtractBase(object) :
     self.externalMeshSeachObj = meshSearchObj
     if fileTypeStr is None :
       try :
-        self.fileName = extractStation.fieldNameToFilename[var]
+        self.fileName = fieldNameToFilename[var]
         self.fileTypeStr = self.fileName.split('.')[1]
       # Try and guess the file name
       except :
@@ -1171,7 +1171,7 @@ class selfeExtract(selfeExtractBase) :
       # merge components
       for i in range(len(compDCs[0])) :
         compDCs[0][i].mergeFields( compDCs[1][i] )
-        compDCs[0][i].fieldNames = extractStation.fieldNameList.get(varStr,[varStr]) # hvel: ['u','v']
+        compDCs[0][i].fieldNames = fieldNameList.get(varStr,[varStr]) # hvel: ['u','v']
         compDCs[0][i].setMetaData( 'variable',varStr )
       return compDCs[0]
 
@@ -1213,7 +1213,7 @@ class selfeExtract(selfeExtractBase) :
       z = np.mean(actualZ[iSta,:])
       x = staX[iSta]
       y = staY[iSta]
-      dc = dataContainer.dataContainer('', ta, x,y,z, data, extractStation.fieldNameList.get(varStr,[varStr]),
+      dc = dataContainer.dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
                           coordSys='spcs',metaData=meta)
       dcs.append(dc)
     return dcs
@@ -1236,7 +1236,7 @@ class selfeExtract(selfeExtractBase) :
       # merge components
       for i in range(len(compDCs[0])) :
         compDCs[0][i].mergeFields( compDCs[1][i] )
-        compDCs[0][i].fieldNames = extractStation.fieldNameList.get(varStr,[varStr]) # hvel: ['u','v']
+        compDCs[0][i].fieldNames = fieldNameList.get(varStr,[varStr]) # hvel: ['u','v']
         compDCs[0][i].setMetaData( 'variable',varStr )
       return compDCs[0]
 
@@ -1295,7 +1295,7 @@ class selfeExtract(selfeExtractBase) :
       meta['bracket'] = 'A'
       meta['variable'] = varStr
       meta['dataType'] = 'profile'
-      dc = dataContainer.dataContainer('', ta, x,y,z, data, extractStation.fieldNameList.get(varStr,[varStr]),
+      dc = dataContainer.dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
                           coordSys='spcs',metaData=meta)
       dcs.append(dc)
     return dcs
@@ -1316,7 +1316,7 @@ class selfeExtract(selfeExtractBase) :
         compDCs.append( dc )
       # merge components
       compDCs[0].mergeFields( compDCs[1] )
-      compDCs[0].fieldNames = extractStation.fieldNameList.get(varStr,[varStr]) # hvel: ['u','v']
+      compDCs[0].fieldNames = fieldNameList.get(varStr,[varStr]) # hvel: ['u','v']
       compDCs[0].setMetaData('variable',varStr)
       return compDCs[0]
 
@@ -1371,7 +1371,7 @@ class selfeExtract(selfeExtractBase) :
     meta['bracket'] = 'A'
     meta['variable'] = varStr
     meta['dataType'] = 'transect'
-    dc = dataContainer.dataContainer('', ta, X,Y,Z, data, extractStation.fieldNameList.get(varStr,[varStr]),
+    dc = dataContainer.dataContainer('', ta, X,Y,Z, data, fieldNameList.get(varStr,[varStr]),
                        coordSys='spcs', metaData=meta, acceptNaNs=True)
     return dc
 
@@ -1389,7 +1389,7 @@ class selfeExtract(selfeExtractBase) :
         compDCs.append( dc )
       # merge components
       compDCs[0].mergeFields( compDCs[1] )
-      compDCs[0].fieldNames = extractStation.fieldNameList.get(varStr,[varStr]) # hvel: ['u','v']
+      compDCs[0].fieldNames = fieldNameList.get(varStr,[varStr]) # hvel: ['u','v']
       compDCs[0].setMetaData('variable',varStr)
       return compDCs[0]
 
@@ -1411,7 +1411,7 @@ class selfeExtract(selfeExtractBase) :
     meta['bracket'] = 'F' if zRelToSurf else 'A'
     meta['variable'] = varStr
     dc = dataContainer.dataContainer('', ta, XX[None,:],YY[None,:],z, data,
-                       extractStation.fieldNameList.get(varStr,[varStr]),
+                       fieldNameList.get(varStr,[varStr]),
                        coordSys='spcs',metaData=meta,acceptNaNs=True)
 
     return dc
@@ -1430,7 +1430,7 @@ class selfeExtract(selfeExtractBase) :
         compDCs.append( dc )
       # merge components
       compDCs[0].mergeFields( compDCs[1] )
-      compDCs[0].fieldNames = extractStation.fieldNameList.get(varStr,[varStr]) # hvel: ['u','v']
+      compDCs[0].fieldNames = fieldNameList.get(varStr,[varStr]) # hvel: ['u','v']
       compDCs[0].setMetaData('variable',varStr)
       return compDCs[0]
 
@@ -1475,6 +1475,6 @@ class selfeExtract(selfeExtractBase) :
       meta['bracket'] = 'F' if zRelToSurf else 'A'
       meta['msldepth'] = msldepth
     mc = meshContainer.meshContainer('', ta, x,y,zArray, data, connectivity,
-                       extractStation.fieldNameList.get(varStr,[varStr]),coordSys='spcs',
+                       fieldNameList.get(varStr,[varStr]),coordSys='spcs',
                        metaData=meta,)
     return mc
