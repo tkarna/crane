@@ -5,11 +5,13 @@ from glob import glob
 
 #from data.extractStation import fieldNameList
 from crane.data import timeArray
-from crane.data import dataContainer
+from crane.data.dataContainer import *
 from crane.data import gridUtils
 from crane.data import meshContainer
 from crane.data.selfeGridUtils import *
 from crane.files import buildPoints
+from crane.physicalVariableDefs import fieldNameList
+import datetime
 
 # use consistent field names throughout the skill assessment package
 
@@ -128,7 +130,7 @@ class slimExtractBase(object) :
       self.edge_lat = ncfile.variables['edge_lat'][:]
 
     # construct mesh search object
-    self.meshSearch2d = meshSearch2d( self.nodeX, self.nodeY, self.faceNodes )
+    self.meshSearch2d = gridUtils.meshSearch2d( self.nodeX, self.nodeY, self.faceNodes )
     self.headerIsRead = True
     if not ncfileGiven :
       ncfile.close()
@@ -139,7 +141,7 @@ class slimExtractBase(object) :
     nTime = len(ncfile.dimensions['time'])
     startTime = ' '.join(ncfile.variables['time'].base_date.split()[2:4])
     startTime = datetime.datetime.strptime( startTime, '%Y-%m-%d %H:%M:%S' )
-    time = simulationToEpochTime( ncfile.variables['time'][:], startTime )
+    time = timeArray.simulationToEpochTime( ncfile.variables['time'][:], startTime )
     return time
 
   def getZCoordinates(self, iStack) :
@@ -177,7 +179,7 @@ class slimExtractBase(object) :
     """
 
     if horzInterp==None :
-      horzInterp = horizontalInterpolator( self.meshSearch2d,x,y,stationNames )
+      horzInterp = gridUtils.horizontalInterpolator( self.meshSearch2d,x,y,stationNames )
 
     ncfile = self.getNCFile(iStack)
     time = self.getTime(ncfile)
@@ -228,7 +230,7 @@ class slimExtractBase(object) :
           Z-coordinates for the vertical profiles
     """
     # create interpolator object for recycling
-    horzInterp = horizontalInterpolator( self.meshSearch2d,x,y,stationNames )
+    horzInterp = gridUtils.horizontalInterpolator( self.meshSearch2d,x,y,stationNames )
 
     time = []
     vals = []
@@ -350,7 +352,7 @@ class slimExtractBase(object) :
            increase upwards.
     k      : int, array_like (nProfiles,), optional
            Instead of interpolating, take k-th nodal value from bottom.
-           k=1 stands for bottom, k=-1 stands for surface
+           k=-1 stands for bottom, k=0 stands for surface
     zRelToSurf : bool, array_like (nProfiles,), optional
            If True z coordinate is taken depth below free surface instead of
            static z coordinate
@@ -380,8 +382,9 @@ class slimExtractBase(object) :
       # nProfiles,nZ,nTime
       # TODO add vertical interpolation
       if k != None :
-        # bottom: k=1 kk=0, surface: k=-1 kk=len(z)-1
-        kk = k-1 if k>0 else nZ+k
+        # bottom: k=1 kk=0, surface: k=0 kk=0
+        #kk = k-1 if k>=0 else nZ+k
+        kk = k
         vals = nodalValues[:,kk,:]
         z_actual = zcoords[:,kk,:]
       else : # interpolate in vertical
@@ -477,7 +480,7 @@ class slimExtract(slimExtractBase) :
       data = np.reshape( np.array(data[goodIx]), (1,1,-1) )
       t = np.array(time[goodIx])
 
-      ta = timeArray( t, 'epoch' )
+      ta = timeArray.timeArray( t, 'epoch' )
       meta = {}
       meta['location'] = stationNames[iSta]
       meta['instrument'] = 'model'
@@ -541,7 +544,7 @@ class slimExtract(slimExtractBase) :
         raise Exception('bad values remain: '+staStr)
       # to (nGoodVert,1,nTime)
       data = v[:,None,:]
-      ta = timeArray( np.array(t), 'epoch' )
+      ta = timeArray.timeArray( np.array(t), 'epoch' )
       # to (nGoodVert,nTime)
       nZ = z.shape[0]
       x = staX[iSta]*np.ones((nZ,))
@@ -604,7 +607,7 @@ class slimExtract(slimExtractBase) :
     data = data[:,None,:]
     
     # build dataContainer
-    ta = timeArray( time, 'epoch' )
+    ta = timeArray.timeArray( time, 'epoch' )
     meta = {}
     meta['location'] = transName
     meta['instrument'] = 'model'
@@ -630,7 +633,7 @@ class slimExtract(slimExtractBase) :
     """Extracts a horiontal slice for the given time range."""
     stacks = self.getStacks(startTime,endTime)
     time,vals,zcoords = self.getSlabForStacks(stacks, var, z, k, zRelToSurf)
-    ta = timeArray( time, 'epoch' )
+    ta = timeArray.timeArray( time, 'epoch' )
     data = vals[:,None,:]
     data = data.filled(np.nan)
     connectivity = self.faceNodes
@@ -656,5 +659,5 @@ class slimExtract(slimExtractBase) :
     else :
       meta['bracket'] = 'F' if zRelativeToSurf else 'A'
       meta['msldepth'] = msldepth
-    mc = meshContainer('', ta, x,y,z, data, connectivity, fieldNameList[var], coordSys='spcs',metaData=meta)
+    mc = meshContainer.meshContainer('', ta, x,y,z, data, connectivity, fieldNameList[var], coordSys='spcs',metaData=meta)
     return mc

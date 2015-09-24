@@ -239,7 +239,7 @@ def makeSlabPlots(netCDFFiles, imgDir, runTag=None, startTime=None,
   for iComp in range(3):
     for dc in dcs:
       if iComp < dc.data.shape[1]:
-        dcs_comp.append(dc.extractField(iComp))
+        dcs_comp.append(dc.extractFields(iComp))
   dcs = dcs_comp
 
   aspect = 1.0 # figure aspect ratio
