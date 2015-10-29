@@ -177,8 +177,7 @@ def extractForXYZ( dataDir, var, startTime, endTime, x, y, z=None,
   return dcs
 
 def extractForStations( dataDir, var, stationFile, startTime, endTime,
-                        profile=False, zRelToSurf=False,
-                        wholeDays=True, stacks=None, verbose=False) :
+                        profile=False, wholeDays=True, stacks=None, verbose=False) :
   """
   Extracts time series for given variable from stations defined in stationFile.
   """
@@ -198,9 +197,8 @@ def extractForStations( dataDir, var, stationFile, startTime, endTime,
     for i,s in enumerate(stationNames) :
       print s,x[i],y[i]
     return extractForXYZ(dataDir, var, startTime, endTime, x, y, z,
-                         stationNames, profile, zRelToSurf,
-                         wholeDays=wholeDays, stacks=stacks,
-                         verbose=verbose)
+                         stationNames, profile=profile, wholeDays=wholeDays,
+                         stacks=stacks, verbose=verbose)
 
   # not profile, depths defined in stationFile
   csvReader = csvStationFile.csvStationFileWithDepth()
