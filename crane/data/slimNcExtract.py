@@ -2,6 +2,7 @@ import os
 import numpy as np
 from netCDF4 import Dataset as NetCDFFile
 from glob import glob
+import traceback
 
 #from data.extractStation import fieldNameList
 from crane.data import timeArray
@@ -12,6 +13,7 @@ from crane.data.selfeGridUtils import *
 from crane.files import buildPoints
 from crane.physicalVariableDefs import fieldNameList
 import datetime
+from crane.files import csvStationFile
 
 # use consistent field names throughout the skill assessment package
 
@@ -20,6 +22,7 @@ VARS2D = ['elev','dahv']
 def getNCVariableName(varStr) :
   nc_names = { 'elev':'eta',
                'salt':'S',
+               'temp':'T',
               }
   return nc_names.get(varStr,varStr)
 
@@ -661,3 +664,97 @@ class slimExtract(slimExtractBase) :
       meta['msldepth'] = msldepth
     mc = meshContainer.meshContainer('', ta, x,y,z, data, connectivity, fieldNameList[var], coordSys='spcs',metaData=meta)
     return mc
+
+  def extractForXYZ(self, dataDir, var, startTime, endTime, x, y, z=None,
+                     stationNames=None, profile=False, zRelToSurf=False,
+                     stacks=None, verbose=False) :
+    """
+    Extracts time series for given variable from stations defined by x,y,z.
+    If profile=True, will extract profiles instead (z is ignored).
+    """
+    varStr,fileTypeStr = splitVarToFileType(var)
+    if not profile and z is None :
+      raise Exception('z coordinates must be provided')
+    try :
+      if profile :
+        dcs = self.extractVerticalProfile(startTime, endTime, varStr, x, y,
+                                        stationNames, stacks=stacks)
+      else :
+        dcs = self.extractTimeSeries(startTime, endTime, varStr, x, y,
+                                   stationNames, z, zRelToSurf=zRelToSurf) 
+      print ' * extracted'
+    except Exception as e :
+      print ' * extraction failed'
+      traceback.print_exc(file=sys.stdout)
+      dcs = []
+    for dc in dcs :
+      if profile :
+        print ' '.join([ dc.getMetaData('location'), dc.getMetaData('variable') ] )
+      else :
+        print ' '.join([ dc.getMetaData('location'), dc.getMetaData('bracket'),
+                dc.getMetaData('msldepth'), dc.getMetaData('variable') ] )
+    return dcs
+  
+  def extractForStations(self, dataDir, var, stationFile, startTime, endTime,
+                          profile=False, stacks=None, verbose=False) :
+    """
+    Extracts time series for given variable from stations defined in stationFile.
+    """
+    # read station file, allow duplicate stations (with different depth)
+    if not os.path.isfile(stationFile):
+      raise Exception('File does not exist: '+stationFile)
+  
+    if profile:
+      csvReader = csvStationFile.csvStationFile()
+      csvReader.readFromFile(stationFile)
+      tuples = csvReader.getTuples() # all entries (loc,x,y)
+      stationNames = [ t[0] for t in tuples ]
+      x = np.array([ t[1] for t in tuples ])
+      y = np.array([ t[2] for t in tuples ])
+      z = None
+      print ' *** extracting profiles for stations *** '
+      for i,s in enumerate(stationNames) :
+        print s,x[i],y[i]
+      return self.extractForXYZ(dataDir, var, startTime, endTime, x, y, z,
+                           stationNames, profile, False,
+                           stacks=stacks, verbose=verbose)
+  
+    # not profile, depths defined in stationFile
+    csvReader = csvStationFile.csvStationFileWithDepth()
+    csvReader.readFromFile(stationFile)
+    tuples = csvReader.getTuples() # all entries (loc,x,y,z,zType,var)
+    stationNames = [ t[0] for t in tuples ]
+    x = np.array([ t[1] for t in tuples ])
+    y = np.array([ t[2] for t in tuples ])
+    z = np.array([ t[3] for t in tuples ])
+    zRelToSurf = np.array([ t[4]=='depth' for t in tuples ],dtype=bool)
+  
+    dcList = []
+    for zIsDepth in [True,False] :
+      # filter for z coordinate/depth cases
+      ix = np.nonzero(zRelToSurf == zIsDepth)[0]
+      if len(ix) == 0 : continue
+      x_filt = x[ix]
+      y_filt = y[ix]
+      z_filt = z[ix]
+      stationNames_filt = [stationNames[i] for i in ix ]
+      print ' *** extracting for stations *** '
+      for i,s in enumerate(stationNames_filt) :
+        print s,x_filt[i],y_filt[i],z_filt[i], zRelToSurf[i]
+      dcs = self.extractForXYZ(dataDir, var, startTime, endTime,
+                          x_filt, y_filt, z_filt, stationNames_filt,
+                          profile, zIsDepth, stacks=stacks, 
+                          verbose=verbose)
+      dcList.extend(dcs)
+  
+    return dcList
+
+
+
+def splitVarToFileType(var) :
+  """Splits 'varname.ext' to 'var','ext'.
+  If returns None as extension if cannot split."""
+  if len(var.split('.'))==2 :
+    return var.split('.')
+  else :
+    return var,None
