@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """Create bed_flux.61.nc NetCDF files from bed_depth.61.nc files.
 
-jesse.e.lopez
+Jesse Lopez
 """
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Imports
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 import os
 import shutil
 import argparse
@@ -13,21 +13,21 @@ import argparse
 import numpy as np
 import netCDF4 as nc
 
-import data.ncExtract as nce
-import data.dirTreeManager as dtm
-import data.meshContainer as mc
+from crane.data import ncExtract as nce
+from crane.data import dirTreeManager as dtm
+from crane.data import meshContainer as mc
 
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Constants
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 MISSING_VALUE = -9999.0
 # Need to have the model output this
 POROSITY = 0.5
 
 
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Functions
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 def elementToNodalValues(elem_data, connectivity):
     """Calculates and resturns nodal value from surrounding elements.
 
@@ -170,14 +170,14 @@ def processBedDepth(data_dir, first_stack, last_stack):
         last_depth = makeBedFlux(bed_depth_path, last_depth)
 
 
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Main
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 def parseCommandLine():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser()
     parser.add_argument('data_dir', help='Path to combined data directory')
-    parser.add_argument('first_stack', type=int, help='First stack to processes')
+    parser.add_argument('first_stack', type=int, help='First stack to process')
     parser.add_argument('last_stack', type=int, help='Last stack to processes')
 
     args = parser.parse_args()
