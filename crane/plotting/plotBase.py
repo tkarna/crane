@@ -294,7 +294,7 @@ class colorPlotBase(plotBase) :
 
   def showColorBar(self, location='right', size=0.3, pad=0.1, fontsize=None,
                    maxticks=None, prune=None, integer=False, symmetric=False,
-                   **kwargs) :
+                   ticks=None, **kwargs) :
     """Adds a colorbar in the axes."""
     if self.ax and self.cax:
       #title = r'TKE [$\log_{10} (m^2 s^{-2}) $]'
@@ -313,11 +313,14 @@ class colorPlotBase(plotBase) :
       # create an axes on the right side of ax. The width of cax will be 5%
       # of ax and the padding between cax and ax will be fixed at 0.05 inch.
       divider = make_axes_locatable(self.ax)
-      cax = divider.append_axes(location, size=size, pad=pad)
+      cbax = divider.append_axes(location, size=size, pad=pad)
       orientation = 'vertical' if location in ['right','left'] else 'horizontal'
-      self.cb = plt.colorbar(self.cax,cax=cax, orientation=orientation,
+      self.cb = plt.colorbar(self.cax, cax=cbax, orientation=orientation,
                              **kwargs)
-      if maxticks is not None:
+      if ticks is not None:
+        self.cb.set_ticks(ticks)
+        self.cb.update_ticks()
+      elif maxticks is not None:
         loc = matplotlib.ticker.MaxNLocator(nbins=maxticks, prune=prune,
                                             integer=integer,
                                             symmetric=symmetric)
