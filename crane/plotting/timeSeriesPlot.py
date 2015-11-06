@@ -9,6 +9,7 @@ Tuomas Karna 2012-08-20
 import sys
 
 import numpy as np
+import datetime
 from crane import plt
 
 from crane.data import dataContainer
