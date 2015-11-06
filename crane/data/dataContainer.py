@@ -252,7 +252,7 @@ class dataContainer(object) :
       # assume index
       return self.data[:,fieldName,:]
 
-  def extractFields( self, *fields ) :
+  def extractFields( self, *fields, **kwargs) :
     """
     Returns a dataContainer containing only the requested field.
 
@@ -260,7 +260,10 @@ class dataContainer(object) :
     ----------
     fields : str or int
         fieldName to extract. If int, the index of the field to extract.
+    copy   : bool
+        if True copies the data array instead of using a view
     """
+    copy = kwargs.get(copy, False)
     indices = []
     names = []
     for f in fields :
@@ -271,7 +274,10 @@ class dataContainer(object) :
         i = f
       indices.append( i )
       names.append( self.fieldNames[i] )
-    data = self.data[:,indices,:]
+    if copy:
+      data = self.data[:, indices, :].copy()
+    else:
+      data = self.data[:, indices, :]
 
     return dataContainer( self.description, self.time, self.x, self.y, self.z, data, names, self.coordSys, self.metaData, acceptNaNs=True )
 
