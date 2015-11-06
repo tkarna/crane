@@ -253,7 +253,9 @@ class singleFileTree(fileTree):
                                var=variable, st=startStr, et=endStr)
         else:  # any other data type
             if slevel is None or slevel == '*':
-                dep = '0'
+                dep = '0' 
+                if slevel == '*':
+                    dep = '*'
             else:
                 dep = 's' + str(slevel)
             pattern = '{tag:s}/data/{typ:s}/{loc:s}_{var:s}_{dep:s}_{st:s}_{et:s}.nc'
