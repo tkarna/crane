@@ -290,7 +290,7 @@ class singleFileTree(fileTree):
         m['rootPath'] = rootPath
         filename = self.generateFileName(**m)
         netcdfIO.netcdfIO(filename).saveDataContainer(dc, dtype, overwrite,
-                                             compress, digits)
+                                                      compress, digits)
 
     def findMatchingFiles(self, **kwargs):
         """Returns a list of all files that match the query."""
