@@ -81,7 +81,7 @@ class netcdfIO(object) :
     return netcdfIO.readNetCDFFile( ncfile, startTime, endTime, includeEnd=includeEnd )
 
   def readToDataContainer( self, startTime=None, endTime=None, includeEnd=False,
-                           verbose=True, dtype=np.float64 ) :
+                           verbose=True, dtype=None ) :
     """Reads file and returns data in data/meshContainer."""
     out = self.read( startTime, endTime, includeEnd, verbose=verbose)
     descr, ta, x,y,z, data, fns, cSys, conn, meta, bnds = out

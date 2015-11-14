@@ -15,17 +15,16 @@ from crane.data import timeArray
 from crane.data import netcdfIO
 
 
-class dataContainer(object) :
+class dataContainer(object):
   """
   Generic data container.
   Contains timeArray, spatial coordinates and data.
   """
   def __init__(self, description, time, x, y, z, data, fieldNames,
-               coordSys='whatever', metaData=None, acceptNaNs=False,
-               checkDataXDim=True,dtype=np.float64) :
+               coordSys='whatever', metaData={}, acceptNaNs=False,
+               checkDataXDim=True, dtype=None):
     """Creates new dataContainer object
 
-    description -- string to identify the data array (e.g. 'observation cbnc3')
     time        -- timeArray object
     x, y, z     -- (scalar) or (nPoints,) or (nPoints,nTime) coordinate arrays
                    2-dimensional array if coodinates depend on time, scalar if
@@ -37,9 +36,12 @@ class dataContainer(object) :
     coordSys    -- string representing the used coordinate system
     acceptNaNs  -- if False, raises an error if NaNs/Infs found in data array
     """
-    self.dtype=dtype
+    if dtype is not None:
+        self.dtype = dtype
+    else:
+        self.dtype = data.dtype
     self.acceptNaNs = acceptNaNs
-    if len(time) == 0 :
+    if len(time) == 0:
       raise Exception( 'time array is empty' )
     if np.isnan(time.array).any() or np.isinf(time.array).any() :
       raise Exception( 'time array contains nans/infs' )
@@ -62,7 +64,7 @@ class dataContainer(object) :
     nZ = z.shape[0]
     if nY != nX or nZ != nX :
       print x.shape, y.shape, z.shape
-      raise Exception( 'x, y, z must be of the same number of rows' )
+      raise Exception( 'x, y, z must have same number of rows' )
     self.xDependsOnTime = len(x.shape) == 2
     self.yDependsOnTime = len(y.shape) == 2
     self.zDependsOnTime = len(z.shape) == 2
@@ -73,7 +75,7 @@ class dataContainer(object) :
     nTime = len(time)
     nPoints = nX
     nFields = data.shape[1]
-    
+
     if self.xDependsOnTime and x.shape[1] != nTime :
       print x.shape, len(time)
       raise Exception( 'If x has 2nd dimension, it must match time' )
@@ -97,16 +99,14 @@ class dataContainer(object) :
       raise Exception( 'length of fieldNames must match cols in data' )
 
     self.time = time
-    self.x = x.astype(self.dtype)
-    self.y = y.astype(self.dtype)
-    self.z = z.astype(self.dtype)
-    self.data = data.astype(self.dtype)
+    self.x = x if dtype is None else x.astype(self.dtype)
+    self.y = y if dtype is None else y.astype(self.dtype)
+    self.z = z if dtype is None else z.astype(self.dtype)
+    self.data = data if dtype is None else data.astype(self.dtype)
     self.description = str(description)
     self.coordSys = str(coordSys)
     self.fieldNames = fieldNames
-    self.metaData = dict() if metaData==None else metaData
-    #if description :
-      #self.metaData['description'] = description
+    self.metaData = metaData
 
   def setMetaData( self, name, value=None ) :
     """Assigns metaData for given name."""
