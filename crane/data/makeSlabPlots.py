@@ -88,8 +88,7 @@ def processFrame(dcs, time, logScaleVars, aspect, clim, diffClim, cmap, bBox,
     climIsLog = logScale
     tag = str(dc.getMetaData('tag',suppressError=True))
     pltTag = tag+name+dc.getMetaData('variable')+'-'+str(i)
-    #titleStr = tag+' '+dateStr+' (PST)'
-    titleStr = dateStr+' (PST)'
+    titleStr = tag+' '+dateStr+' (PST)'
 
     dia.addPlot(pltTag, clabel=VARS.get(var,var), unit=UNITS.get(var,'-'), bbox=bBox)
     # add bathymetry contours (if any)
