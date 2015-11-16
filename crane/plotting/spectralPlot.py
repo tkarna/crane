@@ -7,9 +7,9 @@ A class for plotting signals in frequency domain.
 Tuomas Karna 2012-10-04 17:17:23
 """
 import numpy as np
-from data.dataContainer import dataContainer
-from data.periodogram import *
-from plotting.plotBase import *
+from crane.data import periodogram
+from crane.plotting import plotBase
+from crane import plt
 
 # TODO create a comprehensive class or use TAPPY
 class tidalConstituents(object) :
@@ -52,11 +52,12 @@ class tidalConstituents(object) :
     """Returns constituent's angular speed in deg/hour"""
     if constituent in self.angularSpeeds :
       return self.angularSpeeds[constituent]
-  
+
+# TODO inherit from plotBase?
 class spectralPlot(object) :
   """Plots signals in frequency domain"""
   def __init__(self, frequencies=None, TMin=3*3600, TMax=32*3600, fN=2000, **kwargs) :
-    if frequencies == None :
+    if frequencies is None :
       frequencies = np.linspace( 1./TMax,1./TMin, fN )
     self.defArgs = kwargs
     self.frequencies = frequencies
@@ -106,7 +107,7 @@ class spectralPlot(object) :
     if 'ylim' in kw :
       self.ax.set_ylim( kw.pop('ylim') )
     # TODO detrend berofe computing spectrum
-    spec = computeSpectrum(t, y, self.frequencies)
+    spec = periodogram.computeSpectrum(t, y, self.frequencies)
     xdata = self.convertToUnits( self.frequencies )
     self.ax.semilogx(xdata, spec, **kw)
     self.updateXAxis()
@@ -117,17 +118,17 @@ class spectralPlot(object) :
     if 'xlim' in self.defArgs :
       xmin, xmax = self.defArgs['xlim']
     #print xmin, xmax
-    decimal = -int(floor(log10(xmax)))
+    decimal = -int(np.floor(np.log10(xmax)))
     #print decimal
     tickMax = round(xmax, decimal )
-    decimal = -int(floor(log10(xmin)))
+    decimal = -int(np.floor(np.log10(xmin)))
     #print decimal
     tickMin = round(xmin, decimal )
     #print tickMin,tickMax
-    xTicks = logspace(log10(tickMin),log10(tickMax),7)
+    xTicks = np.logspace(np.log10(tickMin),np.log10(tickMax),7)
     #print xTicks
     sigDigits = 2
-    xTicks = [ round(x , -int(floor(log10(xmax)))+sigDigits-1 ) for x in xTicks ]
+    xTicks = [ round(x , -int(np.floor(np.log10(xmax)))+sigDigits-1 ) for x in xTicks ]
     self.ax.set_xticks( xTicks )
     self.ax.set_xticklabels( xTicks )
     self.ax.set_xlim( [xmin, xmax] )
@@ -185,7 +186,7 @@ class spectralPlotDC(spectralPlot) :
   
   def addSample( self, sample, **kwargs) :
     if not 'label' in kwargs :
-      kwargs['label'] = samle.description
+      kwargs['label'] = sample.description
     spectralPlot.addSample( self, sample.time.array, np.squeeze(sample.data), **kwargs)
 
 class stackSpectralPlot(object) :
@@ -287,7 +288,7 @@ class stackSpectralPlotDC(stackSpectralPlot) :
 
 if __name__=='__main__':
 
-  from data.timeArray import *
+  from crane.data import timeArray
   from datetime import datetime
 
   ### examples with numpy array inputs
@@ -295,12 +296,12 @@ if __name__=='__main__':
   startTime = datetime(2010,1,12,0,0,0)
   endTime = datetime(2010,2,13,3,30,0)
   dt = 90.0
-  ta = generateSimulationTimeArray(startTime,endTime,dt).asEpoch()
+  ta = timeArray.generateSimulationTimeArray(startTime,endTime,dt).asEpoch()
   t = ta.array
   # Randomly select a fraction of an array with timesteps:
   frac_points = 0.6 # Fraction of points to discard
   t = t[ np.random.rand(len(t)) >= frac_points ]
-  ta = timeArray(t, 'epoch')
+  ta = timeArray.timeArray(t, 'epoch')
 
   tcs = tidalConstituents()
   TM2 = tcs.getPeriod('M2')
@@ -335,10 +336,11 @@ if __name__=='__main__':
   
 
   ### examples with dataContainers
-  d0 = dataContainer.fromTimeSeries( 'model Eins', ta, ref, ['elev'] )
-  d1 = dataContainer.fromTimeSeries( 'model Eins', ta, m1, ['elev'] )
-  d2 = dataContainer.fromTimeSeries( 'model Eins', ta, m2, ['elev'] )
-  d3 = dataContainer.fromTimeSeries( 'model Eins', ta, m3, ['elev'] )
+  from crane.data import dataContainer
+  d0 = dataContainer.dataContainer.fromTimeSeries( 'model Eins', ta, ref, ['elev'] )
+  d1 = dataContainer.dataContainer.fromTimeSeries( 'model Eins', ta, m1, ['elev'] )
+  d2 = dataContainer.dataContainer.fromTimeSeries( 'model Eins', ta, m2, ['elev'] )
+  d3 = dataContainer.dataContainer.fromTimeSeries( 'model Eins', ta, m3, ['elev'] )
 
   dia = spectralPlotDC(xunit='hours')
   dia.addSample(d1,label='model 1')

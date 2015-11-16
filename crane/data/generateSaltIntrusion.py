@@ -11,10 +11,10 @@ import numpy as np
 from scipy.interpolate import interp1d
 import time as timeMod
 
-from data.timeArray import *
-from data.dataContainer import dataContainer
-from data.dirTreeManager import netcdfTree, oldTreeRule, defaultTreeRule
-from plotting.transectPlot import generateTransectFromDataContainer
+from crane.data import timeArray
+from crane.data import dataContainer
+from crane.data import dirTreeManager
+from crane.plotting import transectPlot
 
 TRANSECT_NAME = 'mainChannel'
 TRANSECT_BPFILE = '/home/workspace/users/pturner/db29/processing.dev/scripts.working/intrusion_length.bp'
@@ -29,7 +29,7 @@ def computeSaltIntrusion( transectDC, salt_threshold_list ) :
   # for each time step
   for it in range(nTime) :
     # convert transect to array
-    Xalong, Z, salt, time, uniqueXYCoords = generateTransectFromDataContainer(transectDC,it)
+    Xalong, Z, salt, time, uniqueXYCoords = transectPlot.generateTransectFromDataContainer(transectDC,it)
     Xalong = Xalong[0,:]
     # compute max salt in each column
     maxSalt = salt.max(axis=0)
@@ -60,7 +60,7 @@ def computeSaltIntrusion( transectDC, salt_threshold_list ) :
     meta['dataType'] = 'sil'
     meta['tag'] = transectDC.getMetaData('tag')
     data = sil[i][None,None,:]
-    silDC = dataContainer( '', transectDC.time, 0,0,0, data,
+    silDC = dataContainer.dataContainer( '', transectDC.time, 0,0,0, data,
                             [meta['variable']], coordSys='',metaData=meta)
     # compute daily max
     dailyMax = []
@@ -80,28 +80,18 @@ def computeSaltIntrusion( transectDC, salt_threshold_list ) :
         print e
       dayBegin = dayEnd
     data = np.array( dailyMax )[None,None,:]
-    ta = timeArray( np.array(dailyTime), 'epoch' )
+    ta = timeArray.timeArray( np.array(dailyTime), 'epoch' )
     meta = {}
     meta['location'] = transectDC.getMetaData('location')
     meta['instrument'] = 'model'
     meta['variable'] = '''max_sil_%d''' % (salt_threshold,)
     meta['dataType'] = 'sil'
     meta['tag'] = transectDC.getMetaData('tag')
-    dailyMaxDC = dataContainer( '', ta, 0,0,0, data,
+    dailyMaxDC = dataContainer.dataContainer( '', ta, 0,0,0, data,
                             [meta['variable']], coordSys='',metaData=meta)
     output_dc_list.append(silDC)
     output_dc_list.append(dailyMaxDC)
   return output_dc_list
-
-def readSILTransect( tag, startTime, endTime ) :
-  # load transect dataContainer
-  rule = oldTreeRule()
-  #rule = defaultTreeRule()
-  tree = netcdfTree( dataType='transect', tag=tag, location=TRANSECT_NAME, variable='salt', rule=rule )
-  dc = tree.read(startTime,endTime)
-  if dc == None:
-    raise Exception('salt intrusion_length transect could no be read')
-  return dc
 
 #-------------------------------------------------------------------------------
 # Main: Commandline interface
@@ -182,11 +172,11 @@ def parseCommandLine() :
   name = TRANSECT_NAME
   dcs = []
   if readNetcdf :
-    from data.ncExtract import extractTransectForBPFile
+    from crane.data.ncExtract import extractTransectForBPFile
     dcs = extractTransectForBPFile( bpFile, dataDir, varList,
                                     startTime, endTime, name )
   else :
-    from data.extractTransect import extractTransectForBPFile
+    from crane.data.extractTransect import extractTransectForBPFile
     dcs = extractTransectForBPFile( bpFile, dataDir, varList,
                                     startTime, endTime, name=name,
                                     modelCoordSys=modelCoordSys )
@@ -198,11 +188,9 @@ def parseCommandLine() :
   for dc in silDCs :
     print dc
 
-  import data.dirTreeManager as dtm
-  #rule = dtm.oldTreeRule()
-  rule = dtm.defaultTreeRule()
-  dtm.saveDataContainerInTree( silDCs, rule=rule, dtype=np.float32,
-                               overwrite=True )
+  rule = 'monthlyFile'
+  dirTreeManager.saveDataContainerInTree( silDCs, rule=rule, dtype=np.float32,
+                                         overwrite=True )
 
 if __name__=='__main__' :
   parseCommandLine()

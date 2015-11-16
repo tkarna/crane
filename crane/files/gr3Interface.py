@@ -4,12 +4,13 @@ Collection of methods for reading/writing gr3 unstructured grid files.
 
 Tuomas Karna 2012-12-04
 """
-
 import string
-import os, sys
+import os
+import sys
+import numpy as np
 
-from data.timeArray import *
-from data.meshContainer import *
+from crane.data import timeArray
+from crane.data import meshContainer
 
 def readNodeBlock(infile, nPoints) :
   # iN x y data
@@ -48,8 +49,8 @@ def readGR3FileToMC(inputFilename, fieldName='depth') :
   x,y,vals,conn,boundaries,description = readGR3File(inputFilename)
   data = np.reshape(vals, (-1,1,1) )
   z = np.zeros_like(x)
-  ta = timeArray( np.array([0]), 'epoch' )
-  mc = meshContainer( description, ta,x,y,z,data,conn,[fieldName],coordSys='spcs')
+  ta = timeArray.timeArray( np.array([0]), 'epoch' )
+  mc = meshContainer.meshContainer( description, ta,x,y,z,data,conn,[fieldName],coordSys='spcs')
   # append boundary information
   for bnd in boundaries :
     print bnd.type, bnd.tag, len(bnd.nodes)
@@ -104,7 +105,7 @@ def readGR3File(inputFilename) :
       for iN in range(nBndNodes) :
         tmpList.append( int(infile.readline()) )
       nodes = np.array(tmpList,dtype=int)-1
-      boundaries.append( meshBoundary( 'open', tag, nodes ) )
+      boundaries.append( meshContainer.meshBoundary( 'open', tag, nodes ) )
     nLandBndSegments = int(infile.readline().split()[0])
     nLandBndNodesTot = int(infile.readline().split()[0])
     landBndTags = range(nOpenBndSegments+1,nOpenBndSegments+nLandBndSegments+1)
@@ -127,7 +128,7 @@ def readGR3File(inputFilename) :
         tmpList.append( int(infile.readline()) )
       #tmpList = fromfile(infile,dtype=int,count=nBndNodes,sep=' ')
       nodes = np.array(tmpList,dtype=int)-1
-      boundaries.append( meshBoundary( landType, tag, nodes ) )
+      boundaries.append( meshContainer.meshBoundary( landType, tag, nodes ) )
 
   infile.close()
 
@@ -165,13 +166,13 @@ def writeGR3File( filename, description ,nodes, nodalValues, connectivity, bound
   print 'Writing '+filename+' ...'
   triangles = connectivity+1
   outfile = open(filename,'w')
-  if description == None or len(description) == 0 :
+  if description is None or len(description) == 0 :
     description = os.path.split(filename)[1] # take filename without path
   outfile.write( description+'\n' )
   ne = triangles.shape[0]
   nPoints = nodes.shape[0]
   outfile.write( '{ne:d} {nPoints:d}\n'.format(ne=ne,nPoints=nPoints) )
-  if nodalValues == None :
+  if nodalValues is None :
      nodalValues = nodes[:,2]
   triType = 3
   for i in range(nPoints) :

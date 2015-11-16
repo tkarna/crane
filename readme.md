@@ -10,6 +10,8 @@ Pre-/post processing tools for ocean modeling products.
     - avoid from x import * to keep namespaces intact
 - clean unused functions
 - pep8 all source
+- data module is unfortunately named... change
+- fix setup.py so that scripts get copied to correct bin dir
 - revisit docstrings (use numpy convetion?)
 - treat tappy better
     - fork tappy, morph to a generic installable package
@@ -20,7 +22,7 @@ Pre-/post processing tools for ocean modeling products.
 - re-implement extraction routines
     - process all variables simultaneously
     - save each day to disk immediately;
-        i.e. do not store who;e time period in memory
+        i.e. do not store whole time period in memory
 - remove all old station files, use only csv implementation
 - use a database in stationCollection (in-memory): PyDbLite?
 - move definitions to separate file

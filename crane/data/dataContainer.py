@@ -12,19 +12,19 @@ import os
 import numpy as np
 
 from crane.data import timeArray
-from crane.data.netcdfIO import netcdfIO
+from crane.data import netcdfIO
 
-class dataContainer(object) :
+
+class dataContainer(object):
   """
   Generic data container.
   Contains timeArray, spatial coordinates and data.
   """
   def __init__(self, description, time, x, y, z, data, fieldNames,
-               coordSys='whatever', metaData=None, acceptNaNs=False,
-               checkDataXDim=True,dtype=np.float64) :
+               coordSys='whatever', metaData={}, acceptNaNs=False,
+               checkDataXDim=True, dtype=None):
     """Creates new dataContainer object
 
-    description -- string to identify the data array (e.g. 'observation cbnc3')
     time        -- timeArray object
     x, y, z     -- (scalar) or (nPoints,) or (nPoints,nTime) coordinate arrays
                    2-dimensional array if coodinates depend on time, scalar if
@@ -36,9 +36,12 @@ class dataContainer(object) :
     coordSys    -- string representing the used coordinate system
     acceptNaNs  -- if False, raises an error if NaNs/Infs found in data array
     """
-    self.dtype=dtype
+    if dtype is not None:
+        self.dtype = dtype
+    else:
+        self.dtype = data.dtype
     self.acceptNaNs = acceptNaNs
-    if len(time) == 0 :
+    if len(time) == 0:
       raise Exception( 'time array is empty' )
     if np.isnan(time.array).any() or np.isinf(time.array).any() :
       raise Exception( 'time array contains nans/infs' )
@@ -61,7 +64,7 @@ class dataContainer(object) :
     nZ = z.shape[0]
     if nY != nX or nZ != nX :
       print x.shape, y.shape, z.shape
-      raise Exception( 'x, y, z must be of the same number of rows' )
+      raise Exception( 'x, y, z must have same number of rows' )
     self.xDependsOnTime = len(x.shape) == 2
     self.yDependsOnTime = len(y.shape) == 2
     self.zDependsOnTime = len(z.shape) == 2
@@ -72,7 +75,7 @@ class dataContainer(object) :
     nTime = len(time)
     nPoints = nX
     nFields = data.shape[1]
-    
+
     if self.xDependsOnTime and x.shape[1] != nTime :
       print x.shape, len(time)
       raise Exception( 'If x has 2nd dimension, it must match time' )
@@ -96,16 +99,14 @@ class dataContainer(object) :
       raise Exception( 'length of fieldNames must match cols in data' )
 
     self.time = time
-    self.x = x.astype(self.dtype)
-    self.y = y.astype(self.dtype)
-    self.z = z.astype(self.dtype)
-    self.data = data.astype(self.dtype)
+    self.x = x if dtype is None else x.astype(self.dtype)
+    self.y = y if dtype is None else y.astype(self.dtype)
+    self.z = z if dtype is None else z.astype(self.dtype)
+    self.data = data if dtype is None else data.astype(self.dtype)
     self.description = str(description)
     self.coordSys = str(coordSys)
     self.fieldNames = fieldNames
-    self.metaData = dict() if metaData==None else metaData
-    #if description :
-      #self.metaData['description'] = description
+    self.metaData = metaData
 
   def setMetaData( self, name, value=None ) :
     """Assigns metaData for given name."""
@@ -117,7 +118,7 @@ class dataContainer(object) :
 
   def getMetaData( self, name=None, suppressError=False ) :
     """Returns metaData corresponding to the given name. Raises error if metadata is not found. If suppressError=True, returns None instead of raising an error."""
-    if name == None :
+    if name is None :
       return dict(self.metaData)
     if suppressError :
       return self.metaData.get( name, None )
@@ -143,7 +144,7 @@ class dataContainer(object) :
     if isinstance(time, np.ndarray) :
       if timeFormat == '' :
         raise Exception( 'If time is an array, timeFormat must be specified' )
-      time = timeArray(time, timeFormat)
+      time = timeArray.timeArray(time, timeFormat)
     
     nTime = len(time)
     nPoints = 1
@@ -233,8 +234,15 @@ class dataContainer(object) :
                np.array_equal( np.nan_to_num(self.y), np.nan_to_num(other.y) ) and
                np.array_equal( np.nan_to_num(self.z), np.nan_to_num(other.z) ) )
 
-  def getField( self, fieldName ) :
-    """Returns the requested field in an array."""
+  def getFieldArray( self, fieldName ) :
+    """
+    Returns the requested field in an array.
+
+    Parameters
+    ----------
+    fieldName : str or int
+        fieldName to extract. If int, the index of the field to extract.
+    """
     if isinstance(fieldName,str) :
       if fieldName in self.fieldNames :
         return self.data[:,self.fieldNames.index(fieldName),:]
@@ -244,21 +252,34 @@ class dataContainer(object) :
       # assume index
       return self.data[:,fieldName,:]
 
-  def extractField( self, fieldName ) :
-    """Returns a dataContainer containing only the requested field."""
-    iField = None
-    if isinstance(fieldName,str) :
-      if fieldName in self.fieldNames :
-        iField = self.fieldNames.index(fieldName)
+  def extractFields( self, *fields, **kwargs) :
+    """
+    Returns a dataContainer containing only the requested field.
+
+    Parameters
+    ----------
+    fields : str or int
+        fieldName to extract. If int, the index of the field to extract.
+    copy   : bool
+        if True copies the data array instead of using a view
+    """
+    copy = kwargs.get(copy, False)
+    indices = []
+    names = []
+    for f in fields :
+      if isinstance( f, str ) or isinstance( f, unicode ) :
+        # deduce index
+        i = self.fieldNames.index( f )
       else :
-        raise Exception('given field not found',fieldName)
-    else :
-      # assume index
-      iField = fieldName
-    new = self.copy()
-    new.data = self.data[:,[iField],:].copy()
-    new.fieldNames = [ self.fieldNames[iField] ]
-    return new
+        i = f
+      indices.append( i )
+      names.append( self.fieldNames[i] )
+    if copy:
+      data = self.data[:, indices, :].copy()
+    else:
+      data = self.data[:, indices, :]
+
+    return dataContainer( self.description, self.time, self.x, self.y, self.z, data, names, self.coordSys, self.metaData, acceptNaNs=True )
 
   def mergeTemporal(self, other, testSanity=True, acceptDuplicates=False) :
     """
@@ -311,25 +332,6 @@ class dataContainer(object) :
     
     self.fieldNames += other.fieldNames
     self.data = np.hstack( ( self.data, other.data ) )
-
-  def getFields( self, *fields ) :
-    """
-    Returns a new dataContainer with the given fields.
-    field can be a field name (str) or index (int) of the fieldNames list.
-    """
-    indices = []
-    names = []
-    for f in fields :
-      if isinstance( f, str ) or isinstance( f, unicode ) :
-        # deduce index
-        i = self.fieldNames.index( f )
-      else :
-        i = f
-      indices.append( i )
-      names.append( self.fieldNames[i] )
-    data = self.data[:,indices,:]
-
-    return dataContainer( self.description, self.time, self.x, self.y, self.z, data, names, self.coordSys, self.metaData, acceptNaNs=True )
     
   def changeTimeFormat(self,timeFormat,startDate=None) :
     """
@@ -420,7 +422,7 @@ class dataContainer(object) :
     newDC      -- (array) subsampled version of this dataContainer
     """
     if timeStamps==None :
-      if skipFactor == None and targetDt == None :
+      if skipFactor is None and targetDt is None :
         raise Exception('Either skipFactor or targetDt is required',skipFactor,targetDt)
       # detect gaps
       gaps,ranges,t = self.detectGaps(currentDt,gapFactor)
@@ -438,7 +440,7 @@ class dataContainer(object) :
         print ranges[0,0],ranges[0,1]
         print self.time[ ranges[0,0]:ranges[0,1] ]
         raise Exception('weird dt:'+str(dt))
-      if skipFactor == None :
+      if skipFactor is None :
         skipFactor = int(round(targetDt/dt))
       if skipFactor <= 1 :
         print dt, targetDt, skipFactor
@@ -451,7 +453,7 @@ class dataContainer(object) :
         timeStamps.append( np.arange( ranges[r,0],ranges[r,1]+1,skipFactor,dtype=int ) )
       timeStamps = np.concatenate( tuple(timeStamps), axis=0 )
     # create new dataContainer
-    newt = timeArray( self.time[timeStamps], 'epoch', acceptDuplicates=True )
+    newt = timeArray.timeArray( self.time[timeStamps], 'epoch', acceptDuplicates=True )
     newData = self.data[:,:,timeStamps]
     x = self.x[:,timeStamps] if self.xDependsOnTime else self.x
     y = self.y[:,timeStamps] if self.yDependsOnTime else self.y
@@ -528,7 +530,7 @@ class dataContainer(object) :
     goodIx = self.time.getRangeIndices( startDate, endDate, includeEnd )
     if len(goodIx) == 0 :
       raise Exception( 'Given time window out of range' )
-    t = timeArray(self.time.array[goodIx], self.time.timeFormat, acceptDuplicates=True)
+    t = timeArray.timeArray(self.time.array[goodIx], self.time.timeFormat, acceptDuplicates=True)
     d = self.data[:,:,goodIx]
     x = self.x[:,goodIx] if self.xDependsOnTime else self.x
     y = self.y[:,goodIx] if self.yDependsOnTime else self.y
@@ -536,60 +538,6 @@ class dataContainer(object) :
     return dataContainer(self.description, t, x,y,z, d, self.fieldNames,
                self.coordSys,acceptNaNs=True, metaData=dict(self.metaData),
                checkDataXDim=False)
-
-  # TODO add metaData or remove
-  def saveToDisk( self, filename=None, path='' ) :
-    """Saves the data to disk in numpy npz format."""
-    if not filename :
-      staStr = self.time.getDatetime( 0).strftime('%Y-%m-%d')
-      endStr = self.time.getDatetime(-1).strftime('%Y-%m-%d')
-      varNames = '-'.join( self.fieldNames )
-      filename = '_'.join([self.description,varNames,staStr,endStr])+'.npz'
-    
-    if len(path) and not os.path.isdir(path) :
-      raise Exception( 'given path does not exist: '+path )
-    filename = os.path.join(path,filename)
-    
-    print 'writing to '+filename
-    kwargs = {}
-    kwargs['time'] = self.time.array
-    kwargs['timeFormat'] = self.time.timeFormat
-    if self.time.timeFormat == 'simulation' :
-      kwargs['startDate'] = self.time.startDate
-    kwargs['x'] = self.x
-    kwargs['y'] = self.y
-    kwargs['z'] = self.z
-    kwargs['data'] = self.data
-    kwargs['description'] = self.description
-    kwargs['coordSys'] = self.coordSys
-    kwargs['fieldNames'] = self.fieldNames
-    
-    np.savez( filename, **kwargs )
-  
-  @classmethod
-  def loadFromDisk( cls, filename ) :
-    """Creates a new dataContainer object from a saved npz file.
-    npz extension is automatically added to filename if no extension is given."""
-    print 'loading '+filename
-    # add npz extension if missing
-    stem,extension = os.path.splitext(filename)
-    if not extension :
-      filename += '.npz'
-    
-    bundle = np.load( filename )
-    
-    startDate = None
-    if 'startDate' in bundle.files :
-      startDate = bundle['startDate'].tolist()
-    time = timeArray( bundle['time'].astype(cls.dtype), bundle['timeFormat'], startDate, acceptDuplicates=True )
-    fieldNames = bundle['fieldNames'].tolist()
-
-    x = bundle['x'].astype(cls.dtype)
-    y = bundle['y'].astype(cls.dtype)
-    z = bundle['z'].astype(cls.dtype)
-    data = bundle['data'].astype(cls.dtype)
-    return cls(str(bundle['description']), time, x, y, x , data,
-               fieldNames, str(bundle['coordSys']) )
 
   def saveAsNetCDF( self, filename, dtype=None, overwrite=True,
                     compress=False, digits=None) :
@@ -599,17 +547,17 @@ class dataContainer(object) :
     compress=True sets lossless zlib compression for netcdf4 dataset
     digits rounds data to given decimals before storing
     """
-    if dtype == None :
+    if dtype is None :
       dtype = self.dtype
 
-    nc = netcdfIO(filename)
+    nc = netcdfIO.netcdfIO(filename)
     nc.saveDataContainer( self, dtype, overwrite, compress, digits )
 
   @classmethod
   def loadFromNetCDF( cls, filename, startTime=None, endTime=None, includeEnd=False, verbose=True ) :
     """Creates a new dataContainer from netCDF file.
     """
-    nc = netcdfIO(filename)
+    nc = netcdfIO.netcdfIO(filename)
     dc = nc.readToDataContainer( startTime, endTime, includeEnd=includeEnd, verbose=verbose )
     return dc
 

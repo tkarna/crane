@@ -8,10 +8,13 @@ Uses matplotlib bar plotting routine.
 Tuomas Karna 2012-09-17
 """
 import numpy as np
-from plotting.plotBase import *
+
+from crane import matplotlib
+from crane import plt
+from crane.plotting import plotBase
 
 # class that takes the data (error time series) and plots the histogram
-class barPlotBase(plotBase) :
+class barPlotBase(plotBase.plotBase) :
   """A base class for doing bar plots"""
   def __init__(self, **defArgs) :
     # default plot options for all diagrams
@@ -284,6 +287,7 @@ class stackAmplitudePhasePlot(object) :
       self.plots[tag]['pha'].showLegend(prop=dict(size='small'),**kwargs)
 
 def test() :
+  from crane.data import harmonicAnalysis
   labels = ['O1', 'K1', 'K2', 'L2', 'N2', 'M2', 'M4', 'M6']
   amp    = [ 1.2, 0.23,  0.1, 0.13, .341, .512, .433,  .31]
   pha    = [ 212,   45,  124,   54,  192,   76,   85,   39]
@@ -291,8 +295,7 @@ def test() :
   ampDict = dict(zip(labels, amp))
   phaDict = dict(zip(labels, pha))
 
-  from data.harmonicAnalysis import tidalConstituents
-  tc = tidalConstituents('description', ampDict, phaDict, 'elev', startTime=None, endTime=None )
+  tc = harmonicAnalysis.tidalConstituents('description', ampDict, phaDict, 'elev', startTime=None, endTime=None )
   
   fig = plt.figure()
   dia = amplitudePlot(unit='m')
@@ -304,7 +307,6 @@ def test() :
   dia.makePlot(exclude=['O1'])
   dia.showLegend()
   dia.addTitle('amplitudePlot example')
-  #plt.savefig('foo1.png')
   plt.show()
 
   fig = plt.figure()
@@ -317,7 +319,6 @@ def test() :
   dia.makePlot(include=['L2', 'N2', 'M2', 'M4', 'M6'])
   dia.showLegend()
   dia.addTitle('phasePlot example')
-  #plt.savefig('foo2.png')
   plt.show()
   
   dia = amplitudePhasePlot(unit='m')
@@ -328,7 +329,6 @@ def test() :
   dia.makePlot(ampThreshold=0.11,nConsts=5)
   dia.showLegend()
   dia.addTitle('amplitudePhasePlot example')
-  #plt.savefig('foo3.png')
   plt.show()
 
   dia = stackAmplitudePhasePlot(unit='m',ylim=[0,0.5])
@@ -340,16 +340,15 @@ def test() :
   dia.makePlot(ampThreshold=0.11)
   dia.showLegend()
   dia.addTitle('stackAmplitudePhasePlot example')
-  #plt.savefig('foo3.png')
   plt.show()
 
   # examples with real data
-  from data.dataContainer import dataContainer
+  from crane.data import dataContainer
   
   dataDir = '/home/karnat/temp/db29skill/data/obs/'
-  d1 = dataContainer.loadFromNetCDF(dataDir+'tpoin_elev_0_2011-05-13_2011-07-19.nc')
+  d1 = dataContainer.dataContainer.loadFromNetCDF(dataDir+'tpoin_elev_0_2011-05-13_2011-07-19.nc')
   dataDir = '/home/karnat/temp/db29skill/data/run15_29/'
-  d2 = dataContainer.loadFromNetCDF(dataDir+'tpoin_elev_0_2011-05-14_2011-07-19.nc')
+  d2 = dataContainer.dataContainer.loadFromNetCDF(dataDir+'tpoin_elev_0_2011-05-14_2011-07-19.nc')
   dia = amplitudePhasePlot(unit='m')
   tc1 = tidalConstituents.computeFromData( d1 )
   dia.addSample(tc1,'obs')
@@ -358,8 +357,7 @@ def test() :
   dia.makePlot()
   dia.showLegend()
   dia.addTitle('elevation tpoin')
-  plt.savefig('foo4.png')
-  #plt.show()
+  plt.show()
 
 if __name__=='__main__':
   test()

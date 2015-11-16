@@ -5,9 +5,10 @@ Tuomas Karna 2014-06-18
 """
 import numpy as np
 import os
-from data.meshContainer import *
-from files.gmshInterface import gmshMesh
-import files.gr3Interface as gr3Interface
+
+from crane.data import meshContainer
+from crane.files import gmshInterface
+from crane.files import gr3Interface
 
 def readAnyMeshFile( inFile, dataFile=None ) :
   """Reads mesh data in a meshContainer. Supported formats are GR3 (SELFE), MSH (GMSH) and meshContainer netCDF."""
@@ -15,13 +16,13 @@ def readAnyMeshFile( inFile, dataFile=None ) :
   if ext == '.gr3' :
     mc = gr3Interface.readGR3FileToMC(inFile)
   elif ext == '.msh' :
-    gmsh = gmshMesh.fromFile( inFile )
+    gmsh = gmshInterface.gmshMesh.fromFile( inFile )
     if dataFile :
       mc = gmsh.getMeshContainer( fromFile=dataFile )
     else :
       mc = gmsh.getMeshContainer( fromFile=inFile )
   elif ext == '.nc' :
-    mc = meshContainer.loadFromNetCDF(inFile)
+    mc = meshContainer.meshContainer.loadFromNetCDF(inFile)
   else :
     raise Exception('Unknown file extension: '+ext+'\n'+inFile)
   return mc
@@ -73,7 +74,7 @@ def parseCommandLine() :
 
   meshFile = args[0]
 
-  if options.maxAngle == None and options.minQuality == None :
+  if options.maxAngle is None and options.minQuality is None :
     parser.print_help()
     parser.error('either maxAngle or minQuality must be given')
 

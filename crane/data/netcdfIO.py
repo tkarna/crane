@@ -12,6 +12,7 @@ import os
 import numpy as np
 from netCDF4 import Dataset as NetCDFFile
 
+import crane
 from crane.data import timeArray
 
 #-------------------------------------------------------------------------------
@@ -80,17 +81,24 @@ class netcdfIO(object) :
     return netcdfIO.readNetCDFFile( ncfile, startTime, endTime, includeEnd=includeEnd )
 
   def readToDataContainer( self, startTime=None, endTime=None, includeEnd=False,
-                           verbose=True, dtype=np.float64 ) :
+                           verbose=True, dtype=None ) :
     """Reads file and returns data in data/meshContainer."""
     out = self.read( startTime, endTime, includeEnd, verbose=verbose)
     descr, ta, x,y,z, data, fns, cSys, conn, meta, bnds = out
     if conn is None:
-      from data.dataContainer import dataContainer
-      dc = dataContainer( descr, ta, x,y,z, data, fns, cSys,
-                          acceptNaNs=True, dtype=dtype )
+      # NOTE import here to avoid cyclic import issues
+      import crane.data.dataContainer as dataContainer
+      dc = dataContainer.dataContainer(descr, ta,
+                                       x, y, z, data,
+                                       fns, cSys,
+                                       acceptNaNs=True,
+                                       dtype=dtype)
     else :
-      from data.meshContainer import meshContainer
-      dc = meshContainer( descr, ta, x,y,z, data, conn, fns, cSys, dtype=dtype)
+      import crane.data.meshContainer as meshContainer
+      dc = meshContainer.meshContainer(descr, ta,
+                                       x, y, z,
+                                       data, conn, fns,
+                                       cSys, dtype=dtype)
       if bnds :
         for bnd in bnds :
           dc.addBoundary(bnd)
@@ -167,12 +175,12 @@ class netcdfIO(object) :
     vars = ncfile.variables
     timeVar = vars.pop('time')
     timeFormat = ncTimeUnitsInv[ timeVar.units ]
-    ta = timeArray( timeVar[:], timeFormat, acceptDuplicates=True )
+    ta = timeArray.timeArray( timeVar[:], timeFormat, acceptDuplicates=True )
     # infer correct time indices
     timeIx = ta.getRangeIndices( startTime, endTime, includeEnd=includeEnd )
     if len(timeIx) == 0 :
       raise Exception( 'No time stamps found for the given bounds {0:s} - {1:s}'.format(str(startTime),str(endTime)) )
-    ta = timeArray( timeVar[timeIx], timeFormat, acceptDuplicates=True )
+    ta = timeArray.timeArray( timeVar[timeIx], timeFormat, acceptDuplicates=True )
     if headerOnly :
       return metaData,ta # nX,nY,nZ ??
     coordSys = ''
@@ -183,53 +191,56 @@ class netcdfIO(object) :
       xVar = vars.pop('x')
       xDependsOnTime = False if len(xVar.shape) == 1 else True
       if xDependsOnTime :
-        x = xVar[:,timeIx].astype(dtype)
+        x = xVar[:,timeIx]
       else :
-        x = xVar[:].astype(dtype)
+        x = xVar[:]
     if 'y' in ncfile.variables :
       yVar = vars.pop('y')
       yDependsOnTime = False if len(yVar.shape) == 1 else True
       if yDependsOnTime :
-        y = yVar[:,timeIx].astype(dtype)
+        y = yVar[:,timeIx]
       else :
-        y = yVar[:].astype(dtype)
+        y = yVar[:]
     if 'z' in ncfile.variables :
       zVar = vars.pop('z')
       zDependsOnTime = False if len(zVar.shape) == 1 else True
       if zDependsOnTime :
-        z = zVar[:,timeIx].astype(dtype)
+        z = zVar[:,timeIx]
       else :
-        z = zVar[:].astype(dtype)
+        z = zVar[:]
+    if dtype is not None:
+        x = x.astype(dtype)
+        y = y.astype(dtype)
+        z = z.astype(dtype)
     fieldNames = []
     # possible mesh connectivity (for meshContainer)
     connVar = vars.pop('connectivity',None)
-    connectivity = connVar[:].astype(dtype) if connVar else None
-    
+    connectivity = connVar[:] if connVar else None
+
     # possible mesh boundary information
     bndVars = [ vname for vname in vars if vname.find('bnd_nodes_')==0 ]
     if bndVars :
       boundaries = []
-      from data.meshContainer import meshBoundary
       for bndVar in sorted(bndVars) :
         v = vars.pop(bndVar)
-        bnd = meshBoundary( v.getncattr('type'), v.getncattr('tag'), v[:].astype(np.int64) )
+        bnd = crane.data.meshContainer.meshBoundary( v.getncattr('type'), v.getncattr('tag'), v[:] )
         boundaries.append( bnd )
     else :
       boundaries = None
 
     # accept only variables with correct size
     goodVars = [ v for v in vars if vars[v].shape == (nData,nTime) or vars[v].shape == (nTime,) ]
-    data = np.zeros( (nData,len(goodVars),len(timeIx)) )
+    data = np.zeros( (nData,len(goodVars),len(timeIx)), dtype=dtype)
     for i,var in enumerate(goodVars) :
       fieldNames.append( ncVariableNamesInv.get( var, var ) )
       if vars[var].shape == (nData,nTime) :
-        data[:,i,:] = vars[var][:,timeIx].astype(dtype)
+        data[:,i,:] = vars[var][:,timeIx]
       elif vars[var].shape == (nTime,) :
-        data[:,i,:] = vars[var][timeIx].astype(dtype)
+        data[:,i,:] = vars[var][timeIx]
 
     return description, ta, x,y,z, data, fieldNames, coordSys, connectivity, metaData, boundaries
 
-  def populateNetCDFObject( self, ncfile, dc, dtype=np.float64, compress=False, digits=None ) :
+  def populateNetCDFObject( self, ncfile, dc, dtype=None, compress=False, digits=None ) :
     """Helper function that creates all necessary variables and assings the values"""
     # wrappers to handle older scipy
     def createDimension( file, tag, dim ) :
@@ -269,27 +280,35 @@ class netcdfIO(object) :
     # first argument is name of variable, second is datatype, third is
     # a tuple with the names of dimensions.
     # NOTE time must be double precision to avoid round-off in seconds
-    timeVar = createVariable(ncfile,'time',np.dtype(np.float64).char,('time',),compress)
+    timeVar = createVariable(ncfile, 'time', np.dtype(np.float64).char, ('time', ), compress)
     timeVar[:] = dc.time.asEpoch().array.astype(np.float64)
     timeVar.units = ncTimeUnits['epoch']
-    if dc.xDependsOnTime :
-      xVar = createVariable(ncfile,'x',np.dtype(dtype).char,('x','time',),compress)
-      xVar[:,:] = dc.x.astype(dtype)
+    if dtype is None:
+        x = dc.x
+        y = dc.y
+        z = dc.z
+    else:
+        x = dc.x.astype(dtype)
+        y = dc.y.astype(dtype)
+        z = dc.z.astype(dtype)
+    if dc.xDependsOnTime:
+      xVar = createVariable(ncfile, 'x', x.dtype.char, ('x', 'time', ), compress)
+      xVar[:, :] = x
     else :
-      xVar = createVariable(ncfile,'x',np.dtype(dtype).char,('x',),compress)
-      xVar[:] = dc.x.astype(dtype)
-    if dc.yDependsOnTime :
-      yVar = createVariable(ncfile,'y',np.dtype(dtype).char,('y','time',),compress)
-      yVar[:,:] = dc.y.astype(dtype)
+      xVar = createVariable(ncfile, 'x', x.dtype.char, ('x',), compress)
+      xVar[:] = x
+    if dc.yDependsOnTime:
+      yVar = createVariable(ncfile, 'y', y.dtype.char, ('y', 'time', ), compress)
+      yVar[:, :] = y
+    else:
+      yVar = createVariable(ncfile, 'y', y.dtype.char, ('y', ), compress)
+      yVar[:] = y
+    if dc.zDependsOnTime:
+      zVar = createVariable(ncfile, 'z', y.dtype.char, ('z', 'time', ), compress)
+      zVar[:, :] = z
     else :
-      yVar = createVariable(ncfile,'y',np.dtype(dtype).char,('y',),compress)
-      yVar[:] = dc.y.astype(dtype)
-    if dc.zDependsOnTime :
-      zVar = createVariable(ncfile,'z',np.dtype(dtype).char,('z','time',),compress)
-      zVar[:,:] = dc.z.astype(dtype)
-    else :
-      zVar = createVariable(ncfile,'z',np.dtype(dtype).char,('z',),compress)
-      zVar[:] = dc.z.astype(dtype)
+      zVar = createVariable(ncfile, 'z', z.dtype.char, ('z', ), compress)
+      zVar[:] = z
     coordSysLabels = {'spcs':('SPCS 3601 x coordinate','SPCS 3601 y coordinate'),
                       'lonlat':('longitude','latitude'),
                       'utm':('UTM x coordinate','UTM y coordinate')}
@@ -311,13 +330,14 @@ class netcdfIO(object) :
         zVar.long_name = 'meters below free surface'
 
     dataVars = []
-    for i,var in enumerate(dc.fieldNames) :
-      if dataAtNodes :
-        dv = createVariable(ncfile,ncVariableNames.get(var,var),np.dtype(dtype).char,('x','time',),compress,digits)
-      else :
-        dv = createVariable(ncfile,ncVariableNames.get(var,var),np.dtype(dtype).char,('data','time',),compress,digits)
-      dataVars.append( dv )
-      dv[:,:] = np.squeeze(dc.data[:,i,:]).astype(dtype)
+    for i, var in enumerate(dc.fieldNames):
+      d_array = dc.data[:, i, :] if dtype is None else dc.data[:, i, :].astype(dtype)
+      if dataAtNodes:
+        dv = createVariable(ncfile, ncVariableNames.get(var, var), d_array.dtype.char, ('x', 'time',), compress, digits)
+      else:
+        dv = createVariable(ncfile, ncVariableNames.get(var, var), d_array.dtype.char, ('data', 'time',), compress, digits)
+      dataVars.append(dv)
+      dv[:, :] = d_array
       if var in ncVariableUnits :
         dv.units = ncVariableUnits[var]
 

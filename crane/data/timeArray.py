@@ -190,11 +190,11 @@ class timeArray(object) :
 
   def getRangeIndices( self, startTime, endTime, includeEnd=False ) :
     """Returns indices of time stamps that belong to the given interval (end points inclusive). startTime, endTime are datetime instances."""
-    if startTime == None and endTime == None :
+    if startTime is None and endTime is None :
       return range(len(self.array))
-    if startTime == None :
+    if startTime is None :
       startTime = self.getDatetime(0)
-    if endTime == None :
+    if endTime is None :
       endTime = self.getDatetime(-1)
       includeEnd = True
     if self.timeFormat == 'epoch' :

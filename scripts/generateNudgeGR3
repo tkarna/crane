@@ -1,0 +1,89 @@
+#!/usr/bin/env python
+"""
+Script for generating nudge.gr3 near the ocean boundary
+
+Tuomas Karna 2013-03-06
+"""
+
+import os
+import numpy as np
+from scipy.spatial import cKDTree
+
+from crane.files import gr3Interface
+
+def evalDistanceToPoints( mc, cloudX, cloudY ) :
+  """Computes the distance from each mesh node to the closes point."""
+  tree = cKDTree( np.concatenate( (cloudX[:,None],cloudY[:,None]), axis=1 ) )
+  # cloud point indices of nearest points
+  nix = tree.query( np.vstack( (mc.x,mc.y)).T )[1]
+  # compute distance
+  dist = np.sqrt( (mc.x-cloudX[nix])**2 + (mc.y-cloudY[nix])**2 )
+  return dist
+
+def generateNudge( gridFile, dt ) :
+
+  # load hgrid.gr3 in meshContainer
+  depthMC = gr3Interface.readGR3FileToMC(gridFile)
+
+  # find open bnd with most nodes (must be pacific boudary)
+  pacificBnd = None
+  maxNNodes = 0
+  for i,bnd in enumerate(depthMC.boundaries) :
+    if bnd.type=='open' and len(bnd.nodes) > maxNNodes :
+      pacificBnd = bnd
+      maxNNodes = len(bnd.nodes)
+  oceanBndNodes = pacificBnd.nodes
+  print 'Detected ocean boundary with '+str(len(oceanBndNodes))+' nodes'
+
+  newVals = np.zeros_like(depthMC.x)
+  distToBnd = evalDistanceToPoints( depthMC,depthMC.x[oceanBndNodes],
+                                    depthMC.y[oceanBndNodes])
+
+  ## evaluate bell function (paraboloid)
+  #sigma = 80e3 # max width of the transition zone
+  #nudgeFactor = dt/2/86400. # max nudge factor
+  #vals = nudgeFactor*( 1-distToBnd**2/sigma**2 )
+  #vals[ vals < 0 ] = 0
+
+  # evaluate gaussian function
+  sigma = 50e3 # max width of the transition zone
+  nudgeFactor = dt/2/86400. # max nudge factor
+  vals = nudgeFactor*np.exp( -distToBnd**2/sigma**2 )
+
+  nudgeMC = depthMC.duplicateWithFields( [vals], ['nudge'] )
+
+  print nudgeMC
+
+  gr3Interface.writeMCToGR3File( 'nudge.gr3', nudgeMC )
+
+#-------------------------------------------------------------------------------
+# Main: Commandline interface
+#-------------------------------------------------------------------------------
+def parseCommandLine() :
+  from optparse import OptionParser
+
+  parser = OptionParser()
+  parser.add_option('-p', '--hgrid-file', action='store', type='string',
+                      dest='gridFile', help='hgrid.gr3 file defining the grid and open boundaries (default %default)',default='./hgrid.gr3')
+  parser.add_option('-t', '--time-step', action='store', type='float',
+                      dest='dt', help='time step of the simulation')
+
+  (options, args) = parser.parse_args()
+  gridFile       = options.gridFile
+  dt       = options.dt
+
+  if not gridFile :
+    parser.print_help()
+    parser.error('gridFile  undefined')
+  if not dt :
+    parser.print_help()
+    parser.error('time step  undefined')
+
+  print 'Parsed options:'
+  print ' - gridFile',gridFile
+  print ' - dt',dt
+
+  generateNudge(gridFile,dt)
+
+if __name__=='__main__' :
+  parseCommandLine()

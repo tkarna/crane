@@ -6,7 +6,7 @@ jlopez 2013-05-18
 #-------------------------------------------------------------------------------
 # Import
 #-------------------------------------------------------------------------------
-import matplotlib.pyplot as plt
+from crane import plt
 import matplotlib
 import pandas as pd
 import glob

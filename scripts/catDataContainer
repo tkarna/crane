@@ -1,0 +1,51 @@
+#!/usr/bin/env python
+"""
+Merges dataContainer files in time.
+
+Tuomas Karna 2015-01-09
+"""
+from crane.data import dataContainer
+from crane.data import dirTreeManager as dtm
+
+
+def mergeDataContainersInTime(fileList):
+    first = fileList[0]
+    masterDC = dataContainer.dataContainer.loadFromNetCDF(first)
+
+    for next in fileList[1:]:
+        dc = dataContainer.dataContainer.loadFromNetCDF(next)
+        masterDC.mergeTemporal(dc)
+
+    return masterDC
+
+# ------------------------------------------------------------------------------
+# Main: Commandline interface
+# ------------------------------------------------------------------------------
+
+
+def parseCommandLine():
+    from optparse import OptionParser
+
+    parser = OptionParser()
+    parser.add_option('-o', '--outfile', action='store', type='string',
+                      dest='outfile', help='Output file name (default: generated from dataContainer metadata')
+
+    (options, args) = parser.parse_args()
+    outfile = options.outfile
+    fileList = args
+    if len(fileList) == 0:
+        parser.print_help()
+        parser.error('Please enter list of dataContainers')
+
+    masterDC = mergeDataContainersInTime(fileList)
+
+    if outfile is None:
+        rule = 'singleFile'
+        dtm.saveDataContainerInTree(masterDC, rule=rule,
+                                    dtype=np.float32, overwrite=True,
+                                    compress=True)
+    else:
+        masterDC.saveAsNetCDF(outfile)
+
+if __name__ == '__main__':
+    parseCommandLine()

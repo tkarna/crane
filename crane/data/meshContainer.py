@@ -7,10 +7,12 @@ data manipulation methods.
 
 Tuomas Karna 2012-11-26
 """
+import numpy as np
+from crane.data import dataContainer
+from crane.data import netcdfIO
 
-from data.dataContainer import *
 
-class meshContainer(dataContainer) :
+class meshContainer(dataContainer.dataContainer) :
   """
   Generic mesh container.
   Contains an array of node coordinates,
@@ -39,8 +41,8 @@ class meshContainer(dataContainer) :
       self.dataByElement = True
       checkDataDim = False
     if isinstance(time,(int,float,type(None))) :
-      time = timeArray(np.array([0]),'epoch')
-    dataContainer.__init__(self, description, time, x,y,z, data,
+      time = timeArray.timeArray(np.array([0]),'epoch')
+    super(meshContainer, self).__init__(description, time, x,y,z, data,
                            fieldNames, coordSys, metaData, acceptNaNs=True,
                            checkDataXDim=checkDataDim,dtype=dtype)
     self.connectivity = connectivity.astype(np.int32)
@@ -53,7 +55,7 @@ class meshContainer(dataContainer) :
 
   def __eq__(self, other) :
     """True if all data is equal to other."""
-    if not dataContainer.__eq__(self,other) :
+    if not super(meshContainer,  self).__eq__(other) :
       return False
     if not np.array_equal( self.connectivity, other.connectivity ) :
       return False
@@ -72,10 +74,14 @@ class meshContainer(dataContainer) :
       raise Exception('Boundary node index exceed number of nodes in the mesh ({0:d} > {1:d})'.format(n.max(),self.x.shape[0]-1) )
     self.boundaries.append( bnd )
 
-  def getFields( self, *fields ) :
+  def extractFields( self, *fields ) :
     """
-    Returns a new dataContainer with the given fields.
-    field can be a field name (str) or index (int) of the fieldNames list.
+    Returns a meshContainer containing only the requested field.
+
+    Parameters
+    ----------
+    fields : str or int
+        fieldName to extract. If int, the index of the field to extract.
     """
     indices = []
     names = []
@@ -103,14 +109,6 @@ class meshContainer(dataContainer) :
     return meshContainer( self.description, self.time, self.x, self.y, self.z, data,
                 self.connectivity, fieldNames, self.coordSys, self.metaData)
 
-  #def saveAsNetCDF( self, filename, dtype=None, overwrite=True ) :
-    #"""Saves data in netCDF format """
-    #if dtype == None :
-      #dtype = dataContainer.dtype
-
-    #nc = netcdfIO(filename)
-    #nc.saveDataContainer( self, dtype, overwrite )
-
   def convertToNodalMC( self ) :
     """If data is at elements, returns a new object with average value at each node."""
     if self.dataByElement :
@@ -124,16 +122,6 @@ class meshContainer(dataContainer) :
         nodal_multiplicity[ n ] += 1
       nodal_data = nodal_data/nodal_multiplicity
 
-      #from data.selfeGridUtils import constructNodeToElemTable
-      #node2elem = constructNodeToElemTable(self.connectivity)
-      #nNodes = self.x.shape[0]
-      #nElems = self.connectivity.shape[0]
-      #nFields = self.data.shape[1]
-      #nTime = self.data.shape[2]
-      #nodal_data = np.zeros((nNodes,nFields,nTime))
-      #for i in range(nNodes) :
-        #nodal_data[i,:,:] = np.mean( self.data[node2elem[i],:,:], axis=0 )
-
       mc = meshContainer( self.description, self.time, self.x, self.y, self.z,
                         nodal_data, self.connectivity, self.fieldNames,
                         self.coordSys, self.metaData)
@@ -146,7 +134,7 @@ class meshContainer(dataContainer) :
   def loadFromNetCDF( cls, filename, startTime=None, endTime=None, includeEnd=False ) :
     """Creates a new dataContainer from netCDF file.
     """
-    nc = netcdfIO(filename)
+    nc = netcdfIO.netcdfIO(filename)
     mc = nc.readToDataContainer( startTime, endTime, includeEnd=includeEnd )
     return mc
 
@@ -156,7 +144,7 @@ class meshContainer(dataContainer) :
     Returns a new dataContainer object.
     Note: x,y,z are referenced rather than copied!
     """
-    dc = dataContainer.interpolateInTime(self,newTime,acceptNaNs)
+    dc = super(meshContainer, self).interpolateInTime(newTime, acceptNaNs)
     return meshContainer.fromDataContainer(dc, self.connectivity)
 
   def cropGrid( self, boundingBox ) :
@@ -207,7 +195,7 @@ class meshContainer(dataContainer) :
     startDate and endDate are datetime objects. Data in the returned array is refenreced, not copied.
     To obtain a copy use timeWindow(startDate, endDate).copy()
     """
-    dc = dataContainer.timeWindow(self,startDate,endDate,includeEnd)
+    dc = super(meshContainer, self).timeWindow(startDate, endDate, includeEnd)
     return meshContainer.fromDataContainer(dc, self.connectivity )
 
   def subsample( self, timeStamps=None, skipFactor=None, targetDt=None, currentDt=None, gapFactor=5) :
@@ -225,7 +213,7 @@ class meshContainer(dataContainer) :
     Returns:
     newDC      -- (array) subsampled version of this dataContainer
     """
-    dc = dataContainer.subsample(self, timeStamps, skipFactor, targetDt, currentDt, gapFactor)
+    dc = super(meshContainer, self).subsample(timeStamps, skipFactor, targetDt, currentDt, gapFactor)
     return meshContainer.fromDataContainer(dc, self.connectivity)
 
   def fixTriangleArea( self ) :

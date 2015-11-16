@@ -12,14 +12,17 @@ import numpy as np
 import datetime
 import sys
 import traceback
+import time as timeMod
 
-from data.dataContainer import *
-from data.timeArray import timeArray
-import data.netcdfCacheInterface as netcdfDB
-import data.loadHindcastStations as loadHindcastStations
-from data.harmonicAnalysis import tidalConstituents
-from plotting.plotBase import createDirectory
-from data.timeSeriesFilters import *
+from crane.data import dataContainer
+from crane.data import timeArray
+import crane.data.netcdfCacheInterface as netcdfDB
+import crane.data.loadHindcastStations as loadHindcastStations
+from crane.data import harmonicAnalysis
+from crane.utility import createDirectory
+from crane.data import timeSeriesFilters
+from crane.data import dirTreeManager
+from crane.files import csvStationFile
 
 #-------------------------------------------------------------------------------
 # Constants
@@ -113,46 +116,9 @@ def fetchAvailableObservations( startTime, endTime, obsTag='obs',
       print e
   return sc
 
-def fetchHindcastFromDatFiles( tag, hindcastStr, offerings, startTime, endTime,
-  removeBadValues=False, stationFile=None ) :
-  """Fetches model data from the hindcast database *.dat files.
-  3D variables are interpolated to the correct depth.
-  Returns a StationCollection object."""
-  from files.stationFile import StationFile
-  sc = StationCollection( startTime, endTime )
-  baseDir =  '/home/workspace/ccalmr/hindcasts/'
-
-  # group offerings based on station
-  groupedOff = {}
-  for off in offerings :
-    sta = off['location']
-    if off['variable'] not in EXTRACT_VARS :
-      continue
-    groupedOff.setdefault( sta , [] ).append( off )
-  stations = groupedOff.keys()
-
-  csvReader = csvStationFile()
-  csvReader.readFromFile(stationFile)
-  for sta in stations :
-    try :
-      x,y = csvReader.getLocation( sta )
-      extractRequest = []
-      for off in groupedOff[sta] :
-        z = -float(off['msldepth'])/100.0
-        extractRequest.append( (off['variable'],z,off['bracket']) )
-      dcs = loadHindcastStations.readDateRange(baseDir, hindcastStr, sta, extractRequest, startTime, endTime, x, y, 'spcs', removeBadValues)
-      for dc in dcs :
-        dc.setMetaData( 'tag',tag )
-        sc.addSample( dc )
-    except Exception as e :
-      print 'Extraction failed for station',sta
-      print e
-  return sc
-
 def extractForOfferings( tag, dataDir, offerings, startTime, endTime,
                           modelCoordSys='spcs', stationFile=None, profile=False, netcdf=False ) :
   """Extracts station time series from the model output files stored in dataDir, based on the given StationCollection."""
-  import data.extractStation as es
   sc = StationCollection( startTime, endTime )
   # sort offerings for each variable
   offForVar = dict()
@@ -167,11 +133,12 @@ def extractForOfferings( tag, dataDir, offerings, startTime, endTime,
     # extract
     try :
       if netcdf :
-        import data.ncExtract as nce
+        import crane.data.ncExtract as nce
         dataContainers = nce.extractForOfferings( dataDir, var, offForVar[var],
                                                   startTime, endTime,
                                                   stationFile=stationFile )
       else :
+        import crane.data.extractStation as es
         dataContainers = es.extractForOfferings( dataDir, var, offForVar[var],
                                                 startTime, endTime,
                                                 profile=profile,
@@ -186,36 +153,13 @@ def extractForOfferings( tag, dataDir, offerings, startTime, endTime,
       traceback.print_exc(file=sys.stdout)      
   return sc
 
-def extractTrackFromModelOutputs( tag, dataDir, sColl, startTime, endTime,
-                          modelCoordSys='spcs') :
-  """Extracts track data from model outputs stored in dataDir, based on the track samples available in sColl (other stationCollection)."""
-  import data.extractTrack as et
-  import data.extractStation as es
-  sc = StationCollection( startTime, endTime )
-  # extract track data
-  for key in sColl.getKeys() :
-    trackDC = sColl.getSample(**key)
-    if not trackDC.isTrack() :
-      continue
-    # TODO FIXME
-    #dc = et.extractForDataContainer( dataDir, trackDC )
-    var = key[-1]
-    offerings = [trackDC.description]
-    dcs = es.extractForOfferings( dataDir, var, offerings, startTime, endTime, profile=True )
-    dc = dcs[0]
-    dc.setMetaData( 'tag',tag )
-    sc.addSample( dc )
-  return sc
-
 def extractProfiles( tag, dataDir, varList, startTime, endTime,
                      stationFile, stationNames=[], modelCoordSys='spcs', netcdf=False) :
   """Extracts vertical profiles for all stations in the stationFile for the given variable."""
-  import data.extractStation as es
-  from files.csvStationFile import csvStationFile
   sc = StationCollection( startTime, endTime )
 
   # all stations
-  csvReader = csvStationFile()
+  csvReader = csvStationFile.csvStationFile()
   csvReader.readFromFile(stationFile)
 
   if len(stationNames)==0 :
@@ -238,11 +182,12 @@ def extractProfiles( tag, dataDir, varList, startTime, endTime,
     try :
       print ' *',var
       if netcdf :
-        import data.ncExtract as nce
+        import crane.data.ncExtract as nce
         pe = nce.selfeExtract(dataDir,var=var)
         dataContainers = pe.extractVerticalProfile(startTime,endTime,
                                                    var,x,y,stationNames)
       else :
+        import crane.data.extractStation as es
         ee = es.extractStation(dataDir,var,profile=True,modelCoordSys=modelCoordSys)
         ee.setStations( stationNames, x,y )
         dataContainers = ee.extractDates( startTime, endTime )
@@ -326,7 +271,7 @@ class tinyDB( object ) :
     In this case one keyword can be a list.
     Setting exclude=True negates the query.
     """
-    if query == None :
+    if query is None :
       # kwargs is a single dict, one value may be list
       nListArgs = sum( isinstance(v,list) for v in kwargs.values() )
       if nListArgs > 1 :
@@ -460,7 +405,7 @@ class StationCollection(tinyDB) :
 
   def getObsTag(self) :
     """Returns the observation tag in the collection."""
-    if self.obsTag == None :
+    if self.obsTag is None :
       raise Exception( 'obs tag has not been set' )
     return self.obsTag
 
@@ -537,32 +482,15 @@ class StationCollection(tinyDB) :
     dataDir/tag/station_variable_msldepth_startTime_endTime.nc
     All necessary directories are created as needed
     """
-    from data.dirTreeManager import netcdfTree, oldTreeRule, defaultTreeRule
     for k in self.getKeys() :
       dc = self.getSample( **k )
-      tag = dc.getMetaData('tag')
-      sta = dc.getMetaData('location')
-      var = dc.getMetaData('variable')
-      dep = dc.getMetaData('msldepth',suppressError=True)
-      bra = dc.getMetaData('bracket',suppressError=True)
-      dat = dc.getMetaData('dataType')
-
-      rule = oldTreeRule(dataDir=dataDir) if treeType=='old' else defaultTreeRule(dataDir=dataDir)
-      tree = netcdfTree( dataType=dat, tag=tag, location=sta, variable=var, msldepth=dep, bracket=bra, rule=rule )
-      tree.write( dc, overwrite=True )
+      dirTreeManager.saveDataContainerInTree(dc, rule=treeType, overwrite=True)
 
   @classmethod
   def loadFromNetCDFCollection( cls, tag, startTime=None, endTime=None,
                                 obsTag=None, dataDir='data', treeRule=None, dataType=None, variable=None, verbose=True ) :
-    from data.dirTreeManager import netcdfTreeTraverser
-
-    tra = netcdfTreeTraverser( rule=treeRule, verbose=verbose )
-    dcs,st,et = tra.readFiles( tag=tag, dataType=dataType, variable=variable,
-                         startTime=startTime, endTime=endTime, msldepth=None )
-    if not startTime :
-      startTime = st
-    if not endTime :
-      endTime = et
+    dcs = dirTreeManager.getAllDataContainers(tag=tag, dataType=dataType, variable=variable,
+                         startTime=startTime, endTime=endTime, msldepth=None, verbose=True)
     sc = cls( startTime, endTime, obsTag )
     # add to collection
     for dc in dcs :
@@ -621,7 +549,7 @@ class StationCollection(tinyDB) :
                                 self.startTime-pad, self.endTime+pad )
     # find tidal range
     import time
-    t0 = time.clock()
+    t0 = timeMod.clock()
     gaps,ranges,t = dc.detectGaps()
     x = np.squeeze(dc.data)
     tRes = np.array([])
@@ -629,23 +557,23 @@ class StationCollection(tinyDB) :
     for i in range( ranges.shape[0] ) :
       tt = t[ ranges[i,0]:ranges[i,1] ]
       xx = x[ ranges[i,0]:ranges[i,1] ]
-      tt, xx = computeRunningRange( tt,xx,2*T )
+      tt, xx = timeSeriesFilters.computeRunningRange( tt,xx,2*T )
       if len(tt) == 0 :
         continue
-      tt, xx = computeRunningMean( tt,xx,3*T )
+      tt, xx = timeSeriesFilters.computeRunningMean( tt,xx,3*T )
       tRes = np.append( tRes, tt )
       xRes = np.append( xRes, xx )
     print 'tidal range cpu time',time.clock() - t0
     if len(tRes) == 0 :
       print 'tidal data could not be computed, skipping (time series too short?)'
       return
-    ta = timeArray( tRes, 'epoch' )
+    ta = timeArray.timeArray(tRes, 'epoch' )
     data = xRes.reshape( (1,1,-1) )
     meta = dc.getMetaData()
     meta['dataType'] = 'timeseries'
     meta['tag'] = self.getObsTag()
     meta['variable'] = 'tidal_range'
-    dc2 = dataContainer( '', ta, dc.x,dc.y,dc.z, data,
+    dc2 = dataContainer.dataContainer( '', ta, dc.x,dc.y,dc.z, data,
                               ['tidal_range'], coordSys='',metaData=meta)
 
     self.addSample( dc2 )
@@ -664,9 +592,9 @@ class StationCollection(tinyDB) :
 
   def fetchCoastalUpwellingData( self, filename=None ) :
     """Fetches costal upwelling index from default file and stores it in the collection."""
-    from files.cuiFileParser import cuiParser
+    from crane.files import cuiFileParser
     try :
-      dc = cuiParser(filename).getDataContainer( self.startTime, self.endTime )
+      dc = cuiFileParser.cuiParser(filename).getDataContainer( self.startTime, self.endTime )
     except Exception as e :
       print 'CUI data could not be retrieved for period :',self.startTime, self.endTime
       print e
@@ -687,7 +615,7 @@ class StationCollection(tinyDB) :
 
   def generateSaturn01ProfilerData( self, tag, var ) :
     """Uses saturn01 pressure data, and temp/salt data to generate a temp/salt dataContainer with correct depth information in z coordinate."""
-    import data.wprofiler as wp
+    import crane.data.wprofiler as wp
     import time as timeMod
     if tag == self.getObsTag() :
       # TODO what is the correct dataType for raw profiler data?
@@ -698,7 +626,7 @@ class StationCollection(tinyDB) :
       if not depDC or not varDC :
         print 'Could not find saturn01 profiler obs data',var, varDC==None, depDC==None
         return None
-      cputime0 = time.clock()
+      cputime0 = timeMod.clock()
       sys.stdout.write( 'calculating saturn01 profiler obs data ...' )
       sys.stdout.flush()
       try :
@@ -762,7 +690,7 @@ class StationCollection(tinyDB) :
       meta['msldepth'] = '0'
       meta['dataType'] = 'timeseries'
       meta['variable'] = 'strat'
-      dc = dataContainer( '', s.time, s.x[0],s.y[0],z, data,
+      dc = dataContainer.dataContainer( '', s.time, s.x[0],s.y[0],z, data,
                                 ['strat'], coordSys=s.coordSys, metaData=meta )
       self.addSample( dc )
       dcs.append(dc)
@@ -801,11 +729,11 @@ class HAManager( object ) :
     tc.saveToASCII( fname, path=path )
 
   def compute( self, signal ) :
-    t0 = time.clock()
+    t0 = timeMod.clock()
     sys.stdout.write( 'computing harmonic analysis: %s... '%(signal.description) )
     sys.stdout.flush()
-    tc =  tidalConstituents.computeFromData( signal )
-    sys.stdout.write( '%.2f s\n'%(time.clock()-t0) )
+    tc =  harmonicAnalysis.tidalConstituents.computeFromData( signal )
+    sys.stdout.write( '%.2f s\n'%(timeMod.clock()-t0) )
     return tc
 
   def get( self, key, obsKey=None, useErrorSignal=False ) :
@@ -829,7 +757,7 @@ class HAManager( object ) :
         ampDict[const] = tcmod.getConstituent(const)[0] - tcobs.getConstituent(const)[0]
         phaDict[const] = tcmod.getConstituent(const)[1] - tcobs.getConstituent(const)[1]
       # fast to compute, no need to save
-      tc = tidalConstituents( 'error_'+tcmod.description, ampDict, phaDict, tcmod.fieldName, tcmod.startTime, tcmod.endTime )
+      tc = harmonicAnalysis.tidalConstituents( 'error_'+tcmod.description, ampDict, phaDict, tcmod.fieldName, tcmod.startTime, tcmod.endTime )
       return tc
 
     signal = self.coll.getSample( **key )
@@ -845,7 +773,7 @@ class HAManager( object ) :
     fname = os.path.join(key['tag'],self.subDir,fname)
     tc = None
     if os.path.isfile( fname ) :
-      tc = tidalConstituents.loadFromASCII( fname )
+      tc = harmonicAnalysis.tidalConstituents.loadFromASCII( fname )
     else :
       try :
         tc = self.compute( signal )

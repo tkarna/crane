@@ -9,14 +9,12 @@ Tuomas Karna 2012-08-20
 import sys
 
 import numpy as np
-import matplotlib.pyplot as plt
+import datetime
+from crane import plt
 
-from crane.data.dataContainer import dataContainer
-from crane.data.timeArray import (timeArray, datetimeToCorieTime,
-                                  datetimeToEpochTime,
-                                  generateSimulationTimeArray)
-from crane.plotting.plotBase import (plotBase, stackPlotBase,
-                                     convertEpochToPlotTime)
+from crane.data import dataContainer
+from crane.data import timeArray
+from crane.plotting import plotBase
 # for machines where cmop pylib is not present
 from crane.plotting import stackplot as wp
 
@@ -25,7 +23,7 @@ from crane.plotting import stackplot as wp
 #except ImportError:
   #import stackplot as wp # for machines where cmop pylib is not present
 
-class timeSeriesPlot2(plotBase) :
+class timeSeriesPlot2(plotBase.plotBase) :
 
   def __init__(self, **defaultArgs) :
     """Constructor. defaultArgs are the default plot options."""
@@ -34,7 +32,7 @@ class timeSeriesPlot2(plotBase) :
     self.xlabel=defaultArgs.pop('xlabel','Date')
     self.yunit=defaultArgs.pop('unit','')
     self.xIsTime=True
-    plotBase.__init__(self, **defaultArgs)
+    super(timeSeriesPlot2, self).__init__(**defaultArgs)
 
   def setAxes(self, ax) :
     """Set axes for the diagram. All data will be plotted in these axes.
@@ -54,11 +52,11 @@ class timeSeriesPlot2(plotBase) :
     start,end can be a datetime object or float representing epoch time.
     kwargs are passed to matplotlib axvspan routine."""
     if isinstance( start, datetime.datetime ) :
-      start = datetimeToEpochTime(start)
+      start = timeArray.datetimeToEpochTime(start)
     if isinstance( end, datetime.datetime ) :
-      end = datetimeToEpochTime(end)
-    start = convertEpochToPlotTime(start)
-    end = convertEpochToPlotTime(end)
+      end = timeArray.datetimeToEpochTime(end)
+    start = plotBase.convertEpochToPlotTime(start)
+    end = plotBase.convertEpochToPlotTime(end)
     kwargs.setdefault( 'facecolor', [0.8,1.0,0.85] )
     kwargs.setdefault( 'edgecolor', 'none' )
     self.ax.axvspan(start, end, **kwargs)
@@ -76,8 +74,8 @@ class timeSeriesPlot2(plotBase) :
     if 'color' not in kw :
       kw['color'] = self.colorSequence[ self.nSamples ]
     # detect gaps
-    te = convertPlotToEpochTime(t)
-    ta = timeArray(te,'epoch')
+    te = plotBase.convertPlotToEpochTime(t)
+    ta = timeArray.timeArray(te,'epoch')
     gapDt = kw.pop('gapDt', None)
     gaps,ranges,_ = ta.detectGaps(dt=gapDt)
     for i in range(ranges.shape[0]) :
@@ -93,12 +91,12 @@ class timeSeriesPlot2(plotBase) :
 class timeSeriesPlotDC2(timeSeriesPlot2) :
 
   def addSample(self, dc, **kwargs) :
-    t = convertEpochToPlotTime( dc.time.asEpoch().array )
+    t = plotBase.convertEpochToPlotTime( dc.time.asEpoch().array )
     y = np.squeeze( dc.data )
     label = kwargs.pop('label')
     timeSeriesPlot2.addSample(self, label, t, y, **kwargs)
 
-class stackTimeSeriesPlot(stackPlotBase) :
+class stackTimeSeriesPlot(plotBase.stackPlotBase) :
   """A class for stacking multiple time series axes in the same plot."""
   def addPlot(self, tag, **kwargs) :
     """Adds a new subplot to the diagram"""
@@ -106,7 +104,7 @@ class stackTimeSeriesPlot(stackPlotBase) :
     kw.update(kwargs)
     plot = timeSeriesPlot2(**kw)
     #plot.updateXAxis( [ pb.convertEpochToPlotTime( 0.0 ), pb.convertEpochToPlotTime( 365*86400 )] )
-    stackPlotBase.addPlot(self,plot,tag)
+    super(stackTimeSeriesPlot, self).addPlot(plot, tag)
 
   def addSample( self, tag, *args, **kwargs ) :
     if not tag in self.tags :
@@ -123,16 +121,16 @@ class stackTimeSeriesPlot(stackPlotBase) :
 class stackTimeSeriesPlotDC(stackTimeSeriesPlot) :
   """stackTimeSeriesPlot class that uses dataContainer as an input"""
   def __init__(self, **defArgs) :
-    stackTimeSeriesPlot.__init__(self,**defArgs)
+    super(stackTimeSeriesPlotDC, self).__init__(**defArgs)
 
   def addSample( self, tag, dc, **kwargs ) :
     """Add data from dataContainer to subplot identified with tag.
     If given tag does not exist, new subplot is appended.
     """
-    t = pb.convertEpochToPlotTime( dc.time.asEpoch().array )
+    t = plotBase.convertEpochToPlotTime( dc.time.asEpoch().array )
     data = dc.data.flatten()
     label = kwargs.pop('label',dc.getMetaData('tag'))
-    stackTimeSeriesPlot.addSample( self, tag, label,t,data, **kwargs )
+    super(stackTimeSeriesPlotDC, self).addSample(tag, label,t,data, **kwargs )
 
   
 class timeSeriesPlot(object) :
@@ -199,11 +197,11 @@ class timeSeriesPlotDC(timeSeriesPlot) :
   """timeSeriesPlot that uses dataContainer objects as inputs"""
   def __init__(self, varLabel, ref=None, refLabel='Reference', unit='', ylim=None, **kwargs) :
     if 'xlim' in kwargs :
-      kwargs['xlim'] = [ convertEpochToPlotTime( datetimeToEpochTime( dt ) ) for dt in kwargs['xlim'] ]
-    if ref == None :
+      kwargs['xlim'] = [ plotBase.convertEpochToPlotTime( timeArray.datetimeToEpochTime( dt ) ) for dt in kwargs['xlim'] ]
+    if ref is None :
       tref = yref = None
     else :
-      tref = convertEpochToPlotTime( ref.time.asEpoch().array )
+      tref = plotBase.convertEpochToPlotTime( ref.time.asEpoch().array )
       yref = np.squeeze( ref.data )
     timeSeriesPlot.__init__(self, varLabel, tref, yref, refLabel, unit, ylim, **kwargs)
 
@@ -214,7 +212,7 @@ class timeSeriesPlotDC(timeSeriesPlot) :
       label = sampleData.description
     else :
       label = kwargs.pop('label')
-    t = convertEpochToPlotTime( sampleData.time.asEpoch().array )
+    t = plotBase.convertEpochToPlotTime( sampleData.time.asEpoch().array )
     y = np.squeeze( sampleData.data )
     timeSeriesPlot.addSample(self,label, t, y, **kwargs)
 
@@ -286,9 +284,9 @@ class timeSeriesComboPlotDC(timeSeriesComboPlot) :
   """timeSeriesComboPlot that uses dataContainer objects as inputs"""
   def __init__(self, varLabel, refData, refLabel=None, errLabel='Error', unit='', ylim=None, err_ylim=None, **kwargs) :
     self.refData = refData
-    tref = convertEpochToPlotTime( refData.time.asEpoch().array )
+    tref = plotBase.convertEpochToPlotTime( refData.time.asEpoch().array )
     if 'xlim' in kwargs :
-      kwargs['xlim'] = [ convertEpochToPlotTime( datetimeToEpochTime( dt ) ) for dt in kwargs['xlim'] ]
+      kwargs['xlim'] = [ plotBase.convertEpochToPlotTime( timeArray.datetimeToEpochTime( dt ) ) for dt in kwargs['xlim'] ]
     yref = np.squeeze( refData.data )
     if not refLabel :
       refLabel = refData.description
@@ -296,7 +294,7 @@ class timeSeriesComboPlotDC(timeSeriesComboPlot) :
     
   @staticmethod
   def checkData( sample ) :
-    if not isinstance( sample, dataContainer ) :
+    if not isinstance( sample, dataContainer.dataContainer ) :
       raise Exception( 'sample must be a dataContainer object' )
     if sample.data.shape[0] > 1 :
       raise Exception( 'spatially varying data is not supported' )
@@ -312,12 +310,12 @@ class timeSeriesComboPlotDC(timeSeriesComboPlot) :
       label = sampleData.description
     else :
       label = kwargs.pop('label')
-    t = convertEpochToPlotTime( sampleData.time.asEpoch().array )
+    t = plotBase.convertEpochToPlotTime( sampleData.time.asEpoch().array )
     y = np.squeeze( sampleData.data )
     self.tsPlot.addSample(label, t, y, **kwargs)
     try :
       err = self.refData.computeError( sampleData )
-      t = convertEpochToPlotTime( err.time.asEpoch().array )
+      t = plotBase.convertEpochToPlotTime( err.time.asEpoch().array )
       self.errPlot.addSample(label, t, np.squeeze( err.data ), **kwargs)
     except Exception as e :
       print 'Error could not be computed, skipping:', label, sampleData.description
@@ -330,7 +328,7 @@ class timeSeriesStackPlot(object) :
     if not 'width' in kwargs :
       kwargs['width'] = figsize[0]
     if 'xlim' in kwargs :
-      kwargs['xlim'] = [ convertEpochToPlotTime( datetimeToEpochTime( dt ) ) for dt in kwargs['xlim'] ]
+      kwargs['xlim'] = [ plotBase.convertEpochToPlotTime( timeArray.datetimeToEpochTime( dt ) ) for dt in kwargs['xlim'] ]
     self.tags = [] # one for each subplot
     self.data = dict() # list of time series for each subplot
     self.varLabel = dict() # one for each subplot
@@ -389,21 +387,21 @@ class timeSeriesStackPlotDC(timeSeriesStackPlot) :
     else :
       label = kwargs.pop('label')
     if 'xlim' in kwargs :
-      kwargs['xlim'] = [ convertEpochToPlotTime( datetimeToEpochTime( dt ) ) for dt in kwargs['xlim'] ]
-    t = convertEpochToPlotTime( sampleData.time.asEpoch().array )
+      kwargs['xlim'] = [ plotBase.convertEpochToPlotTime( timeArray.datetimeToEpochTime( dt ) ) for dt in kwargs['xlim'] ]
+    t = plotBase.convertEpochToPlotTime( sampleData.time.asEpoch().array )
     y = np.squeeze( sampleData.data )
     timeSeriesStackPlot.addSample(self,tag,label, t, y, **kwargs)
 
 if __name__=='__main__':
 
-  from datetime import datetime
+  import datetime
 
   ### examples with numpy array inputs
   # generate data
-  startTime = datetime(2010,1,12,0,0,0)
-  endTime = datetime(2010,2,13,3,30,0)
+  startTime = datetime.datetime(2010,1,12,0,0,0)
+  endTime = datetime.datetime(2010,2,13,3,30,0)
   dt = 900.0
-  sta = generateSimulationTimeArray(startTime,endTime,dt).asEpoch()
+  sta = timeArray.generateSimulationTimeArray(startTime,endTime,dt).asEpoch()
   t = sta.array
   
   T = 44714
@@ -414,7 +412,7 @@ if __name__=='__main__':
   
   N = len(t)
   ref[N/2:N/2+N/10] = np.nan # missing values
-  tn = convertEpochToPlotTime( t )
+  tn = plotBase.convertEpochToPlotTime( t )
  
   # plot
   fig = plt.figure(figsize=(10,5))
@@ -462,28 +460,28 @@ if __name__=='__main__':
   # example with dataContainer objects
   # generate data
   np.random.seed(int(3411))
-  startTime = datetime(2010,1,12,0,0,0)
-  startCorie = datetimeToCorieTime(startTime)
+  startTime = datetime.datetime(2010,1,12,0,0,0)
+  startCorie = timeArray.datetimeToCorieTime(startTime)
   t0 = np.hstack( ( np.linspace(0,12,20), np.linspace(15.33,30,15) ) ) + startCorie
   m0 = np.sin(t0)
-  ta0 = timeArray(t0,'corie')
+  ta0 = timeArray.timeArray(t0,'corie')
   
   t1 = np.hstack( ( np.linspace(-10,17,50), np.linspace(22,34,50) ) )  + startCorie
   m1 = 0.8*np.sin(t1) + 0.03*np.random.randn(len(t1))
-  ta1 = timeArray(t1,'corie')
+  ta1 = timeArray.timeArray(t1,'corie')
   
   t2 = np.linspace(-9,31.7,65) + startCorie
   m2 = 0.95*np.sin(t2) + 0.12*np.random.randn(len(t2))
-  ta2 = timeArray(t2,'corie')
+  ta2 = timeArray.timeArray(t2,'corie')
   
   t3 = np.linspace(-9,32.2,100) + startCorie
   m3 = np.sin(t3-0.12) - 0.05*np.random.randn(len(t3))
-  ta3 = timeArray(t3,'corie')
+  ta3 = timeArray.timeArray(t3,'corie')
   
-  d0 = dataContainer.fromTimeSeries( 'Observation', ta0, m0, ['elev'] )
-  d1 = dataContainer.fromTimeSeries( 'model Eins', ta1, m1, ['elev'] )
-  d2 = dataContainer.fromTimeSeries( 'model Zwei', ta2, m2, ['elev'] )
-  d3 = dataContainer.fromTimeSeries( 'model Drei', ta3, m3, ['elev'] )
+  d0 = dataContainer.dataContainer.fromTimeSeries( 'Observation', ta0, m0, ['elev'] )
+  d1 = dataContainer.dataContainer.fromTimeSeries( 'model Eins', ta1, m1, ['elev'] )
+  d2 = dataContainer.dataContainer.fromTimeSeries( 'model Zwei', ta2, m2, ['elev'] )
+  d3 = dataContainer.dataContainer.fromTimeSeries( 'model Drei', ta3, m3, ['elev'] )
 
   kwargs = {}
   kwargs['title'] = 'timeSeriesPlotDC example'
@@ -497,7 +495,9 @@ if __name__=='__main__':
   # plot
   kwargs = {}
   kwargs['title'] = 'timeSeriesComboPlotDC example'
-  dia = timeSeriesComboPlotDC('Elevation', d0 ,refLabel='custom ref', unit='m', xlim=[datetime(2010,1,5,0,0,0), datetime(2010,2,10,0,0,0)], ylim=[-1.2,1.1], err_ylim=[-0.4,0.5], linestyle='dashed',linewidth=1.0)
+  xlim = [datetime.datetime(2010,1,5,0,0,0), datetime.datetime(2010,2,10,0,0,0)]
+  dia = timeSeriesComboPlotDC('Elevation', d0 ,refLabel='custom ref', unit='m', xlim=xlim,
+                              ylim=[-1.2,1.1], err_ylim=[-0.4,0.5], linestyle='dashed',linewidth=1.0)
   dia.addSample(d1, color='b')
   dia.addSample(d2, color=[0.1,0.5,0.1], label='custom label')
   dia.addSample(d3, color='k', linestyle='dashed')

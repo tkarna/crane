@@ -4,266 +4,30 @@ High-level class to create timeseries and Taylor Diagrams.
 #-------------------------------------------------------------------------------
 # Imports
 #-------------------------------------------------------------------------------
-from data.timeArray import *
-from plotting.timeSeriesPlot import *
-from plotting.taylorDiagram import *
-from plotting.stationExtremaPlot import *
-from plotting.errorHistogram import *
-from plotting.spectralPlot import *
-from plotting.tidalConstPlot import *
-from plotting.profilePlot import *
-from plotting.trackPlot import *
-from files.stationFile import StationFile
-from plotting.plotBase import *
+import os
+import numpy as np
+
+from crane import matplotlib
+from crane import plt
+
+from crane.data import timeArray
+from crane.plotting import plotBase
+from crane.plotting import timeSeriesPlot
+from crane.plotting import taylorDiagram
+from crane.plotting import stationExtremaPlot
+from crane.plotting import errorHistogram
+from crane.plotting import spectralPlot
+from crane.plotting import tidalConstPlot
+from crane.plotting import profilePlot
+from crane.plotting import trackPlot
+from crane.files import stationFile
+from crane.utility import saveFigure
+from crane.physicalVariableDefs import VARS
+from crane.physicalVariableDefs import UNITS
 
 #-------------------------------------------------------------------------------
 # Constants
 #-------------------------------------------------------------------------------
-# These strings will appear on plot axes etc
-VARS = {'salt': 'Salinity',
-        'temp': 'Temperature',
-        'cond': 'Electrical conductivity',
-        'elev': 'Elevation',
-        'pres': 'Pressure',
-        'fluores': 'Fluorescence',
-        'kine': 'TKE',
-        'vdff': 'Viscosity',
-        'tdff': 'Diffusivity',
-        'mixl': 'Mixing length',
-        'hvel': 'Velocity',
-        'vert': 'Vert velocity',
-        'u': 'u-velocity',
-        'v': 'v-velocity',
-        'w': 'w-velocity',
-        'alongvel': 'Along Vel.',
-        'discharge': 'Discharge',
-        'tidal_range': 'Tidal range',
-        'cui': 'Upwelling index',
-        'strat': 'Stratification',
-        'sil': 'Salt intrusion length',
-        'srad': 'Solar radiation',
-        'sed': 'Sediment',
-        'bed_stress': 'bed stress',
-        'bed_depth': 'bed depth',
-        'sed_1': 'S-class 1',
-        'sed_2': 'S-class 2',
-        'sed_3': 'S-class 3',
-        'sed_4': 'S-class 4',
-        'di_sed': 'DI sed',
-        'NO3': 'NO3',
-        'NH4': 'NH4',
-        'PHYM': 'PHYM',
-        'PHYF': 'PHYF',
-        'SZOO': 'SZOO',
-        'BZOO': 'BZOO',
-        'DETN': 'DETN',
-        'DETC': 'DETC',
-        'BACT': 'BACT',
-        'DON': 'DON',
-        'DOC': 'DOC',
-        'CHLM': 'CHLM',
-        'CHLF': 'CHLF',
-        'bnth_1':'NO3 benthos',
-        'bnth_2':'NH4 benthos',
-        'bnth_3':'DETN benthos',
-        'bnth_4':'OXY benthos',
-        'Diag':'Diagnostic array',
-        'nem':'NEM',
-        'nem_DAVG':'Averaged NEM',
-        'nem_DI':'Integrated NEM',
-        'nemb':'benthic NEM',
-        'nemi':'vert. int. NEM',
-        'totalN':'total Nitrogen',
-        'NO3': 'NO3',
-        'NH4': 'NH4',
-        'phy': 'Phy',
-        'zoo': 'Zoo',
-        'det': 'Det',
-        'oxy': 'Oxy',
-        'plumevol': 'Plume volume',
-        'plumethick': 'Plume thickness',
-        'flntu':'FLNTU',
-        'ecoblue':'ECO backscatter 470nm',
-        'ecored':'ECO backscatter 700nm',
-        'dens':'Density',
-        'turbidity': 'Sediment',
-        'bath': 'Bathymetry',
-        'depth': 'Depth',
-        'bed_depth': 'Depth',
-        'bed_stress': 'bottom stress',
-        'sil_1':'SIL 1',
-        'sil_2':'SIL 2',
-        'sil_3':'SIL 3',
-        'sil_4':'SIL 4',
-        'sil_5':'SIL 5',
-        'plume_area_12':'Plume area 12',
-        'plume_volume_12':'Plume volume 12',
-        'plume_center_12':'Plume center 12',
-        'plume_center_x_12':'Plume center x 12',
-        'plume_center_y_12':'Plume center y 12',
-        'plume_thickness_12':'Plume thickness 12',
-        'plume_area_28':'Plume area 28',
-        'plume_volume_28':'Plume volume 28',
-        'plume_center_28':'Plume center 28',
-        'plume_center_x_28':'Plume center x 28',
-        'plume_center_y_28':'Plume center y 28',
-        'plume_thickness_28':'Plume thickness 28',
-        'plume_area_30':'Plume area 30',
-        'plume_volume_30':'Plume volume 30',
-        'plume_center_30':'Plume center 30',
-        'plume_center_x_30':'Plume center x 30',
-        'plume_center_y_30':'Plume center y 30',
-        'plume_thickness_30':'Plume thickness 30',
-        'volume': 'Volume',
-        'flux': 'Flux',
-        'bed_flux':'Sediment bed flux',
-        'iRiv':'Riverine water',
-        'iOce':'Oceanic water',
-        'iPlu':'Plume water',
-        'iRen':'Renewed water',
-        'aRiv':'Riv. age conc.',
-        'aOce':'Oce. age conc.',
-        'aPlu':'Plu. age conc.',
-        'aRen':'Ren. age conc.',
-        'ARiv':'Riv. age',
-        'AOce':'Oce. age',
-        'APlu':'Plu. age',
-        'ARen':'Ren. age',
-        'maxiRiv':'Riverine water',
-        'maxiOce':'Oceanic water',
-        'maxiPlu':'Plume water',
-        'maxiRen':'Renewed water',
-        'maxaRiv':'Riv. age conc.',
-        'maxaOce':'Oce. age conc.',
-        'maxaPlu':'Plu. age conc.',
-        'maxared':'Ren. age conc.',
-        'maxARiv':'Riv. age',
-        'maxAOce':'Oce. age',
-        'maxAPlu':'Plu. age',
-        'maxARen':'Ren. age',
-        }
-
-# These strings will appear as units in plots
-UNITS = {'salt': 'psu',
-        'temp': 'degC',
-        'cond': '',
-        'elev': 'm',
-        'pres': 'Pa',
-        'fluores': '',
-        'kine': 'm^2/s^2',
-        'vdff': 'm^2/s',
-        'tdff': 'm^2/s',
-        'mixl': 'm',
-        'hvel': 'm/s',
-        'vert': 'm/s',
-        'u': 'm/s',
-        'v': 'm/s',
-        'w': 'm/s',
-        'alongvel': 'm/s',
-        'discharge': 'm^3/s',
-        'tidal_range': 'm',
-        'cui': '',
-        'strat':'psu',
-        'sil':'km',
-        'srad':'W m-2',
-        'sed':'mg/l',
-        'bed_stress':'N/m^2',
-        'bed_depth':'m',
-        'sed_1':'kg/m^3',
-        'sed_2':'kg/m^3',
-        'sed_3':'kg/m^3',
-        'sed_4':'kg/m^3',
-        'sed_5':'kg/m^3',
-        'di_sed':'kg/m^3',
-        'NO3':'mmol N m-3',
-        'NH4':'mmol N m-3',
-        'PHYM':'mmol N m-3',
-        'PHYF':'mmol N m-3',
-        'SZOO':'mmol N m-3',
-        'BZOO':'mmol N m-3',
-        'DETN':'mmol N m-3',
-        'DETC':'mmol C m-3',
-        'BACT':'mmol N m-3',
-        'DON':'mmol N m-3',
-        'DOC':'mmol C m-3',
-        'CHLM':'mg Chl m-3',
-        'CHLF':'mg Chl m-3',
-        'bnth_1':'mmol N m-3',
-        'bnth_2':'mmol N m-3',
-        'bnth_3':'mmol N m-3',
-        'bnth_4':'mmol O m-3',
-        'Diag':' ',
-        'nem':'mmol O m-3 day-1 ',
-        'nem_DAVG':'mmol O m-3 day-1 ',
-        'nem_DI':'mmol O m-2 day-1 ',
-        'nemb':'mmol O m-2 day-1 ',
-        'nemi':'mmol O m-2 day-1 ',
-        'totalN':'mmol N m-3',
-        'trcr_5':'kg/m^3',
-        'phy': 'mmol N m-3',
-        'zoo': 'mmol N m-3',
-        'det': 'mmol N m-3',
-        'oxy': 'mmol m-3',
-        'plumevol': '10^9 m^3',
-        'plumethick': 'm',
-        'flntu':'ntu',
-        'ecored':'m-1 sr-1',
-        'ecoblue':'m-1 sr-1',
-        'dens':'kg m-3',
-        'turbidity': 'kg/m^3',
-        'bath':'m',
-        'depth':'m',
-        'sil_1':'km',
-        'sil_2':'km',
-        'sil_3':'km',
-        'sil_4':'km',
-        'sil_5':'km',
-        'plume_area_12':'m2',
-        'plume_volume_12':'m3',
-        'plume_center_12':'m',
-        'plume_center_x_12':'m',
-        'plume_center_y_12':'m',
-        'plume_thickness_12':'m',
-        'plume_area_28':'m2',
-        'plume_volume_28':'m3',
-        'plume_center_28':'m',
-        'plume_center_x_28':'m',
-        'plume_center_y_28':'m',
-        'plume_thickness_28':'m',
-        'plume_area_30':'m2',
-        'plume_volume_30':'m3',
-        'plume_center_30':'m',
-        'plume_center_x_30':'m',
-        'plume_center_y_30':'m',
-        'plume_thickness_30':'m',
-        'volume': 'm3',
-        'flux': 'm3 s-1',
-        'bed_flux':'m3',
-        'iRiv':'frac',
-        'iOce':'frac',
-        'iPlu':'frac',
-        'iRen':'frac',
-        'aRiv':'frac s',
-        'aOce':'frac s',
-        'aPlu':'frac s',
-        'aRen':'frac s',
-        'ARiv':'h',
-        'AOce':'h',
-        'APlu':'h',
-        'ARen':'h',
-        'maxiRiv':'frac',
-        'maxiOce':'frac',
-        'maxiPlu':'frac',
-        'maxiRen':'frac',
-        'maxaRiv':'frac s',
-        'maxaOce':'frac s',
-        'maxaPlu':'frac s',
-        'maxaRen':'frac s',
-        'maxARiv':'h',
-        'maxAOce':'h',
-        'maxAPlu':'h',
-        'maxARen':'h',
-        }
 
 COLORS = ['b', 'g', 'k', 'm', 'c', 'y',
           'Darkorange','Orchid','SpringGreen','DarkTurquoise','DarkKhaki',
@@ -408,7 +172,7 @@ class Plots(object):
         kw['title'] = ('%s %s\n %s - %s (PST)' %
                             (location, varTitle, sT, eT))
       fig = plt.figure(figsize=(7.5,3))
-      dia=timeSeriesPlotDC(varTitle, unit=UNITS[var], ylim=ylim, **kw)
+      dia = timeSeriesPlot.timeSeriesPlotDC(varTitle, unit=UNITS[var], ylim=ylim, **kw)
 
       for modKey in keys :
         m = self.coll.getSample( **modKey )
@@ -464,10 +228,10 @@ class Plots(object):
 
       # ----- Make image -----
       if obsKey :
-        dia=timeSeriesComboPlotDC(varTitle, o, 'Obs', unit=UNITS[var], ylim=yl, err_ylim=erryl, **kw)
+        dia=timeSeriesPlot.timeSeriesComboPlotDC(varTitle, o, 'Obs', unit=UNITS[var], ylim=yl, err_ylim=erryl, **kw)
       else :
         fig = plt.figure(figsize=(7.5,3))
-        dia=timeSeriesPlotDC(varTitle, unit=UNITS[var], ylim=yl, **kw)
+        dia=timeSeriesPlot.timeSeriesPlotDC(varTitle, unit=UNITS[var], ylim=yl, **kw)
       for modKey in modKeys :
         m = self.coll.getSample( **modKey )
         dia.addSample(m, color=modelColors[modKey['tag']], label=modKey['tag'])
@@ -488,7 +252,7 @@ class Plots(object):
       titleStr = ' '.join([ varTitle, sT+' - '+eT])
       if 'title' not in kwargs :
         kwargs['title'] = titleStr
-      dia = timeSeriesStackPlotDC(**kwargs)
+      dia = timeSeriesPlot.timeSeriesStackPlotDC(**kwargs)
       stations = list( set( self.coll.getAttributes( 'location', variable=var ) ).intersection( set( stationX.keys() ) ) )
       orderedSta = sorted( stations, key = lambda k: stationX[k] )
       for sta in orderedSta :
@@ -547,7 +311,7 @@ class Plots(object):
         stationCoords[station] = x
 
     for var in self.coll.getAttributes('variable') :
-      dia = stationExtremaPlotDC(VARS[var], stationCoords, unit=UNITS[var], **kwargs)
+      dia = stationExtremaPlot.stationExtremaPlotDC(VARS[var], stationCoords, unit=UNITS[var], **kwargs)
       comKeys = self.coll.getComparableKeys(dataType='timeseries', requireObs=False)
       for entry, obsKey, modKeys in comKeys :
         station,var,msldepth = entry
@@ -587,7 +351,7 @@ class Plots(object):
         continue
 
       # ----- Make plot -----
-      dia = errorHistogramDC(o, unit=UNITS[var], label='Obs', **kwargs)
+      dia = errorHistogram.errorHistogramDC(o, unit=UNITS[var], label='Obs', **kwargs)
       for modKey in modKeys :
         m = self.coll.getSample( **modKey )
         dia.addSample(m, label=modKey['tag'], color=modelColors[modKey['tag']])
@@ -611,7 +375,7 @@ class Plots(object):
     modelColors = self.makeColorsForModels()
 
     for var in self.coll.getAttributes('variable',dataType='timeseries') :
-      dia = stackHistogramDC(unit=UNITS[var],**kwargs)
+      dia = errorHistogram.stackHistogramDC(unit=UNITS[var],**kwargs)
       stations = list( set( self.coll.getAttributes( 'location', variable=var ) ).intersection( set( stationX.keys() ) ) )
 #      stations = self.coll.getAttributes( 'location',variable=var )
       orderedSta = sorted( stations, key = lambda k: stationX[k] )
@@ -659,7 +423,7 @@ class Plots(object):
         continue
 
       # ----- Make plot -----
-      dia = spectralPlotDC(xunit='hours')
+      dia = spectralPlot.spectralPlotDC(xunit='hours')
       for modKey in modKeys :
         m = self.coll.getSample( **modKey )
         try :
@@ -690,7 +454,7 @@ class Plots(object):
     #constsToPlot = ['M2','S2','N2','L2','K2','K1','O1','P1','M4','M6','M8','Mf','Mm']
     constsToPlot = ['M2','S2','N2','L2','K2','K1','O1','P1','J1','NO1','OO1','M4','M6','M8','Mf','Mm','MSf']
     for var in self.coll.getAttributes('variable',dataType='timeseries') :
-      dia = stackAmplitudePhasePlot(unit=UNITS[var],**kwargs)
+      dia = tidalConstPlot.stackAmplitudePhasePlot(unit=UNITS[var],**kwargs)
 #      stations = self.coll.getAttributes( 'location',variable=var)
       stations = list( set( self.coll.getAttributes( 'location', variable=var ) ).intersection( set( stationX.keys() ) ) )
       orderedSta = sorted( stations, key = lambda k: stationX[k] )
@@ -725,7 +489,7 @@ class Plots(object):
     modelColors = self.makeColorsForModels()
     constsToPlot = ['M2','M4','M6','S2','K1','O1','MSf']
     for var in self.coll.getAttributes('variable',dataType='timeseries') :
-      dia = stackAmplitudePhasePlot(unit=UNITS[var],**kwargs)
+      dia = tidalConstPlot.stackAmplitudePhasePlot(unit=UNITS[var],**kwargs)
       #stations = self.coll.getAttributes( 'location',variable=var)
       stations = list( set( self.coll.getAttributes( 'location', variable=var ) ).intersection( set( stationX.keys() ) ) )
       orderedSta = sorted( stations, key = lambda k: stationX[k] )
@@ -763,7 +527,7 @@ class Plots(object):
     modelColors = self.makeColorsForModels()
 
     for var in self.coll.getAttributes('variable',dataType='timeseries') :
-      dia = stackSpectralPlotDC(xunit='hours',**kwargs)
+      dia = spectralPlot.stackSpectralPlotDC(xunit='hours',**kwargs)
       #stations = self.coll.getAttributes( 'location',variable=var)
       stations = list( set( self.coll.getAttributes( 'location', variable=var ) ).intersection( set( stationX.keys() ) ) )
       orderedSta = sorted( stations, key = lambda k: stationX[k] )
@@ -824,7 +588,7 @@ class Plots(object):
         continue
 
       # ----- Make plot -----
-      dia = statisticsDiagramDC(o, 'Obs', unit=UNITS[var], **kwargs)
+      dia = taylorDiagram.statisticsDiagramDC(o, 'Obs', unit=UNITS[var], **kwargs)
       for modKey in modKeys :
         m = self.coll.getSample( **modKey )
         dia.plotSample(m, label=modKey['tag'], color=modelColors[modKey['tag']])
@@ -855,7 +619,7 @@ class Plots(object):
     markers, colors = self.makeMarkersForTaylor()
     
     for var in self.coll.getAttributes('variable',dataType='timeseries') :
-      dia = normalizedStatisticsDiagramDC(figsize=(9,6))
+      dia = taylorDiagram.normalizedStatisticsDiagramDC(figsize=(9,6))
       for sta in self.coll.getAttributes( 'location', variable=var ) :
         comKeys = self.coll.getComparableKeys( dataType='timeseries',variable=var, location=sta, requireObs=True )
         for entry, obsKey, modKeys in comKeys :
@@ -915,7 +679,7 @@ class Plots(object):
       varTitle,varStr,sT,eT = self.getAnnotationStrings(var,varPrefix)
       logScale = True if var in ['kine','vdff','tdff','bed_stress'] else False
       climIsLog = True if var in ['kine','vdff','tdff','bed_stress'] else False
-      dia = stackProfileTimeSeriesDC(clabel=varTitle,unit=UNITS[var], clim=climVar, logScale=logScale,climIsLog=climIsLog,**kwargs)
+      dia = profilePlot.stackProfileTimeSeriesDC(clabel=varTitle,unit=UNITS[var], clim=climVar, logScale=logScale,climIsLog=climIsLog,**kwargs)
       for modKey in modKeys :
         # add model(s)
         m = self.coll.getSample( **modKey ).copy()
@@ -959,7 +723,7 @@ class Plots(object):
       else :
         climVar=None
       kwargs.setdefault( 'ylabel', 'depth below surface' )
-      dia = stackTrackPlotDC(clabel=varTitle,unit=UNITS[var],clim=climVar, **kwargs)
+      dia = trackPlot.stackTrackPlotDC(clabel=varTitle,unit=UNITS[var],clim=climVar, **kwargs)
       for key in keys :
         sample = self.coll.getSample( **key )
         dia.addPlot( key['tag'] )
@@ -997,7 +761,7 @@ class Plots(object):
       varTitle,varStr,sT,eT = self.getAnnotationStrings('discharge','')
       title = ('Dates: %s - %s (PST)' % (sT, eT))
       kwargs['title'] = ('Dates: %s - %s (PST)' % (sT, eT))
-    dia = timeSeriesStackPlotDC(**kwargs)
+    dia = timeSeriesPlot.timeSeriesStackPlotDC(**kwargs)
     # discharge
     if discharge :
       station = discharge.getMetaData('location')
@@ -1034,50 +798,6 @@ class Plots(object):
        of unique markers where the key is the tuple (modelTag, station, msldepth).
     """
     return makeMarkersForTaylor(self.coll)
-
-#-------------------------------------------------------------------------------
-# Tests 
-#-------------------------------------------------------------------------------
-def test_Plots():
-  """Test class creation and plotting"""
-  import time
-  from data.stationSet import StationSet
-  from data.stationCollection import StationCollection, createDirectory
-  startTime = time.time()
-
-  I_PATH='tmp_images'
-  M_FILE='/home/workspace/users/lopezj/data/test/process/stationSet_model_2012-04-23-2012-05-20.npz'
-  O_FILE='/home/workspace/users/lopezj/data/test/process/stationSet_obs_2012-04-23-2012-05-20.npz'
-
-  createDirectory(I_PATH)
-  print 'Loading data'
-  oSet = StationSet.loadFromDisk(O_FILE)
-  mSet = StationSet.loadFromDisk(M_FILE)
-  sc = StationCollection( oSet.startTime, oSet.endTime )
-  sc.addStationSet( 'obs', oSet )
-  sc.addStationSet( 'model', mSet )
-  loadTime = time.time()
-
-  print 'Creating plots'
-  tsTime = time.time()
-  plot = Plots(I_PATH, sc)
-  plot.makeTimeSeries() 
-  etsTime = time.time()
-
-  tdTime = time.time()
-  plot.makeTaylorDiagrams()
-  etdTime = time.time()
-
-  tdvTime = time.time()
-  plot.makeTaylorDiagramsVar()
-  endTime = time.time()
-
-  print '\n Times \n'
-  print 'Elapsed time (Loading data) %s' % (loadTime - startTime)
-  print 'Elapsed time (Time series) %s' % (etsTime - tsTime)
-  print 'Elapsed time (Taylor diagram) %s' % (etdTime - tdvTime)
-  print 'Elapsed time (Taylor diagram (var)) %s' % (endTime - tdvTime)
-  print 'Elapsed time (Total) %s' % (endTime - startTime)
 
 #-------------------------------------------------------------------------------
 # Main 

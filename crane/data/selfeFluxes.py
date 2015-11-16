@@ -16,16 +16,22 @@ Tuomas Karna 2014-10-10
 """
 
 import os
+import sys
+import datetime
+import traceback
 import numpy as np
 import numpy.linalg
-import files.gr3Interface as gr3Interface
-from data.ncExtract import selfeNCFile, selfeExtractBase, getNCVariableName
-from data.dataContainer import *
-from data.meshContainer import *
-from data.gridUtils import meshSearch2d, constructEdgeNodeArray
-from extractStation import addTracers, fieldNameToFilename
-import traceback
-import sys
+import time as timeMod
+
+from crane.files import gr3Interface
+from crane.data import ncExtract
+from crane.data import dataContainer
+from crane.data import meshContainer
+from crane.data import timeArray
+from crane.data import gridUtils
+from crane.data import extractStation
+from crane.data import dirTreeManager
+from crane.physicalVariableDefs import addTracers
 
 # -----------------------------------------------------------------------------
 #  classes
@@ -175,7 +181,7 @@ def makeFluxDataContainer(times, volFlux, location, runTag,
     """
     Creates a single dataContainer that contains all the flux time series
     """
-    ta = timeArray(times, 'epoch')
+    ta = timeArray.timeArray(times, 'epoch')
     x = np.array([0])
     y = np.array([0])
     z = np.array([0])
@@ -192,7 +198,7 @@ def makeFluxDataContainer(times, volFlux, location, runTag,
     meta['dataType'] = 'flux'
     meta['tag'] = runTag
 
-    dc = dataContainer('', ta, x, y, z, data, fieldNames, coordSys='spcs',
+    dc = dataContainer.dataContainer('', ta, x, y, z, data, fieldNames, coordSys='spcs',
                        metaData=meta)
     return dc
 
@@ -201,7 +207,7 @@ def makeVolumeDataContainer(times, volume, location, runTag,
     """
     Creates a single dataContainer that contains all the volume time series
     """
-    ta = timeArray(times, 'epoch')
+    ta = timeArray.timeArray(times, 'epoch')
     x = np.array([0])
     y = np.array([0])
     z = np.array([0])
@@ -218,7 +224,7 @@ def makeVolumeDataContainer(times, volume, location, runTag,
     meta['dataType'] = 'flux'
     meta['tag'] = runTag
 
-    dc = dataContainer('', ta, x, y, z, data, fieldNames, coordSys='spcs',
+    dc = dataContainer.dataContainer('', ta, x, y, z, data, fieldNames, coordSys='spcs',
                        metaData=meta)
     return dc
 
@@ -323,32 +329,32 @@ def computeSelfeFluxes(path, regionFile, location, runTag, stacks=None,
     for iReg in regions:
         regionToElem[iReg] = np.nonzero(elemToRegion == iReg)[0]
 
-    fname = getNCVariableName('dihv')
-    dihvReader = selfeExtractBase(path, fname, fileTypeStr='71', verbose=verbose)
+    fname = ncExtract.getNCVariableName('dihv')
+    dihvReader = ncExtract.selfeExtractBase(path, fname, fileTypeStr='71', verbose=verbose)
     # construct edge info and mesh search object
-    edgeNodes = constructEdgeNodeArray(dihvReader.dataFile.faceNodes)
-    meshSearchObj = meshSearch2d(dihvReader.dataFile.nodeX,
+    edgeNodes = gridUtils.constructEdgeNodeArray(dihvReader.dataFile.faceNodes)
+    meshSearchObj = gridUtils.meshSearch2d(dihvReader.dataFile.nodeX,
                                  dihvReader.dataFile.nodeY,
                                  dihvReader.dataFile.faceNodes,
                                  edgeNodes=edgeNodes)
     trcrReaders = {}
     if useHVel or applyCorrection:
         for v in trcrVarList:
-            fname = getNCVariableName(v)
-            trcrReaders[v] = selfeExtractBase(path, fname, fileTypeStr='70',
+            fname = ncExtract.getNCVariableName(v)
+            trcrReaders[v] = ncExtract.selfeExtractBase(path, fname, fileTypeStr='70',
                                             verbose=verbose,
                                             meshSearchObj=meshSearchObj)
     if useHVel:
-        fname = getNCVariableName('hvel')
-        hvelReader = selfeExtractBase(path, fname, fileTypeStr='67',
+        fname = ncExtract.getNCVariableName('hvel')
+        hvelReader = ncExtract.selfeExtractBase(path, fname, fileTypeStr='67',
                                       verbose=verbose,
                                       meshSearchObj=meshSearchObj)
     else:
         trcrFluxReaders = {}
         for v in trcrVarList:
-            fname = getNCVariableName(v)
+            fname = ncExtract.getNCVariableName(v)
             fname = 'di_'+fname+'_flux'
-            trcrFluxReaders[v] = selfeExtractBase(path, fname,
+            trcrFluxReaders[v] = ncExtract.selfeExtractBase(path, fname,
                                                   fileTypeStr='65',
                                                   verbose=verbose,
                                                   meshSearchObj=meshSearchObj)
@@ -403,7 +409,7 @@ def computeSelfeFluxes(path, regionFile, location, runTag, stacks=None,
 
     vCoords = dihvReader.dataFile.vCoords
     bathymetry = dihvReader.dataFile.bath
-    bathMC = meshContainer('', timeArray(np.array([0]),'epoch'),
+    bathMC = meshContainer('', timeArray.timeArray(np.array([0]),'epoch'),
                         dihvReader.dataFile.nodeX,
                         dihvReader.dataFile.nodeY,
                         np.zeros_like(dihvReader.dataFile.nodeX),
@@ -439,7 +445,6 @@ def computeSelfeFluxes(path, regionFile, location, runTag, stacks=None,
     kbot_elem = np.zeros((nFaces,), dtype=int)
     iwet_elem = np.zeros((nFaces,), dtype=int)
 
-    import time as timeMod
     t0 = timeMod.clock()
     compVCoords = vCoords.computeVerticalCoordinates
     #@profile
@@ -455,7 +460,7 @@ def computeSelfeFluxes(path, regionFile, location, runTag, stacks=None,
                 if useHVel or applyCorrection:
                     for v in trcrVarList:
                         trcrFile = trcrReaders[v].getNCFile(iStack=stacks[iStack])
-                        ncVar = getNCVariableName(v)
+                        ncVar = ncExtract.getNCVariableName(v)
                         trcrDataSet[v] = trcrFile.variables[ncVar]
                 if useHVel and trcrVarList:
                     uvFile = hvelReader.getNCFile(iStack=stacks[iStack])
@@ -465,7 +470,7 @@ def computeSelfeFluxes(path, regionFile, location, runTag, stacks=None,
                     trcrFluxArray = {}
                     for v in trcrVarList:
                         fluxFile = trcrFluxReaders[v].getNCFile(iStack=stacks[iStack])
-                        ncVar = getNCVariableName(v)
+                        ncVar = ncExtract.getNCVariableName(v)
                         ncVar = 'di_'+ncVar+'_flux'
                         trcrFluxArray[v] = fluxFile.variables[ncVar][:]
 
@@ -763,12 +768,11 @@ def parseCommandLine() :
                        trcrVarList=trcrVarList, useHVel=useHVel,
                        applyCorrection=applyCorrection)
 
-    import data.dirTreeManager as dtm
     if saveInTree :
-      rule = dtm.defaultTreeRule()
+      rule = 'monthlyFile'
     else :
-      rule = dtm.oldTreeRule()
-    dtm.saveDataContainerInTree(dcs, rule=rule, dtype=np.float32,
+      rule = 'singleFile'
+    dirTreeManager.saveDataContainerInTree(dcs, rule=rule, dtype=np.float32,
                                 overwrite=True, compress=True)
 
 if __name__=='__main__' :

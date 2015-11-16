@@ -17,12 +17,13 @@ import sys
 import datetime
 import subprocess as sub
 
-from data.dataContainer import dataContainer
-from data.timeArray import timeArray
-from data.loadHindcastStations import excludeNaNs,VALID_MIN
-from data.extractStation import *
+from crane.data import dataContainer
+from crane.data import timeArray
+from crane.data import loadHindcastStations
+from crane.data import extractStation
+from crane.physicalVariableDefs import addTracers
+from crane.files import buildPoints
 
-from files.buildPoints import BuildPoint
 
 #-------------------------------------------------------------------------------
 # Functions
@@ -52,14 +53,14 @@ def extractTransectForBPFile( bpFile, dataDir, varList, startTime, endTime, name
 
   return extractTransectForCoords( x, y, dataDir, varList, startTime, endTime,
                                    name, modelCoordSys )
-  
+
 #-------------------------------------------------------------------------------
 # Classes
 #-------------------------------------------------------------------------------
-class extractTransect(extractBase) :
+class extractTransect(extractStation.extractBase) :
   """A higher lever extraction object for transects"""
   def __init__(self, dataDir, fieldName, firstStack=1, modelCoordSys='spcs') :
-    extractBase.__init__(self,dataDir,fieldName,firstStack,modelCoordSys)
+    super(extractTransect, self).__init__(dataDir,fieldName,firstStack,modelCoordSys)
     self.extractor.setTransectMode()
     self.name = None
     
@@ -126,7 +127,7 @@ class extractTransect(extractBase) :
     z = np.vstack( tuple(z) ) # shape (npt,ntime)
     data = np.vstack( tuple(data) )
     # create dataContainer
-    ta = timeArray(t, 'simulation', self.extractor.startTime).asEpoch()
+    ta = timeArray.timeArray(t, 'simulation', self.extractor.startTime).asEpoch()
     # if suspected bad values, print warning
     hasBadValues = np.isnan(data).any() or np.isinf(data).any() or np.any( data < VALID_MIN )
     if hasBadValues :
@@ -137,7 +138,7 @@ class extractTransect(extractBase) :
     meta['bracket'] = 'A'
     meta['variable'] = var
     meta['dataType'] = 'transect'
-    dc = dataContainer('', ta, x,y,z, data, fieldNameList[var],
+    dc = dataContainer.dataContainer('', ta, x,y,z, data, fieldNameList[var],
                        coordSys='spcs', metaData=meta)
     return dc
 
@@ -227,6 +228,9 @@ def parseCommandLine() :
   if endStr is None and stackStr is None:
     parser.print_help()
     parser.error('endStr   undefined')
+  if not name :
+    parser.print_help()
+    parser.error('name  undefined')
   if not runTag :
     parser.print_help()
     parser.error('runTag  undefined')
@@ -266,7 +270,7 @@ def parseCommandLine() :
   dcs = []
   if readNetcdf :
     # use ncExtract instead of this module
-    from data.ncExtract import extractTransectForBPFile as extractTransectForBPFileNC
+    from crane.data.ncExtract import extractTransectForBPFile as extractTransectForBPFileNC
     dcs = extractTransectForBPFileNC(bpFile, dataDir, varList,
                                      startTime, endTime, name=name,
                                      modelCoordSys=modelCoordSys, stacks=stacks)
@@ -277,11 +281,10 @@ def parseCommandLine() :
 
   for dc in dcs :
     dc.setMetaData( 'tag', runTag )
-  import data.dirTreeManager as dtm
-  rule = dtm.oldTreeRule()
-  #rule = dtm.defaultTreeRule()
-  dtm.saveDataContainerInTree( dcs, path=outDir, rule=rule, dtype=np.float32,
-                               overwrite=True, compress=True, digits=digits )
+  import crane.data.dirTreeManager as dtm
+  rule = 'singleFile'
+  dtm.saveDataContainerInTree( dcs, rootPath=outDir, dtype=np.float32, overwrite=True, compress=True,
+                               digits=digits, rule=rule )
 
 if __name__=='__main__' :
   parseCommandLine()

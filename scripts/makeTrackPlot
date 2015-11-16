@@ -1,0 +1,188 @@
+#!/usr/bin/env python
+"""
+A script for generating track time series plots
+
+Example:
+
+python makeTrackPlot.py  -r run29 -o run29/images/track/ run29/data/track/AUV46_salt_trck_2012-05-04_2012-05-04.nc
+
+Tuomas Karna 2012-11-28
+"""
+import numpy as np
+import datetime
+import sys
+from optparse import OptionParser
+
+from crane.data import dataContainer
+
+from crane.physicalVariableDefs import VARS
+from crane.physicalVariableDefs import UNITS
+from crane.utility import createDirectory
+from crane.utility import saveFigure
+from crane.utility import parseTimeStr
+from crane.plotting import trackPlot
+import crane.plotting.colormap
+
+#-------------------------------------------------------------------------------
+# Main routine
+#-------------------------------------------------------------------------------
+
+def plotTrack( userRunTag, ncfiles, imgDir, fPrefix='trck',filetype='png',
+               startTime=None, endTime=None, userClim={}, cmapStr=None, 
+               normalize=None, diff=False, userDiffClim={} ) :
+
+  imgDir = createDirectory(imgDir)
+  cmap = plt.get_cmap(cmapStr)
+
+  # logScale flag
+  logScaleVars = ['kine','vdff']
+  # color range
+  clim = { 'salt':[0,35],
+           'temp':[5,20],
+           'kine':[-6,-0.5],
+           'vdff':[-6,-0.5],
+           'hvel':[-3.0,3.0],
+           'sed' :[0, 1],
+           'NTU' :[0, 1],}
+  clim.update( userClim )
+  nContours = 15
+  cmap = cmap_discretize(cmap, nContours)
+
+  # color range for differences 
+  diffClim = { 'salt':[-5,5], 
+             }
+  diffClim.update( userDiffClim )
+
+  dcs = []
+  for f in ncfiles :
+    dc = dataContainer.dataContainer.loadFromNetCDF(f)
+    if normalize:
+      dc.data = dc.data / dc.data.max()
+    dcs.append(dc)
+
+  if startTime or endTime :
+    # restrict time window based on the given start/end time
+    if not startTime :
+      startTime = dcs[0].time.getDatetime(0)
+    if not endTime :
+      endTime = dcs[0].time.getDatetime(-1)
+    for i in range(len(dcs)) :
+      dcs[i] = dcs[i].timeWindow( startTime, endTime, includeEnd=True )
+
+  dia = trackPlot.stackTrackPlotDC(ylabel='depth below surface',xlabel='',cmap=cmap, plotheight=3.2)
+
+  for j,dc in enumerate(dcs) :
+    for i in range(dc.data.shape[1]) :
+      dci = dc.extractField(i)
+      var = dci.fieldNames[0]
+      plotID = str(j)+'-'+str(i)
+      dia.addPlot( plotID, clabel=VARS.get(var,var),
+                   clim=clim.get(var,None), unit=UNITS.get(var,'-') )
+      dia.addSample(plotID, dci)
+      trackTitle = dci.getMetaData('location')
+      runTag = userRunTag if userRunTag else dci.getMetaData('tag')
+      titleStr = ' '.join( [trackTitle,runTag] )
+      dia.addTitle( titleStr, tag=plotID )
+  dia.showColorBar( )
+
+  # plot difference of two tracks
+  if diff :
+    diffDC = dcs[0].copy()
+    diffDC.data = dcs[0].data - dcs[1].data
+    var = dci.fieldNames[0]
+    plotID = 'diff'
+    dia.addPlot( plotID, clabel=VARS.get(var,var),
+                 clim=diffClim.get(var,None), unit=UNITS.get(var,'-') )
+    dia.addSample( plotID, diffDC, cmap='RdBu')
+    runTag = userRunTag if userRunTag else dci.getMetaData('tag')
+    titleStr = ' '.join( [trackTitle,runTag,'diff'] )
+    dia.addTitle( titleStr, tag=plotID )
+
+# save to disk
+  varStr = '-'.join(list(set( dc.getMetaData('variable') for dc in dcs )))
+  tagStr = '-'.join(list(set( dc.getMetaData('tag') for dc in dcs )))
+  dateStr = dcs[0].time.getDatetime(0).strftime( '%Y-%m-%d' )
+  file = '_'.join([fPrefix,trackTitle,tagStr,varStr,dateStr])
+  saveFigure( imgDir,file,filetype,verbose=True, dpi=100 )
+  plt.close()
+
+def parseCommandLine() :
+  usage = ('Usage: %prog -o [path] -r [runID] trackFile1 trackFile2 ...\n')
+
+  parser = OptionParser(usage=usage)
+  parser.add_option('-s', '--start', action='store', type='string',
+                      dest='startTime', help='Date to start processing (Default: start of data)')
+  parser.add_option('-e', '--end', action='store', type='string',
+                      dest='endTime', help='Date to end processing (Default: end of data)')
+  parser.add_option('-o', '--imageDirectory', action='store', type='string',
+                      dest='imgDir', help='directory where generated images are stored')
+  parser.add_option('-r', '--runID', action='store', type='string',
+                      dest='runTag', help='Run ID, added in the plot title, e.g. run29 or "selfe k-e" (Default: tag stored in trackFile)')
+  parser.add_option('-c', '--clim', action='store', type='string',
+                      dest='climStr', help='Custom limits for color bar, a string like salt:0:30,kine:-6:-2')
+  parser.add_option('-M', '--colormap', action='store', type='string',
+                      dest='cmapStr', help='name of matplotlib colormap to use')
+  parser.add_option('-n', '--normalize', action='store', type='string',
+                      dest='normalize', help='normalize data for plotting',
+                      default=None)
+  parser.add_option('-D', '--diff', action='store_true', 
+                      dest='diff', help='plot difference of two transects (Default: %default)', default=False)
+  parser.add_option('-d', '--diffClim', action='store', type='string',
+                      dest='diffClimStr', help='Custom limits for color bar if plotting differences, a string like salt:-1:1,kine:-0.5:-0.5')
+
+  (options, args) = parser.parse_args()
+
+  startTime = options.startTime
+  endTime = options.endTime
+  imgDir = options.imgDir
+  runTag = options.runTag
+  climStr = options.climStr
+  cmapStr = options.cmapStr
+  normalize = options.normalize
+  diff = options.diff
+  diffClimStr = options.diffClimStr
+
+  if imgDir == None:
+    parser.print_help()
+    parser.error('imgDir undefined')
+  if len(args) < 1 :
+    parser.print_help()
+    parser.error('trackFile missing')
+  if len(args) != 2 and diff :
+    print args
+    parser.print_help()
+    parser.error('can only take difference of two transects')
+  if diffClimStr and not diff :
+    parser.print_help()
+    parser.error('can not specify colormap for differences. \nRequires -D to make difference transect plot.') 
+
+  if startTime :
+    startTime = parseTimeStr( startTime )
+  if endTime :
+    endTime = parseTimeStr( endTime )
+
+  clim = {}
+  if climStr :
+    for entry in climStr.split(',') :
+      var,vmin,vmax = entry.split(':')
+      clim[var] = [float(vmin),float(vmax)]
+
+  diffClim = {}
+  if diffClimStr :
+    for entry in diffClimStr.split(',') :
+      var,vmin,vmax = entry.split(':')
+      diffClim[var] = [float(vmin),float(vmax)]
+
+  netCDFFiles = args
+
+  if diff :
+    print ' - plotting difference of transects'
+  if diffClim :
+    print ' - using difference color limits',diffClim
+
+  plotTrack( runTag, netCDFFiles, imgDir, fPrefix='trck',filetype='png',
+             startTime=startTime, endTime=endTime, userClim=clim, cmapStr=cmapStr,
+             normalize=normalize, diff=diff, userDiffClim=diffClim )
+
+if __name__=='__main__' :
+  parseCommandLine()

@@ -2,16 +2,17 @@
 
 """
 A class for plotting min/max values along the estuary.
-Uses matplotlib.
-
 
 Tuomas Karna 2012-09-25
 """
 import numpy as np
-from data.dataContainer import dataContainer
-from plotting.plotBase import *
+# TODO import only modules
+from crane.data.dataContainer import dataContainer
+from crane.plotting import plotBase
+from crane import plt
 
 # class that takes a list of station names and distance coordinate, and time series
+# TODO inherit from plotBase?
 class stationExtremaPlot(object) :
   def __init__(self, fieldName, stationCoords, unit='', **defArgs) :
     """Creates a new object for given stations and (along river) coordinates
@@ -177,7 +178,7 @@ class stationExtremaPlotDC(stationExtremaPlot) :
 
 if __name__=='__main__':
 
-  from data.timeArray import *
+  from crane.data import timeArray
   from datetime import datetime
 
   ### examples with numpy array inputs
@@ -185,7 +186,7 @@ if __name__=='__main__':
   startTime = datetime(2010,1,12,0,0,0)
   endTime = datetime(2010,2,13,3,30,0)
   dt = 900.0
-  ta = generateSimulationTimeArray(startTime,endTime,dt).asEpoch()
+  ta = timeArray.generateSimulationTimeArray(startTime,endTime,dt).asEpoch()
   t = ta.array
   
   T = 44714

@@ -1,0 +1,13 @@
+#!/usr/bin/env python
+"""
+Plots volume/tracer mass conservation for each region in flux partitioning.
+Also plots fluxes and fluxes corrected to match volume changes.
+
+Tuomas Karna 2014-10-29
+"""
+
+# just a wrapper to parseCommandLine method
+from crane.data import testFluxConservation
+
+if __name__=='__main__' :
+  testFluxConservation.parseCommandLine()

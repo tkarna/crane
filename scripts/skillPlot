@@ -1,0 +1,473 @@
+#!/usr/bin/env python
+"""
+Main plotting script for skill assessment products.
+
+Examples:
+
+Compare run13_29 and db22, save images to tmp/images
+./skillPlot -s 2011-5-14 -e 2011-7-20 -o tmp/images db22 run13_29
+
+Tuomas Karna 2012-10-22
+"""
+
+import os
+import numpy as np
+import datetime
+import sys
+from optparse import OptionParser
+
+import crane.data.stationCollection as StationCollection
+from crane.data.loadHindcastStations import readDateRange
+from crane.files.stationFile import StationFile
+
+from crane.plotting.plot import Plots
+from crane.utility import createDirectory
+from crane.physicalVariableDefs import tracerModelObsVariables
+
+#-------------------------------------------------------------------------------
+# Main routine
+#-------------------------------------------------------------------------------
+def skillPlots(startTime, endTime, runTags, imgDir, stationFile=None, onlineObs=False,
+               tracerModel=None, numTracers=None, noProfiles=False) :
+
+  imgDir = createDirectory(imgDir)
+
+  # limits for time series plots
+  ts_ylim = {'elev':[-2.0,10.0], 'temp':[4,20], 'salt':[-0.45,35], 'strat':[-0.45,30],
+             'turbidity':[], 'trcr_1': [], 'trcr_2':[], 'trcr_3':[], 'trcr_4':[]}
+  ts_err_ylim = {'elev':[-0.6,0.6], 'temp':[], 'salt':[], 'turbidity':[], 'trcr_1':[],
+                 'trcr_2':[], 'trcr_3':[], 'trcr_4':[]}
+  # limits for error histograms
+  eh_lim = {'elev':[-2.0,2.0], 'temp':[-8,8], 'salt':[-32,32]}
+  eh_bins = 60
+  eh_shadelim = {'elev':[-0.3,0.3], 'temp':[], 'salt':[]}
+  # limits for spectral plot
+  esp_ylim = [0.0, 0.2]
+  # limits for harmonic analysis amplitude
+  haErr_ylim = [-0.2,0.2]
+  # color limits for vertical profiles
+  vprof_clim = {'temp':[4,20], 'salt':[0,35], 'hvel':[-2.5,2.5],
+                'kine':[-6,-0.5], 'tdff':[-6,-0.5], 'vdff':[-6,-0.5] }
+  sta01_dep_lim = [-23, 0]
+
+  #-------------------------------------------------------------------------------
+  # Part I  : set station information
+  #-------------------------------------------------------------------------------
+
+  # get "all" station names and coordinates
+  sta = StationFile()
+  sta.readFileFromDisk(stationFile)
+  stationNames = sta.stations.keys()
+  stationXY = sta.stations
+  stationX = dict( (s,stationXY[s][0]) for s in stationXY )
+
+  # all stations for elevation comparison
+  elevStations = [ 'hmndb', 'hmdo3', 'tpoin', 'skaw1', 'bvao3', 'lonw1', 'stho3', 'vanw1', 'saturn06', 'prto3', 'wilo3', 'bono3', 'neaw1', 'tokw1', 'wptw1', 'lapw1']
+  presStations = [ 'tansy', 'woody', 'cbnc3', 'marsh', 'saturn01', 'saturn04', 'grays','eliot' ]
+  # ~distance from mouth
+  elevStationX = dict( (s, stationX[s]) for s in elevStations if s in stationX )
+
+  # filter for surface salinity stations
+  fNames = ['location','variable','msldepth']
+  tuples = [
+              ('saturn02', 'salt', '100'), # 100, 600, 1000, 1100, 1600, 2100, 3500
+              ('saturn03', 'salt', '240'), # 240, 820, 1300
+              ('saturn04', 'salt', '30'), # 30, 830, 860, 910
+              ('am169', 'salt', '260'), # 260, 1100, 1130, 1430
+              ('red26', 'salt', '330'), # 330, 750, 900
+              ('ogi01', 'salt', '80'), # 80 500 1100 5000
+              ('nh10', 'salt', '200'), # 200 1000 6000 7300
+             ]
+  surfSaltFilter = [ dict( (fNames[i],t[i]) for i in range(len(fNames)) )
+                     for t in tuples ]
+
+  # filter for bottom salinity stations
+  tuples = [
+            ('saturn01', 'salt', '1950'), # 740, 1950
+            ('saturn02', 'salt', '3500'), # 100, 600, 1000, 1100, 1600, 2100, 3500
+            ('saturn03', 'salt', '1300'), # 240, 820, 1300
+            ('saturn04', 'salt', '910'), # 30, 830, 860, 910
+            ('saturn05', 'salt', None), # 250
+            ('saturn06', 'salt', None), # 50
+            ('saturn07', 'salt', ['60','100']), # 60 100 *
+            ('am169', 'salt', '1430'), # 260, 1100, 1130, 1430
+            ('red26', 'salt', '900'), # 330, 750, 900
+            ('tansy', 'salt', None), # 840
+            ('jetta', 'salt', None), # 640
+            ('sandi', 'salt', None), # 790
+            ('dsdma', 'salt', ['730', '820']), # 730 820 *
+            ('ncbn1', 'salt', '1200'), # 1200
+            ('coaof', 'salt', ['320', '210']), # 320 210 *
+            ('grays', 'salt', None), # 160
+            ('cbnc3', 'salt', ['650', '670', '900']), # 650 670 900 *
+            ('sveni', 'salt', None), # 1080
+            ('marsh', 'salt', None), # 540
+            ('eliot', 'salt', None), # 1390
+            ('yacht', 'salt', ['560', '590']), # 560 590 *
+            ('ogi01', 'salt', '5000'), # 80 500 1100 5000
+            ('nh10', 'salt', '6000'), # 200 1000 6000 7300
+            ('yb101', 'salt', ['410', '320']), # 410 320 *
+            ('seahs', 'salt', None), # 100
+            ('lwsck', 'salt', None), # 420
+            ('lght6', 'salt', None), # 290
+            ('lght2', 'salt', None), # 440
+            ('coaww', 'salt', None), # 440
+            ('chnkr', 'salt', None), # 0
+            ('chnke', 'salt', None), # 260
+            ('abpoa', 'salt', None), # 410
+           ]
+  botSaltFilter = [ dict( (fNames[i],t[i]) for i in range(len(fNames)) )
+                     for t in tuples ]
+
+  # ~distance from mouth
+  surfSaltStationX = dict( (d['location'], stationX[ d['location'] ]) for d in surfSaltFilter if d['location'] in stationX )
+  botSaltStationX = dict( (d['location'], stationX[ d['location'] ]) for d in botSaltFilter if d['location'] in stationX )
+
+  # filter for surface temperature stations
+  tuples = [
+            ('saturn02', 'temp', '100'), # 100, 600, 1000, 1100, 1600, 2100, 3500
+            ('saturn03', 'temp', '240'), # 240, 820, 1300
+            ('saturn04', 'temp', '30'), # 30, 830, 860, 910
+            ('am169', 'temp', '260'), # 260, 1100, 1130, 1430
+            ('red26', 'temp', '330'), # 330, 750, 900
+            ('ogi01', 'temp', '80'), # 80 500 1100 5000
+            ('nh10', 'temp', '200'), # 200 1000 6000 7300
+           ]
+  surfTempFilter = [ dict( (fNames[i],t[i]) for i in range(len(fNames)) )
+                     for t in tuples ]
+
+  # filter for bottom temperature stations
+  tuples = [
+            ('saturn01', 'temp', '1950'), # 740, 1950
+            ('saturn02', 'temp', '3500'), # 100, 600, 1000, 1100, 1600, 2100, 3500
+            ('saturn03', 'temp', '1300'), # 240, 820, 1300
+            ('saturn04', 'temp', '910'), # 30, 830, 860, 910
+            ('saturn05', 'temp', None), # 250
+            ('saturn06', 'temp', None), # 50
+            ('saturn07', 'temp', ['60','100']), # 60 100 *
+            ('am169', 'temp', '1430'), # 260, 1100, 1130, 1430
+            ('red26', 'temp', '900'), # 330, 750, 900
+            ('tansy', 'temp', None), # 840
+            ('yacht', 'temp', ['560', '590']), # 560 590 *
+            ('sveni', 'temp', None), # 1080
+            ('sandi', 'temp', None), # 790
+            ('ogi01', 'temp', '5000'), # 80 500 1100 5000
+            ('nh10', 'temp', '6000'), # 200 1000 6000 7300
+            ('ncbn1', 'temp', None), # 1200
+            ('marsh', 'temp', None), # 540
+            ('jetta', 'temp', None), # 640
+            ('eliot', 'temp', None), # 1390
+            ('dsdma', 'temp', ['730', '820']), # 730 820 *
+            ('cbnc3', 'temp', ['650', '670', '900']), # 650 670 900 *
+            ('yb101', 'temp', ['410', '320']), # 410 320 *
+            ('woody', 'temp', None), # 240
+            ('tpoin', 'temp', None), # 60
+            ('tnslh', 'temp', None), # 10
+            ('seahs', 'temp', None), # 100
+            ('nbd89', 'temp', None), # 60
+            ('nbd41', 'temp', None), # 60
+            ('nbd29', 'temp', None), # 60
+            ('nb243', 'temp', None), # 60
+            ('lwsck', 'temp', None), # 420
+            ('lonw1', 'temp', None), # 0
+            ('lght6', 'temp', None), # 290
+            ('lght2', 'temp', None), # 440
+            ('grays', 'temp', None), # 160
+            ('coaww', 'temp', None), # 440
+            ('coaof', 'temp', ['320', '210']), # 320 210 *
+            ('chnkr', 'temp', None), # 0
+            ('chnke', 'temp', None), # 260
+            ('abpoa', 'temp', None), # 410
+            ('bono3', 'temp', None), # 0
+           ]
+  botTempFilter = [ dict( (fNames[i],t[i]) for i in range(len(fNames)) )
+                     for t in tuples ]
+
+  # ~distance from mouth
+  surfTempStationX = dict( (d['location'], stationX[ d['location'] ]) for d in surfTempFilter if d['location'] in stationX )
+  botTempStationX = dict( (d['location'], stationX[ d['location'] ]) for d in botTempFilter if d['location'] in stationX )
+
+  # stratification stations
+  stratStations = [ 'abpoa', 'am169', 'bono3', 'chaba', 'chnke', 'chnkr',
+     'csbo3', 'dsdma', 'grays', 'hmndb', 'jetta', 'lght2', 'lght6', 'lonw1',
+     'nb243', 'nbd29', 'nbd41', 'nbd89', 'ncbn1', 'newb', 'nh10', 'ogi01',
+     'red26', 'sandi', 'saturn01', 'saturn02', 'saturn03', 'saturn04',
+     'saturn06', 'saturn07', 'seahs', 'stho3', 'tansy', 'tnslh', 'tpoin',
+     'vanw1', 'wilo3', 'yacht', 'yb101', ]
+
+  #-------------------------------------------------------------------------------
+  # Part II  : get observation data
+  #-------------------------------------------------------------------------------
+
+  # a collection for all the data
+  dataDir = 'data'
+  obsTag = 'obs'
+  sc = StationCollection.StationCollection( startTime, endTime, obsTag )
+  dataTypeToRead = 'timeseries' if noProfiles else None
+
+  obsColl = None
+  if onlineObs :
+    # define all variables to fetch from database
+    variables = ['elev', 'temp', 'salt', 'flux']
+    if tracerModel != None:
+      if tracerModel == 'all':
+        for varList in tracerModelObsVariables.keys():
+          variables += varList
+      elif tracerModel in tracerModelObsVariables:
+        variables += tracerModelObsVariables[tracerModel]
+      else:
+        raise Exception('Unknown tracer model:' + tracerModel)
+    # fetch observations
+    obsColl = StationCollection.fetchAvailableObservations(startTime,
+                                     endTime, obsTag=obsTag, variables=variables)
+    # fetch additional products
+    obsColl.fetchDischargeData()
+    obsColl.fetchTidalData()
+    obsColl.fetchCoastalUpwellingData()
+    # additional products
+    derColl = StationCollection.computeDerivedProducts( obsColl, [obsTag] )
+    obsColl.update( derColl )
+  elif os.path.isdir( os.path.join(obsTag,dataDir) ) :
+    obsColl = StationCollection.StationCollection.loadFromNetCDFCollection( obsTag, startTime, endTime,
+                                                                            obsTag, dataDir,
+                                                                            dataType=dataTypeToRead )
+  if obsColl :
+    print ' *** obs data *** '
+    for k in obsColl :
+      print k
+    # add to the main collection
+    sc.update( obsColl )
+
+  #-------------------------------------------------------------------------------
+  # Part III  : get model output
+  #-------------------------------------------------------------------------------
+
+  for runTag in runTags :
+    path = os.path.join(runTag,dataDir)
+    if os.path.isdir( path ) :
+      modColl = StationCollection.StationCollection.loadFromNetCDFCollection( runTag, startTime, endTime,
+                                                                              obsTag, dataDir,
+                                                                              dataType=dataTypeToRead)
+    else :
+      raise Exception( 'run data not found {0:s} {1:s}'.format( runTag, path ) )
+    print ' *** extracted model data *** '
+    for k in modColl :
+      print k
+    sc.update( modColl )
+
+  if len(sc.getModelTags()) == 0 :
+    raise Exception( 'no model data was found, '+str(runTags) )
+
+  print ' *** StationCollection *** '
+  print 'samples',len(sc)
+  print 'observation', sc.getObsTag()
+  print 'models', sc.getModelTags()
+
+  #-------------------------------------------------------------------------------
+  # Part IV : plot results
+  #-------------------------------------------------------------------------------
+  # populate filter msldepth values with min/max of the candidates
+  def fillFilterMSLDepth( sColl, filt, operation ) :
+    for d in filt : # d is dict with keys 'location','variable','msldepth'
+      if isinstance(d['msldepth'],list) :
+        # must choose one in list
+        candidates = d['msldepth']
+        # check which msldepth exists in collection
+        query = dict(d)
+        query.pop('msldepth') # ignore msldepth in query
+        keys = sColl.getKeys( [query] )
+        foundMSLDepth = [ k['msldepth'] for k in keys ]
+        # find overlapping values
+        foundMSLDepth = list( set(foundMSLDepth).intersection(set(candidates)) )
+        if len(foundMSLDepth) == 0 :
+          d['msldepth'] = None # no data sample matches this filter
+        else :
+          vals = [ int(s) for s in foundMSLDepth ]
+          # assign value with user-provided operation
+          d['msldepth'] = str(operation( vals ))
+    return filt
+  botTempFilter = fillFilterMSLDepth( sc, botTempFilter, min )
+  botSaltFilter = fillFilterMSLDepth( sc, botSaltFilter, min )
+
+  # conditions
+  pl = Plots(imgDir, sc )
+  pl.makeConditionPlot(xlim=[startTime,endTime])
+
+  # elevations for water level stations
+  data = sc.getSubset(variable='elev',location=elevStations)
+  pl = Plots(imgDir, data )
+  # taylor
+  pl.makeTaylorDiagramsVar()
+  # minmax plot
+  pl.makeStationExtremaPlot(stationCoords=elevStationX)
+  # time series stack plot
+  pl.makeTimeSeries( xlim=[startTime,endTime], ylim=ts_ylim, err_ylim=ts_err_ylim )
+  pl.makeTimeSeriesStack( elevStationX, xlim=[startTime,endTime], ylim=ts_ylim['elev'], plotError=True )
+  # error histogram stack plot
+  pl.makeErrorHistograms( plotMinMax=True, range=eh_lim['elev'], bins=eh_bins, shadedLim=eh_shadelim['elev'] )
+  pl.makeErrorHistogramStack( elevStationX, plotMinMax=True, range=eh_lim['elev'],
+                              bins=eh_bins, shadedLim=eh_shadelim['elev'] )
+  # error spectral plot
+  pl.makeErrorSpectralPlots()
+  pl.makeErrorSpectralStack( elevStationX, ylim=esp_ylim )
+  # harmonic analysis NOTE slow!!
+  pl.makeHarmonicAnalysisErrorPlots( elevStationX, amplim=haErr_ylim, phalim=[-180,180] )
+  pl.makeHarmonicAnalysisPlots( elevStationX )
+
+  # all salt
+  data = sc.getSubset(variable='salt')
+  pl = Plots(imgDir, data )
+  pl.makeTimeSeries( xlim=[startTime,endTime], ylim=ts_ylim, err_ylim=ts_err_ylim )
+  pl.makeErrorHistograms( plotMinMax=True, range=eh_lim['salt'], bins=eh_bins )
+
+  # surface salt
+  data = sc.getSubset(surfSaltFilter)
+  pl = Plots(imgDir, data )
+  pl.makeStationExtremaPlot(varPrefix='surface',stationCoords=surfSaltStationX)
+  pl.makeTaylorDiagramsVar(varPrefix='surface')
+  pl.makeTimeSeriesStack( surfSaltStationX, varPrefix='surface', xlim=[startTime,endTime], ylim=ts_ylim['salt'] )
+  pl.makeErrorHistogramStack( surfSaltStationX, varPrefix='surface', plotMinMax=True, range=eh_lim['salt'], bins=eh_bins )
+
+  # bottom salt
+  data = sc.getSubset(botSaltFilter)
+  pl = Plots(imgDir, data )
+  pl.makeStationExtremaPlot(varPrefix='bottom',stationCoords=botSaltStationX)
+  pl.makeTaylorDiagramsVar(varPrefix='bottom')
+  pl.makeTimeSeriesStack( botSaltStationX, varPrefix='bottom', xlim=[startTime,endTime], ylim=ts_ylim['salt'] )
+  pl.makeErrorHistogramStack( botSaltStationX, varPrefix='bottom', plotMinMax=True, range=eh_lim['salt'], bins=eh_bins )
+
+  # all temp
+  data = sc.getSubset(variable='temp').getSubset(exclude=True,location='saturn01',msldepth='0')
+  pl = Plots(imgDir, data )
+  pl.makeTimeSeries( xlim=[startTime,endTime], ylim=ts_ylim, err_ylim=ts_err_ylim )
+  pl.makeErrorHistograms( plotMinMax=True, range=eh_lim['temp'], bins=eh_bins )
+
+  # surface temperature
+  data = sc.getSubset(surfTempFilter)
+  pl = Plots(imgDir, data )
+  pl.makeStationExtremaPlot(varPrefix='surface',stationCoords=surfTempStationX)
+  pl.makeTaylorDiagramsVar(varPrefix='surface')
+  pl.makeTimeSeriesStack( surfTempStationX, varPrefix='surface', xlim=[startTime,endTime], ylim=ts_ylim['temp'] )
+  pl.makeErrorHistogramStack( surfTempStationX, varPrefix='surface', plotMinMax=True, range=eh_lim['temp'], bins=eh_bins )
+
+  # bottom temperature
+  data = sc.getSubset(botTempFilter)
+  pl = Plots(imgDir, data )
+  pl.makeStationExtremaPlot(varPrefix='bottom',stationCoords=botTempStationX)
+  pl.makeTaylorDiagramsVar(varPrefix='bottom')
+  pl.makeTimeSeriesStack( botTempStationX, varPrefix='bottom', xlim=[startTime,endTime], ylim=ts_ylim['temp'] )
+  pl.makeErrorHistogramStack( botTempStationX, varPrefix='bottom', plotMinMax=True, range=eh_lim['temp'], bins=eh_bins )
+
+  # sediment
+  data = sc.getSubset(variable='turbidity').getSubset(exclude=True,location='saturn01',msldepth='0')
+  pl = Plots(imgDir, data )
+  pl.makeTimeSeries( xlim=[startTime,endTime], ylim=ts_ylim, err_ylim=ts_err_ylim )
+
+  # NO3
+  data = sc.getSubset(variable='NO3')
+  pl = Plots(imgDir, data )
+  pl.makeTimeSeries( xlim=[startTime,endTime], ylim=ts_ylim, err_ylim=ts_err_ylim )
+  pl.makeTaylorDiagramsVar()
+
+  # oxygen
+  data = sc.getSubset(variable='oxy')
+  pl = Plots(imgDir, data )
+  pl.makeTimeSeries( xlim=[startTime,endTime], ylim=ts_ylim, err_ylim=ts_err_ylim )
+  pl.makeTaylorDiagramsVar()
+
+  # stratification
+  data = sc.getSubset( location=stratStations, variable='strat' )
+  pl = Plots(imgDir, data )
+  pl.makeTimeSeries( ylim=ts_ylim )
+
+  # salt intrusion length
+  data = sc.getSubset( dataType='sil' )
+  pl = Plots(imgDir, data )
+  pl.makeSaltIntrusion( )
+
+  # profiles
+  if not noProfiles :
+    pl = Plots(imgDir, sc )
+    pl.makeVertProfileTimeSeriesPlot( clim=vprof_clim )
+    pl.makeProfilerPlots( clim=vprof_clim, ylim=sta01_dep_lim, xlim=[startTime,endTime] )
+
+#-------------------------------------------------------------------------------
+# Parse commandline arguments
+#-------------------------------------------------------------------------------
+if __name__=='__main__' :
+
+  usage = ('Usage: %prog -s [start date YYYY-MM-DD] -e [end date YYYY-MM-DD] -o [path] -t [stationFile] runID1 runID2 ...\n')
+
+  parser = OptionParser(usage=usage)
+  parser.add_option('-s', '--start', action='store', type='string',
+                      dest='startStr', help='Date to start processing')
+  parser.add_option('-e', '--end', action='store', type='string',
+                      dest='endStr', help='Date to end processing')
+  parser.add_option('-o', '--imageDirectory', action='store', type='string',
+                      dest='imgDir', help='directory where generated images are stored')
+  parser.add_option('-t', '--stationFile', action='store', type='string',
+                      dest='stationFile', help='file that defines station coordinates')
+  parser.add_option('-N', '--onlineObservations', action='store_true',
+                    dest='onlineObs',
+                    help='Do not read observations from disk, fetch from database each time (default %default)',default=False)
+  parser.add_option('-T', '--tracerModel', action='store', type='string', dest='tracerModel',
+                     help='Enable extraction of tracers: sed, oxy, generic. Must '
+                         'supply number of tracers for \'sed\' and \'generic\' '
+                         'models via the -n switch', default=None)
+  parser.add_option('-n', '--numTracers', action='store', type='int', dest='numTracers',
+                    help='Number of tracers to support for \'sed\' and \'generic\' models',
+                    default=None)
+  parser.add_option('', '--no-profiles', action='store_true',
+                    dest='noProfiles',
+                    help='Skip plotting of profiles (default %default)',default=False)
+
+
+  (options, args) = parser.parse_args()
+
+  startStr = options.startStr
+  endStr = options.endStr
+  imgDir = options.imgDir
+  stationFile = options.stationFile
+  onlineObs = options.onlineObs
+  tracerModel = options.tracerModel
+  numTracers = options.numTracers
+  noProfiles = options.noProfiles
+
+  if imgDir == None:
+    parser.print_help()
+    parser.error('imgDir undefined')
+  if startStr == None:
+    parser.print_help()
+    parser.error('Start date undefined')
+  if endStr == None:
+    parser.print_help()
+    parser.error('End date undefined')
+
+  if tracerModel :
+    if not numTracers and tracerModel.split('.')[0] in ['sed','generic']:
+      parser.print_help()
+      parser.error('numTracers must be provided if sed or generic tracer models are used.')
+
+  runTags = args
+
+  startTime = datetime.datetime.strptime( startStr ,'%Y-%m-%d')
+  endTime = datetime.datetime.strptime( endStr ,'%Y-%m-%d')
+
+  print 'Parsed options:'
+  print ' - time range:',str(startTime),'->', str(endTime)
+  print ' - runTags',runTags
+  print ' - output dir',imgDir
+  if stationFile :
+    print ' - using stationFile',stationFile
+  if onlineObs :
+    print ' - observations fetched from database'
+  if tracerModel:
+    print ' - using tracer model ', tracerModel
+  if tracerModel and numTracers:
+    print ' - with tracers n=', numTracers
+  if noProfiles :
+    print ' - plotting of profiles disabled'
+
+  skillPlots(startTime, endTime, runTags, imgDir, stationFile, onlineObs,
+             tracerModel=tracerModel, numTracers=numTracers,
+             noProfiles=noProfiles)

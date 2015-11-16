@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+"""
+Extract transect data using the efficient SELFE extract_mod python module.
+
+Examples:
+
+# extract salt,hvel, -d data dir bp file, -n transect name string, -o output dir, -s -e time range
+extractSlab -d /home/tuomas/workspace/cmop/selfe/runs/channel_boxtest/outputs_dihv_spool10/ -v salt,hvel -n test -o tmp -s 2010-6-14 -e 2010-6-14 -z -4
+
+Tuomas Karna 2012-11-16
+"""
+
+# just a wrapper to parseCommandLine method
+from crane.data import extractSlab
+
+if __name__=='__main__' :
+  extractSlab.parseCommandLine()

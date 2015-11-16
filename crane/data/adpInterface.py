@@ -9,24 +9,24 @@ import numpy as np
 import os
 import sys
 import datetime
+import time as timeMod
 
-import data.netcdfCacheInterface as netcdfCacheInterface
-from data.netcdfCacheInterface import netcdfCacheReader as ncCacheReader
-from files.stationFile import StationFile
-from data.dataContainer import dataContainer
-from data.timeArray import *
-#-------------------------------------------------------------------------------
-# Constants
-#-------------------------------------------------------------------------------
-import pdb
+from crane.data import netcdfCacheInterface
+from crane.files import stationFile
+from crane.data import dataContainer
+from crane.data import timeArray
+from crane.data import dirTreeManager
+
 #-------------------------------------------------------------------------------
 # Classes
 #-------------------------------------------------------------------------------
-class netcdfCacheADPReader(ncCacheReader) :
+
+
+class netcdfCacheADPReader(netcdfCacheInterface.netcdfCacheReader) :
   """ Child object overrides getData method to read ADP data"""
 
   def __init__(self, o) :
-     ncCacheReader.__init__(self, o)
+     super(netcdfCacheADPReader, self).__init__(o)
 
   def getData(self, starttime, endtime) :
      if not self.db:
@@ -38,7 +38,8 @@ class netcdfCacheADPReader(ncCacheReader) :
      t, v, u = netcdfCacheInterface.getncdatastation(self.station, self.nc_offering, starttime, endtime, variables, quality='PD0') 
 
      if t.shape[0]==0:
-       raise Exception("Empty files found for %s - %s time range" % (time.gmtime(starttime), time.gmtime(endtime)))
+       raise Exception("Empty files found for %s - %s time range" % (timeMod.gmtime(starttime),
+                                                                     timeMod.gmtime(endtime)))
 
      # ambigous about following line, but is faster than a query to DB
      binsize = np.max(v['height'])
@@ -62,13 +63,13 @@ def getADPData(offering, sT, eT, var) :
   """
   s, d, b, i = offering.split('.')
   # convert datetime to epochtime with timeArray methods (safe timezone convert)
-  sT = datetimeToEpochTime( sT )
-  eT = datetimeToEpochTime( eT )
+  sT = timeArray.datetimeToEpochTime( sT )
+  eT = timeArray.datetimeToEpochTime( eT )
   off = {'location':s, 'msldepth':d, 'bracket':b, 'instrument':i, 'variable': var}
   ncreader = netcdfCacheADPReader( off )
   # Get data as 1D arrays 
   t, v, u, binsize = ncreader.getData(sT, eT)
-  sta = StationFile()
+  sta = stationFile.StationFile()
   x,y = sta.getLocation( ncreader.station )
   z = v['bindepth']
   # Reshape time, x, y, and data
@@ -85,7 +86,7 @@ def getADPData(offering, sT, eT, var) :
   goodIx = np.logical_not( np.all( np.isnan( data[:,0,:] ), axis=0 ) )
   data = data[:,:,goodIx]
   zv = zv[:,goodIx]
-  ta = timeArray(t[goodIx], 'epoch')
+  ta = timeArray.timeArray(t[goodIx], 'epoch')
   # Prepare metadata
   meta = {}
   meta['dataType'] =  'profile'
@@ -96,7 +97,7 @@ def getADPData(offering, sT, eT, var) :
   meta['variable'] = ncreader.var
   meta['tag'] = 'obs' 
 
-  return dataContainer( '', ta, xv, yv, zv, data, [var], coordSys=sta.coordSys, acceptNaNs=True, metaData=meta)
+  return dataContainer.dataContainer( '', ta, xv, yv, zv, data, [var], coordSys=sta.coordSys, acceptNaNs=True, metaData=meta)
 
 
 #-------------------------------------------------------------------------------
@@ -138,11 +139,9 @@ def parseCommandLine() :
 
   dc = getADPData( offering, sT, eT, var)
   dc.setMetaData( 'tag', runTag )
-  import data.dirTreeManager as dtm
-  rule = dtm.oldTreeRule()
-  #rule = dtm.defaultTreeRule()
-  dtm.saveDataContainerInTree( dc, path=outDir, rule=rule, dtype=np.float32,
-                               overwrite=True  )
+  rule = 'singleFile'
+  dirTreeManager.saveDataContainerInTree(dc, rootPath=outDir, rule=rule,
+                                         dtype=np.float32, overwrite=True)
 
 if __name__=='__main__' :
 

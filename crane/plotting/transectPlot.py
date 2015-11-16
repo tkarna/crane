@@ -7,15 +7,18 @@ Tuomas Karna 2012-11-16
 """
 
 import numpy as np
-from data.dataContainer import dataContainer
 import datetime
-from data.timeArray import *
-from plotting.plotBase import *
+
+from crane import plt
+from crane.data import timeArray
+from crane.plotting import plotBase
+from crane.utility import createDirectory
+from crane.utility import saveFigure
 
 STA_MIN_DIST = 800
 
 # class that takes the data (transect time series) and plots a snaphot (for certain time)
-class transectSnapshot(colorPlotBase) :
+class transectSnapshot(plotBase.colorPlotBase) :
   """transectSnapshot class"""
   def __init__(self, **defaultArgs) :
     # default plot options for all diagrams
@@ -31,7 +34,7 @@ class transectSnapshot(colorPlotBase) :
     self.logScale = defaultArgs.pop('logScale',False)
     if self.logScale :
       self.unit = 'log10('+self.unit+')'
-    colorPlotBase.__init__(self,**defaultArgs)
+    super(transectSnapshot, self).__init__(**defaultArgs)
     self.ax = None
     self.cax = None
 
@@ -174,8 +177,8 @@ def generateTransectFromDataContainer( dc, timeStamp, flipDirection=False ) :
   # TODO optimize
   if isinstance( timeStamp, datetime.datetime ) :
     # interpolate to correct time
-    timeStamp = datetimeToEpochTime( timeStamp )
-    newTime = timeArray( np.array( [timeStamp] ), 'epoch' )
+    timeStamp = timeArray.datetimeToEpochTime( timeStamp )
+    newTime = timeArray.timeArray( np.array( [timeStamp] ), 'epoch' )
     dc = dc.interpolateInTime( newTime, acceptNaNs=True )
     x = dc.x.flatten()
     y = dc.y.flatten()
@@ -311,7 +314,7 @@ class transectSnapshotDC(transectSnapshot) :
     # if close enough, just use x coordinate
     transectSnapshot.addStationMarker( self, xAlong, label, **kwargs )
 
-class stackTransectPlot(stackPlotBase) :
+class stackTransectPlot(plotBase.stackPlotBase) :
   """A class for stacking multiple transects in the same plot."""
 
   def addPlot(self, tag, **kwargs) :
@@ -319,7 +322,7 @@ class stackTransectPlot(stackPlotBase) :
     kw = dict(self.defArgs)
     kw.update(kwargs)
     plot = transectSnapshot(**kw)
-    stackPlotBase.addPlot(self,plot,tag)
+    super(stackTransectPlot, self).addPlot(plot,tag)
 
   def addSample( self, tag, xCoord, zCoord, variable, **kwargs ) :
     if not tag in self.tags :
@@ -423,7 +426,8 @@ if __name__ == '__main__' :
   dia.addTitle('stackTransectPlot example')
   plt.show()
 
-  d0 = dataContainer.loadFromNetCDF('~/workspace/cmop/projects/db29dev/transect/run76/data/transect/nchannel_salt_tran_2012-05-01_2012-05-19.nc')
+  from crane.data import dataContainer
+  d0 = dataContainer.dataContainer.loadFromNetCDF('~/workspace/cmop/projects/db29dev/transect/run76/data/transect/nchannel_salt_tran_2012-05-01_2012-05-19.nc')
   print d0
 
   fig = plt.figure(figsize=(15,5))

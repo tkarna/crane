@@ -15,12 +15,11 @@ import sys
 import datetime
 import subprocess as sub
 
-from data.dataContainer import dataContainer
-from data.timeArray import timeArray
-from data.loadHindcastStations import excludeNaNs,VALID_MIN
-from data.extractStation import *
-
-from files.buildPoints import BuildPoint
+from crane.data import dataContainer
+from crane.data import timeArray
+from crane.data import extractStation
+from crane.files import buildPoints
+from crane.physicalVariableDefs import addTracers
 
 #-------------------------------------------------------------------------------
 # Functions
@@ -44,10 +43,10 @@ def extractForDataContainer( dataDir, trackDC, var=None, name=None, bpFile=None)
   # Overwrite x,y coordinate if using alternative coordinate system (open channels) 
   if bpFile is not None:
     print 'Overwriting xy from buildpoint'
-    bp = BuildPoint()
-    bp.readFileFromDisk( bpFile )
+    bp = buildPoints.BuildPoint()
+    bp.readFileFromDisk(bpFile)
     x = bp.getX()
-    y = bp.getY()  
+    y = bp.getY()
 
   # expand scalar coordinates to time-dep track
   nx = max( max( len(x), len(y) ), len(z) )
@@ -67,10 +66,10 @@ def extractForDataContainer( dataDir, trackDC, var=None, name=None, bpFile=None)
 # Classes
 #------------------------------------------------------------------------------
 
-class extractTrack(extractBase) :
+class extractTrack(extractStation.extractBase) :
   """A higher lever extraction object for tracks"""
   def __init__(self, dataDir, fieldName, firstStack=1, modelCoordSys='spcs') :
-    extractBase.__init__(self,dataDir,fieldName,firstStack,modelCoordSys)
+    super(extractTrack, self).__init__(dataDir,fieldName,firstStack,modelCoordSys)
     self.extractor.setTrackMode()
     self.name = None
     self.extractor.readHeader(firstStack)
@@ -98,11 +97,11 @@ class extractTrack(extractBase) :
     var = self.fieldName
 
     # TODO remove bad values (nan mask?)
-    data[ data < VALID_MIN ] = np.nan
+    data[ data < extractStation.VALID_MIN ] = np.nan
     # TODO add support for removing/keeping dry elements
 
     # if suspected bad values, print warning
-    hasBadValues = np.isnan(data).any() or np.isinf(data).any() or np.any( data < VALID_MIN )
+    hasBadValues = np.isnan(data).any() or np.isinf(data).any() or np.any( data < extractStation.VALID_MIN )
     if hasBadValues :
       print 'Warning: bad values in', self.name
     meta = {}
@@ -111,31 +110,12 @@ class extractTrack(extractBase) :
     meta['instrument'] = 'model'
     meta['bracket'] = 'F' if self.zRelativeToSurf else 'A'
     meta['variable'] = var
-    dc = dataContainer('', self.time, x,y,z, data, fieldNameList[var], coordSys='spcs',metaData=meta,acceptNaNs=True)
+    dc = dataContainer.dataContainer('', self.time, x,y,z, data, fieldNameList[var], coordSys='spcs',metaData=meta,acceptNaNs=True)
     return dc
 
 #-------------------------------------------------------------------------------
 # Main: Commandline interface
 #-------------------------------------------------------------------------------
-def test() :
-  dataDir = '/home/tuomas/workspace/cmop/projects/turb_tests/warner/open_channel/run129/outputs/'
-  var = 'hvel'
-
-  x = np.linspace( 100, 9000, 100 )
-  y = 50*np.sin(x)+500
-  z = np.linspace( -8, -2, 100 )
-
-  from data.timeArray import timeArray, datetimeToEpochTime
-  startTime = datetime.datetime(2010,1,1,2,30,0)
-  endTime = datetime.datetime(2010,1,1,12,45,0)
-  t = np.linspace( datetimeToEpochTime( startTime ), datetimeToEpochTime( endTime ), 100 )
-  ta = timeArray( t, 'epoch' )
-
-  ee = extractTrack( dataDir, var )
-  ee.setTrack( 'snake',x,y,z,ta )
-  dc = ee.extract()
-
-  print dc
 
 def parseCommandLine() :
 
@@ -252,23 +232,23 @@ def parseCommandLine() :
   sys.stdout.flush()
 
 
-  import data.dirTreeManager as dtm
+  import crane.data.dirTreeManager as dtm
+  rule = 'singleFile'
   if readNetcdf :
-    from data.ncExtract import extractTrackForDataContainer as extractNetCDF
+    from crane.data.ncExtract import extractTrackForDataContainer as extractNetCDF
 
   if tracerModel == 'sed' :
-    trackDC = dataContainer.loadFromNetCDF( ncFile )
+    trackDC = dataContainer.dataContainer.loadFromNetCDF( ncFile )
     if readNetcdf :
       dc = extractNetCDF(dataDir, trackDC, 'trcr_1', name, stacks=stacks)
     else :
       dc = extractForDataContainer( dataDir, trackDC, 'sed_1', name, bpFile )
     dc.setMetaData( 'tag', runTag )
     dc.setMetaData( 'variable', 'sed_1' )
-    dc.fieldNames = ['sed_1'] 
-    rule = dtm.oldTreeRule()
-    dtm.saveDataContainerInTree( dc, path=outDir, rule=rule, dtype=np.float32,
-                                 overwrite=True  )      
-    # Combines sediment files into one 
+    dc.fieldNames = ['sed_1']
+    dtm.saveDataContainerInTree( dc, rootPath=outDir, rule=rule, dtype=np.float32,
+                                 overwrite=True  )
+    # Combines sediment files into one
     if numTracers > 1 :
       for sed_class in range(2, numTracers+1) : 
         if readNetcdf :
@@ -279,27 +259,22 @@ def parseCommandLine() :
         tmp.setMetaData( 'tag', runTag )
         tmp.setMetaData( 'variable', 'sed_%d' % sed_class)
         tmp.fieldNames = ['sed_%d' % sed_class] 
-        rule = dtm.oldTreeRule()
-              #rule = dtm.defaultTreeRule()
-        dtm.saveDataContainerInTree( tmp, path=outDir, rule=rule, dtype=np.float32,
+        dtm.saveDataContainerInTree( tmp, rootPath=outDir, rule=rule, dtype=np.float32,
                                      overwrite=True  )
     dc.setMetaData( 'tag', runTag )
     dc.setMetaData( 'variable', 'sed' )
     dc.fieldNames = ['sed'] 
-    rule = dtm.oldTreeRule()
-    dtm.saveDataContainerInTree( dc, path=outDir, rule=rule, dtype=np.float32,
+    dtm.saveDataContainerInTree( dc, rootPath=outDir, rule=rule, dtype=np.float32,
                                  overwrite=True  )
   else :
     for var in varList :
-      trackDC = dataContainer.loadFromNetCDF( ncFile )
+      trackDC = dataContainer.dataContainer.loadFromNetCDF( ncFile )
       if readNetcdf :
         dc = extractNetCDF( dataDir, trackDC, var, name, bpFile, stacks=stacks)
       else:
         dc = extractForDataContainer( dataDir, trackDC, var, name, bpFile )
       dc.setMetaData( 'tag', runTag )
-      rule = dtm.oldTreeRule()
-      #rule = dtm.defaultTreeRule()
-      dtm.saveDataContainerInTree( dc, path=outDir, rule=rule, dtype=np.float32,
+      dtm.saveDataContainerInTree( dc, rootPath=outDir, rule=rule, dtype=np.float32,
                                   overwrite=True  )
 
 if __name__=='__main__' :

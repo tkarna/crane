@@ -7,12 +7,11 @@ Tuomas Karna 2012-11-27
 """
 
 import numpy as np
-from data.meshContainer import meshContainer
 import datetime
-from data.timeArray import *
-from plotting.plotBase import *
+from crane.data import timeArray
+from crane.plotting import plotBase
 import matplotlib.tri as tri
-from data.coordSys import *
+from crane.data import coordSys as coordSysModule
 
 def generateTriangulation(x,y,connectivity):
     """Return a Triangulation from a connectivity array"""
@@ -58,7 +57,7 @@ class latlonTransformer(object) :
     self.flipXCoord = flipXCoord
 
   def transform(self, x,y) :
-    newX, newY = spcs2lonlat(x, y)
+    newX, newY = coordSysModule.spcs2lonlat(x, y)
     if self.flipXCoord:
         newX *= -1.0
     return newX*self.scale, newY*self.scale
@@ -71,13 +70,13 @@ class utmTransformer(object) :
     self.scale = scale
 
   def transform(self, x,y) :
-    newX, newY = spcs2utm(x, y)
+    newX, newY = coordSysModule.spcs2utm(x, y)
     return newX*self.scale, newY*self.scale
 
 unitTransform = coordTransformer(0.0, 0.0, 1.0)
 
 # class that takes the data (slab time series) and plots a snaphot (for certain time)
-class slabSnapshot(colorPlotBase) :
+class slabSnapshot(plotBase.colorPlotBase) :
   """slabSnapshot histogram class"""
   def __init__(self, **defaultArgs) :
     # default plot options for all diagrams
@@ -121,7 +120,7 @@ class slabSnapshot(colorPlotBase) :
     if self.logScale :
       self.unit = 'log10('+self.unit+')'
 
-    colorPlotBase.__init__(self,**defaultArgs)
+    super(slabSnapshot, self).__init__(**defaultArgs)
     self.ax = None
     self.cax = None
     self.coordTransformer = None
@@ -312,8 +311,8 @@ def generateSlabFromMeshContainer( mc, timeStamp ) :
   """
   if isinstance( timeStamp, datetime.datetime ) :
     # interpolate to correct time
-    timeStamp = datetimeToEpochTime( timeStamp )
-    newTime = timeArray( np.array( [timeStamp] ), 'epoch' )
+    t_epoch = timeArray.datetimeToEpochTime( timeStamp )
+    newTime = timeArray.timeArray( np.array( [t_epoch] ), 'epoch' )
     mc = mc.interpolateInTime( newTime, acceptNaNs=True )
     x = mc.x.flatten()
     y = mc.y.flatten()
@@ -360,7 +359,7 @@ class slabSnapshotDC(slabSnapshot) :
     titleStr = kwargs.pop('title',titleStr)
     self.updateTitle(titleStr)
 
-class stackSlabPlot(stackPlotBase) :
+class stackSlabPlot(plotBase.stackPlotBase) :
   """A class for stacking multiple slabs in the same plot."""
 
   def addPlot(self, tag, **kwargs) :
@@ -368,7 +367,7 @@ class stackSlabPlot(stackPlotBase) :
     kw = dict(self.defArgs)
     kw.update(kwargs)
     plot = slabSnapshot(**kw)
-    stackPlotBase.addPlot(self,plot,tag)
+    super(stackSlabPlot, self).addPlot(plot, tag)
 
   def addSample( self, tag, tri, variable, **kwargs ) :
     if not tag in self.tags :
@@ -445,6 +444,7 @@ class stackSlabPlotDC(stackSlabPlot) :
 
 
 if __name__ == '__main__' :
+  from crane import plt
   # generate dummy data
   # First create the x and y coordinates of the points.
   n_angles = 36
@@ -478,7 +478,8 @@ if __name__ == '__main__' :
   plt.show()
 
   # example with meshContainer
-  d0 =  meshContainer.loadFromNetCDF('/home/tuomas/workspace/cmop/utils/processing/data/tmp/test_hvel_400_2010-06-14_2010-06-15.nc')
+  from crane.data import meshContainer
+  d0 =  meshContainer.meshContainer.loadFromNetCDF('/home/tuomas/workspace/cmop/utils/processing/data/tmp/test_hvel_400_2010-06-14_2010-06-15.nc')
   d0 = d0.cropGrid( [4000,1e5,200,1e5] )
   print d0
   print d0.x.shape, d0.y.shape, d0.connectivity.shape, d0.data[:,0,-1].shape

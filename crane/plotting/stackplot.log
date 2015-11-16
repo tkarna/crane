@@ -1,0 +1,11 @@
+C:101, 0: Old-style class defined. (old-style-class)
+E:114,21: Undefined variable 'todate' (undefined-variable)
+E:320,19: Undefined variable 'getvalidscatterargs' (undefined-variable)
+E:324,13: Undefined variable 'scattermap' (undefined-variable)
+E:331,19: Undefined variable 'getvalidscatterargs' (undefined-variable)
+E:336,13: Undefined variable 'scatter3' (undefined-variable)
+E:344,19: Undefined variable 'getvalidvlinesargs' (undefined-variable)
+E:350,19: Undefined variable 'getvalidfillargs' (undefined-variable)
+E:438,14: Undefined variable 'colorbarhelper' (undefined-variable)
+E:456,14: Undefined variable 'colorbarhelper' (undefined-variable)
+|undefined-variable     |11          |

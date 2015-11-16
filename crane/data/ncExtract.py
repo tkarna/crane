@@ -6,18 +6,21 @@ Tuomas Karna 2013-11-06
 import os
 import sys
 import traceback
-from data.gridUtils import *
-from netCDF4 import Dataset as NetCDFFile
-from glob import glob
+import datetime
 import time as timeMod
+from glob import glob
 
-from data.timeArray import *
-from data.dataContainer import *
-from data.meshContainer import meshContainer
-from data.selfeGridUtils import verticalCoordinates
-from files.buildPoints import BuildPoint
-from files.csvStationFile import csvStationFile,csvStationFileWithDepth
-from data.extractStation import fieldNameList, fieldNameToFilename
+import numpy as np
+from netCDF4 import Dataset as NetCDFFile
+
+from crane.data import timeArray
+from crane.data import dataContainer
+from crane.data import gridUtils
+from crane.data import meshContainer
+from crane.data import selfeGridUtils
+from crane.files import buildPoints
+from crane.files import csvStationFile
+from crane import fieldNameList, fieldNameToFilename
 
 #-------------------------------------------------------------------------------
 # High-level functions
@@ -46,7 +49,7 @@ def extractTrackForDataContainer(dataDir, trackDC, var, name, bpFile=None,
   # Overwrite x,y coords if using alternative coordinate system (open channels)
   if bpFile is not None:
     print 'Overwriting xy from buildpoint'
-    bp = BuildPoint()
+    bp = buildPoints.BuildPoint()
     bp.readFileFromDisk( bpFile )
     x = bp.getX()
     y = bp.getY()
@@ -113,7 +116,7 @@ def extractTransectForBPFile(bpFile, dataDir, varList, startTime, endTime,
   """
   Extracts a transect defined in the bpFile and returns a dataContainer.
   """
-  bpObj = BuildPoint()
+  bpObj = buildPoints.BuildPoint()
   bpObj.readFileFromDisk(bpFile)
   x = bpObj.points[:,1]
   y = bpObj.points[:,2]
@@ -174,8 +177,7 @@ def extractForXYZ( dataDir, var, startTime, endTime, x, y, z=None,
   return dcs
 
 def extractForStations( dataDir, var, stationFile, startTime, endTime,
-                        profile=False, zRelToSurf=False,
-                        wholeDays=True, stacks=None, verbose=False) :
+                        profile=False, wholeDays=True, stacks=None, verbose=False) :
   """
   Extracts time series for given variable from stations defined in stationFile.
   """
@@ -184,7 +186,7 @@ def extractForStations( dataDir, var, stationFile, startTime, endTime,
     raise Exception('File does not exist: '+stationFile)
 
   if profile:
-    csvReader = csvStationFile()
+    csvReader = csvStationFile.csvStationFile()
     csvReader.readFromFile(stationFile)
     tuples = csvReader.getTuples() # all entries (loc,x,y)
     stationNames = [ t[0] for t in tuples ]
@@ -195,12 +197,11 @@ def extractForStations( dataDir, var, stationFile, startTime, endTime,
     for i,s in enumerate(stationNames) :
       print s,x[i],y[i]
     return extractForXYZ(dataDir, var, startTime, endTime, x, y, z,
-                         stationNames, profile, zRelToSurf,
-                         wholeDays=wholeDays, stacks=stacks,
-                         verbose=verbose)
+                         stationNames, profile=profile, wholeDays=wholeDays,
+                         stacks=stacks, verbose=verbose)
 
   # not profile, depths defined in stationFile
-  csvReader = csvStationFileWithDepth()
+  csvReader = csvStationFile.csvStationFileWithDepth()
   csvReader.readFromFile(stationFile)
   tuples = csvReader.getTuples() # all entries (loc,x,y,z,zType,var)
   stationNames = [ t[0] for t in tuples ]
@@ -252,7 +253,7 @@ def extractForOfferings( dataDir, var, offerings, startTime, endTime,
   """
 
   # read station file
-  staReader = csvStationFile()
+  staReader = csvStationFile.csvStationFile()
   staReader.readFromFile(stationFile)
 
   # screen possible duplicates in the offerings (e.g. instrument can be ignored)
@@ -353,13 +354,6 @@ class selfeNCFile(object) :
     self.verbose = verbose
     self.headerIsRead = False
 
-  def __delete__(self) :
-    if self.verbose :
-      print 'closing',self.filenamefull
-    if self.ncfile != None :
-      self.ncfile.close()
-      self.variables = None
-
   def readHeader(self, meshSearchObj=None) :
     """
     Reads header of the netcdf file and prepares data structures.
@@ -455,22 +449,23 @@ class selfeNCFile(object) :
       h0 = 0.01 # bug in old combine version: h0 missing
 
     # init vCoords object
-    self.vCoords = verticalCoordinates(self.nVert, nz, h_s, h_c, ztot=zz,
-                                       sigma=sigma, cs=Cs, h0=h0)
+    self.vCoords = selfeGridUtils.verticalCoordinates(self.nVert, nz, h_s, h_c,
+                                                      ztot=zz, sigma=sigma, cs=Cs,
+                                                      h0=h0)
 
     # construct mesh search object
     if meshSearchObj != None :
       self.meshSearch2d = meshSearchObj
     else :
-      self.meshSearch2d = meshSearch2d( self.nodeX, self.nodeY,
-                                        self.faceNodes, self.edgeNodes )
+      self.meshSearch2d = gridUtils.meshSearch2d( self.nodeX, self.nodeY,
+                                                  self.faceNodes, self.edgeNodes )
     self.headerIsRead = True
 
   def getTime( self ) :
     """Returns time stamps from given netCDF file in epoch format."""
     startTime = ' '.join(self.ncfile.variables['time'].base_date.split()[2:4])
     startTime = datetime.datetime.strptime( startTime, '%Y-%m-%d %H:%M:%S' )
-    time = simulationToEpochTime( self.ncfile.variables['time'][:], startTime )
+    time = timeArray.simulationToEpochTime( self.ncfile.variables['time'][:], startTime )
     return time
 
   def getStacks( self, startTime, endTime, wholeDays=False ) :
@@ -533,7 +528,7 @@ class selfeExtractBase(object) :
     self.path = path
     self.varStr = var
     self.externalMeshSeachObj = meshSearchObj
-    if fileTypeStr == None :
+    if fileTypeStr is None :
       try :
         self.fileName = fieldNameToFilename[var]
         self.fileTypeStr = self.fileName.split('.')[1]
@@ -567,8 +562,8 @@ class selfeExtractBase(object) :
   def generateFileName(self, iStack=None, fileName=None) :
     """Returns full path to the netcdf file for iStack.
     If iStack==None, returns a pattern with '*' as a wildcard."""
-    if fileName == None : fileName = self.fileName
-    stackStr = '*' if iStack == None else '{0:d}'.format(iStack) 
+    if fileName is None : fileName = self.fileName
+    stackStr = '*' if iStack is None else '{0:d}'.format(iStack) 
     fname = '{stack:s}_{typeStr:s}.nc'.format(
                         typeStr=fileName,stack=stackStr )
     return os.path.join(self.path,fname)
@@ -576,7 +571,7 @@ class selfeExtractBase(object) :
   def getNCFile( self, iStack=None, fileName=None ) :
     """Opens netcdf file corresponding to the given stack number.
     If no stack number is given opens first matching file."""
-    if fileName == None : fileName = self.fileName
+    if fileName is None : fileName = self.fileName
     f = self.generateFileName(iStack, fileName)
     if iStack==None :
       # try to find a file that matches file name pattern
@@ -626,12 +621,12 @@ class selfeExtractBase(object) :
       elevfile = self.getNCFile(iStack,fileName='elev.61')
 
     if horzInterp==None :
-      horzInterp = horizontalInterpolator(self.dataFile.meshSearch2d,
-                                          x,y,stationNames)
+      horzInterp = gridUtils.horizontalInterpolator(self.dataFile.meshSearch2d,
+                                                    x,y,stationNames)
     nodesToRead = horzInterp.getParentNodes()
     parentElems = horzInterp.parentElems
     nodesToReadData = horzInterp.getParentNodes(self.dataFile.discrType)
-    
+
     time = ncfile.getTime()
     nTime = len(time)
 
@@ -705,9 +700,9 @@ class selfeExtractBase(object) :
     """
 
     # create interpolator object for recycling
-    
-    horzInterp = horizontalInterpolator(self.dataFile.meshSearch2d,
-                                        x,y,stationNames)
+
+    horzInterp = gridUtils.horizontalInterpolator(self.dataFile.meshSearch2d,
+                                                  x,y,stationNames)
 
     time = []
     vals = []
@@ -765,7 +760,7 @@ class selfeExtractBase(object) :
     z_actual : array_like (nProfiles,nTime,)
         The z coordinate at which the interpolation actually took place
     """
-    vertInterp = verticalInterpolator(z,k,zRelToSurf)
+    vertInterp = gridUtils.verticalInterpolator(z,k,zRelToSurf)
     v, z_actual = vertInterp.evaluateArray(zcoords,vals)
     v = np.ma.masked_invalid(v)
     return v,z_actual
@@ -889,7 +884,7 @@ class selfeExtractBase(object) :
       nDataNodes = self.dataFile.nDataNodes # dataFile may have different nodes
       vals = np.ma.ones((nDataNodes,nTime))*np.nan
       zSlab = np.ma.ones((nDataNodes,nTime))*np.nan
-      if k == None and z == None :
+      if k is None and z is None :
         raise Exception('either k or z must be specified for 3D fields')
       # compute z coords for all time steps
       zDim = nVert-1 if self.dataFile.vertDiscrType == 'half' else nVert
@@ -917,7 +912,7 @@ class selfeExtractBase(object) :
       elif self.dataFile.discrType == 'edge' :
         dryEdges = self.dataFile.meshSearch2d.convertNodalValuesToEdges(dryNodes,np.min)
         dryDataNodes = dryEdges
-      alongSLevel = z == None
+      alongSLevel = z is None
       # do not read bottom value if data at half levels
       kOffset = 1 if self.dataFile.vertDiscrType == 'half' else 0
       if alongSLevel :
@@ -1049,8 +1044,8 @@ class selfeExtractBase(object) :
 
     # figure out correct stacks
     if stacks is None:
-        stacks = self.dataFile.getStacks(epochToDatetime(T0[0]),
-                                         epochToDatetime(T0[-1]),
+        stacks = self.dataFile.getStacks(timeArray.epochToDatetime(T0[0]),
+                                         timeArray.epochToDatetime(T0[-1]),
                                          wholeDays=False)
     # get profiles for all x,y locations (nPoints,nVert,nTime)
     time,vals,zcor,is3d = self.getVerticalProfileForStacks(stacks,varStr,X0,Y0)
@@ -1066,14 +1061,14 @@ class selfeExtractBase(object) :
     if time[0] > T[0] or time[-1] < T[-1] :
       print 'Extracted time range does not cover query range: cropping'
       if time[0] > T[0] :
-        print 'start',epochToDatetime(time[0]), '>', epochToDatetime(T[0])
+        print 'start',timeArray.epochToDatetime(time[0]), '>', timeArray.epochToDatetime(T[0])
       if time[-1] < T[-1] :
-        print 'end',epochToDatetime(time[-1]), '<', epochToDatetime(T[-1])
+        print 'end',timeArray.epochToDatetime(time[-1]), '<', timeArray.epochToDatetime(T[-1])
       goodTimeIx = np.logical_and( T >= time[0], T <= time[-1] )
       print goodTimeIx
       if not np.any(goodTimeIx):
-        print 'extracted time range:', epochToDatetime(time[0]), '->', epochToDatetime(time[0])
-        print 'query time range:', epochToDatetime(T[0]), '->', epochToDatetime(T[0])
+        print 'extracted time range:', timeArray.epochToDatetime(time[0]), '->', timeArray.epochToDatetime(time[0])
+        print 'query time range:', timeArray.epochToDatetime(T[0]), '->', timeArray.epochToDatetime(T[0])
         raise Exception('Time arrays do not overlap - cannot extract')
       X = X[goodTimeIx]
       Y = Y[goodTimeIx]
@@ -1191,7 +1186,7 @@ class selfeExtract(selfeExtractBase) :
       data = np.reshape( np.array(data[goodIx]), (1,1,-1) )
       t = np.array(time[goodIx])
 
-      ta = timeArray( t, 'epoch' )
+      ta = timeArray.timeArray( t, 'epoch' )
       meta = {}
       meta['location'] = stationNames[iSta]
       meta['instrument'] = 'model'
@@ -1209,7 +1204,7 @@ class selfeExtract(selfeExtractBase) :
       z = np.mean(actualZ[iSta,:])
       x = staX[iSta]
       y = staY[iSta]
-      dc = dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
+      dc = dataContainer.dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
                           coordSys='spcs',metaData=meta)
       dcs.append(dc)
     return dcs
@@ -1252,7 +1247,7 @@ class selfeExtract(selfeExtractBase) :
     # build dataContainer for each station
     dcs = []
     for iSta in range(len(staX)) :
-      staName = '' if stationNames == None else stationNames[iSta]
+      staName = '' if stationNames is None else stationNames[iSta]
       staStr = '{x:f} {y:f} {name:s}'.format(x=staX[iSta],y=staY[iSta],name=staName)
       # remove time steps with all bad values
       goodIxTime = np.logical_and( ~np.all( vals[iSta,:,:].mask, axis=0 ),
@@ -1280,7 +1275,7 @@ class selfeExtract(selfeExtractBase) :
         raise Exception('bad values remain: '+staStr)
       # to (nGoodVert,1,nTime)
       data = v[:,None,:]
-      ta = timeArray( np.array(t), 'epoch' )
+      ta = timeArray.timeArray( np.array(t), 'epoch' )
       # to (nGoodVert,nTime)
       nZ = z.shape[0]
       x = staX[iSta]*np.ones((nZ,))
@@ -1291,7 +1286,7 @@ class selfeExtract(selfeExtractBase) :
       meta['bracket'] = 'A'
       meta['variable'] = varStr
       meta['dataType'] = 'profile'
-      dc = dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
+      dc = dataContainer.dataContainer('', ta, x,y,z, data, fieldNameList.get(varStr,[varStr]),
                           coordSys='spcs',metaData=meta)
       dcs.append(dc)
     return dcs
@@ -1360,14 +1355,14 @@ class selfeExtract(selfeExtractBase) :
     data = data[:,None,:]
     
     # build dataContainer
-    ta = timeArray( time, 'epoch' )
+    ta = timeArray.timeArray( time, 'epoch' )
     meta = {}
     meta['location'] = transName
     meta['instrument'] = 'model'
     meta['bracket'] = 'A'
     meta['variable'] = varStr
     meta['dataType'] = 'transect'
-    dc = dataContainer('', ta, X,Y,Z, data, fieldNameList.get(varStr,[varStr]),
+    dc = dataContainer.dataContainer('', ta, X,Y,Z, data, fieldNameList.get(varStr,[varStr]),
                        coordSys='spcs', metaData=meta, acceptNaNs=True)
     return dc
 
@@ -1392,7 +1387,7 @@ class selfeExtract(selfeExtractBase) :
     XX,YY,ZZ,TT,actualZ,data = self.getXYZT(varStr, X, Y, Z, T,zRelToSurf, stacks)
 
     # create dataContainer
-    ta = timeArray(TT, 'epoch', acceptDuplicates=True)
+    ta = timeArray.timeArray(TT, 'epoch', acceptDuplicates=True)
     data = data[None,None,:]
     if not zRelToSurf :
       # export the actual z coordinate where data was extracted
@@ -1406,7 +1401,7 @@ class selfeExtract(selfeExtractBase) :
     meta['instrument'] = 'model'
     meta['bracket'] = 'F' if zRelToSurf else 'A'
     meta['variable'] = varStr
-    dc = dataContainer('', ta, XX[None,:],YY[None,:],z, data,
+    dc = dataContainer.dataContainer('', ta, XX[None,:],YY[None,:],z, data,
                        fieldNameList.get(varStr,[varStr]),
                        coordSys='spcs',metaData=meta,acceptNaNs=True)
 
@@ -1433,7 +1428,7 @@ class selfeExtract(selfeExtractBase) :
     if stacks is None:
         stacks = self.dataFile.getStacks(startTime,endTime,wholeDays=wholeDays)
     time,vals,zcoords = self.getSlabForStacks(stacks, varStr, z, k, zRelToSurf)
-    ta = timeArray( time, 'epoch' )
+    ta = timeArray.timeArray( time, 'epoch' )
     vals = vals.filled(np.nan)
     data = vals[:,None,:]
     zcoords = zcoords.filled(np.nan)
@@ -1458,7 +1453,7 @@ class selfeExtract(selfeExtractBase) :
     # make a special vcoords evaluator that reads elev.61 if necessary?
     # implement selfeNCFile class that reads header, comps vcoords, getsNodal data
     # selfeExtractBase has two files, dataFile and elevFile, latter always 63 file
-    
+
     # make meshContainer
     meta = {}
     meta['dataType'] = 'slab'
@@ -1470,7 +1465,7 @@ class selfeExtract(selfeExtractBase) :
     else :
       meta['bracket'] = 'F' if zRelToSurf else 'A'
       meta['msldepth'] = msldepth
-    mc = meshContainer('', ta, x,y,zArray, data, connectivity,
+    mc = meshContainer.meshContainer('', ta, x,y,zArray, data, connectivity,
                        fieldNameList.get(varStr,[varStr]),coordSys='spcs',
                        metaData=meta,)
     return mc

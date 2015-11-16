@@ -103,9 +103,9 @@ class tupleList( object ) :
     tl.addSample( ('dog','black',3) )
     tl.addSample( species='cat',color='gray' )
     """
-    if tup == None and not keywords :
+    if tup is None and not keywords :
       raise Exception('tuple or keywords must be given')
-    if tup == None :
+    if tup is None :
       tup = tuple([ keywords.get(k,None) for k in self.keywords])
     if len(tup) != len(self.keywords) :
       msg = 'Given tuple has incorrect length: %d != %d'%(len(tup),
@@ -130,7 +130,7 @@ class tupleList( object ) :
     In this case one keyword can be a list.
     Setting exclude=True negates the query.
     """
-    if query == None :
+    if query is None :
       # kwargs is a single dict, one value may be list
       nListArgs = sum( isinstance(v,list) for v in kwargs.values() )
       if nListArgs > 1 :

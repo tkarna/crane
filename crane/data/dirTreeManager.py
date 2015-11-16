@@ -23,9 +23,11 @@ import numpy as np
 import datetime
 from dateutil import rrule, relativedelta
 from glob import glob
+import traceback
+import sys
 
-from plotting.plotBase import createDirectory
-from data.netcdfIO import netcdfIO
+from crane.utility import createDirectory
+from crane.data import netcdfIO
 
 ruleAlias = {'singleFile': ['singleFile', 'old', ],
              'monthlyFile': ['monthlyFile', 'default', ],
@@ -64,7 +66,7 @@ def getDataContainer(rootPath=None, rule=None, dataType=None, tag=None,
         directory is used.
     rule : string or fileTree object, optional
         Specify which tree abstraction to use. Possible values are
-        'singleFileTree' or 'monthlyFileTree'. If unspecified, first
+        'singleFile' or 'monthlyFile'. If unspecified, first
         method that finds a matching file is used.
     dataType : string
         dataType of the dataContainer to read. Possible values are
@@ -78,7 +80,7 @@ def getDataContainer(rootPath=None, rule=None, dataType=None, tag=None,
     startTime : datetime, optional
     endTime : datetime, optional
         start and end times of the data. If the data set on disk is
-        longer, than the requested range, only the matching time steps 
+        longer, than the requested range, only the matching time steps
         are read. Saves time in case of long, large data sets.
     verbose : bool, optional
         Print information on stdin
@@ -86,7 +88,51 @@ def getDataContainer(rootPath=None, rule=None, dataType=None, tag=None,
     Returns
     -------
     dc : dataContainer or meshContainer
-        First data set that matches the query data. In case of meshed data
+        First data set that matches the query. In case of meshed data
+        returns a meshContainer object
+    """
+    return getAllDataContainers(rootPath, rule, dataType, tag, location,
+                                variable, startTime, endTime, msldepth,
+                                slevel, verbose)[0]
+
+
+def getAllDataContainers(rootPath=None, rule=None, dataType=None, tag=None,
+                         location=None, variable=None,
+                         startTime=None, endTime=None,
+                         msldepth=None, slevel=None, verbose=False):
+    """
+    Reads all matching dataContainers from file tree given the meta data.
+
+    Parameters
+    ----------
+    rootPath : string, optional
+        Set the root path of the file tree. By default the current
+        directory is used.
+    rule : string or fileTree object, optional
+        Specify which tree abstraction to use. Possible values are
+        'singleFile' or 'monthlyFile'. If unspecified, first
+        method that finds a matching file is used.
+    dataType : string
+        dataType of the dataContainer to read. Possible values are
+        'timeseries', 'profile', 'track', 'transect', 'slab', etc.
+    tag : string, optional
+    location : string, optional
+    variable : string, optional
+    msldepth : string, optional
+    slevel : string, optional
+        Meta data of the data to look for.
+    startTime : datetime, optional
+    endTime : datetime, optional
+        start and end times of the data. If the data set on disk is
+        longer, than the requested range, only the matching time steps
+        are read. Saves time in case of long, large data sets.
+    verbose : bool, optional
+        Print information on stdin
+
+    Returns
+    -------
+    dcs : list of dataContainer or meshContainer
+        All data sest that matche the query. In case of meshed data
         returns a meshContainer object
     """
     keys = ['dataType', 'tag', 'location', 'variable',
@@ -112,7 +158,7 @@ def getDataContainer(rootPath=None, rule=None, dataType=None, tag=None,
     dcList = tree.readFiles(**kwargs)
     if len(dcList) == 0:
         raise Exception('Reading data from tree failed: ' + argsStr)
-    return dcList[0]
+    return dcList
 
 
 def saveDataContainerInTree(dcs, rootPath=None, rule=None, dtype=np.float64,
@@ -128,7 +174,7 @@ def saveDataContainerInTree(dcs, rootPath=None, rule=None, dtype=np.float64,
         directory is used.
     rule : string or fileTree object, optional
         Specify which tree abstraction to use. Possible values are
-        'singleFileTree' or 'monthlyFileTree'. If unspecified, first
+        'singleFile' or 'monthlyFile'. If unspecified, first
         method that finds a matching file is used.
     dtype : numpy dtype, optional
         data type of the arrays to write to disk. If unspecified
@@ -207,7 +253,9 @@ class singleFileTree(fileTree):
                                var=variable, st=startStr, et=endStr)
         else:  # any other data type
             if slevel is None or slevel == '*':
-                dep = '0'
+                dep = '0' 
+                if slevel == '*':
+                    dep = '*'
             else:
                 dep = 's' + str(slevel)
             pattern = '{tag:s}/data/{typ:s}/{loc:s}_{var:s}_{dep:s}_{st:s}_{et:s}.nc'
@@ -241,8 +289,8 @@ class singleFileTree(fileTree):
         m['endTime'] = et
         m['rootPath'] = rootPath
         filename = self.generateFileName(**m)
-        netcdfIO(filename).saveDataContainer(dc, dtype, overwrite,
-                                             compress, digits)
+        netcdfIO.netcdfIO(filename).saveDataContainer(dc, dtype, overwrite,
+                                                      compress, digits)
 
     def findMatchingFiles(self, **kwargs):
         """Returns a list of all files that match the query."""
@@ -265,20 +313,22 @@ class singleFileTree(fileTree):
         rootPath = kwargs.get('rootPath')
         st = kwargs.get('startTime')
         et = kwargs.get('endTime')
+        dataType = kwargs.pop('dataType')
         files = self.findMatchingFiles(**kwargs)
         dcList = []
         for f in files:
             if os.path.isfile(f):
-                nc = netcdfIO(f)
+                nc = netcdfIO.netcdfIO(f)
                 try:
                     desc, ta = nc.readHeader(verbose=self.verbose)
                     if (st is not None and et is not None and not ta.overlaps(st, et)):
                         continue  # time out of requested range
-                    dc = nc.readToDataContainer(st, et, verbose=self.verbose)
+                    dc = nc.readToDataContainer(st, et, verbose=self.verbose, dataType=dataType)
                     dcList.append(dc)
                 except Exception as e:
                     print 'Error while reading file: {0:s}'.format(f)
                     print e
+                    traceback.print_exc(file=sys.stdout)
         return dcList
 
 
@@ -357,10 +407,10 @@ class monthlyFileTree(fileTree):
         return pathPattern
 
     def getMonthWindows(self, startTime, endTime):
-        """Returns an interator for time windows."""
+        """Returns a list of monthly time windows."""
         windows = []
-        for dt in rrule.rrule(rrule.MONTHLY, until=endTime,
-                              dtstart=datetime.datetime(startTime.year,startTime.month,1)):
+        dtstart = datetime.datetime(startTime.year, startTime.month, 1)
+        for dt in rrule.rrule(rrule.MONTHLY, until=endTime, dtstart=dtstart):
             windows.append((dt, dt+relativedelta.relativedelta(months=1)))
         return windows
 
@@ -389,10 +439,17 @@ class monthlyFileTree(fileTree):
             print 'saving to', fn
             createDirectory(os.path.split(fn)[0])
             # crop data dataContainer
-            cropped_dc = dc.timeWindow(win_start, win_end, includeEnd=False)
-            # save
-            netcdfIO(fn).saveDataContainer(cropped_dc, dtype, overwrite,
-                                           compress, digits)
+            try:
+                cropped_dc = dc.timeWindow(win_start, win_end, includeEnd=False)
+            except Exception as e:
+                # NOTE this should not happen as win_start/end come from dc
+                print 'cropping time window failed:'
+                print e
+                continue
+            #  save
+            netcdfIO.netcdfIO(fn).saveDataContainer(cropped_dc, dtype,
+                                                    overwrite, compress,
+                                                    digits)
 
     def getLocalFilename(self, filename, rootPath=None):
         """Removes base path from the file name"""
@@ -502,6 +559,7 @@ class monthlyFileTree(fileTree):
         """
         st = kwargs.get('startTime')
         et = kwargs.get('endTime')
+        dataType = kwargs.pop('dataType')
         rootPath = kwargs.get('rootPath')
         files = self.findMatchingFiles(**kwargs)
         samples = self.getAvailableSamples(files, rootPath)
@@ -517,7 +575,7 @@ class monthlyFileTree(fileTree):
             outputDC = None
             for f in sampleFiles:
                 if os.path.isfile(f):
-                    nc = netcdfIO(f)
+                    nc = netcdfIO.netcdfIO(f)
                     try:
                         desc, ta = nc.readHeader(verbose=self.verbose)
                         file_st = ta.getDatetime(0)
@@ -528,7 +586,7 @@ class monthlyFileTree(fileTree):
                         # skip file if its start time is greater than query end
                         if (et is not None and file_st > et):
                             continue
-                        dc = nc.readToDataContainer(st, et, verbose=self.verbose)
+                        dc = nc.readToDataContainer(st, et, verbose=self.verbose, dataType=dataType)
                         if outputDC is None:
                             outputDC = dc
                         else:
@@ -537,6 +595,7 @@ class monthlyFileTree(fileTree):
                     except Exception as e:
                         print 'Error while reading file: {0:s}'.format(f)
                         print e
+                        traceback.print_exc(file=sys.stdout)
             if outputDC is not None:
                 dcList.append(outputDC)
         return dcList

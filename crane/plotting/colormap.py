@@ -3,8 +3,12 @@ Various colormaps and related routines
 
 Tuomas Karna 2014-06-04
 """
-from plotting.plotBase import *
 import numpy as np
+
+from crane import matplotlib
+from crane import plt
+from crane.plotting import plotBase
+
 import matplotlib.colors as colors
 import matplotlib.cm as cm
 
@@ -149,7 +153,7 @@ def get_light_cubehelix(N=256, reverse=False):
 
 def plotColormap(cmap,ax=None) :
   """Plots the colormap on given axis, if no axis given uses current axis."""
-  if ax == None :
+  if ax is None :
     ax = plt.gca()
   gradient = np.linspace(0, 1, 256)
   gradient = np.vstack((gradient, gradient))
@@ -161,7 +165,7 @@ def plotColormap(cmap,ax=None) :
 def plotColormaps(cmap_list, fig=None) :
   """Plots all the given colormaps in the same plot."""
   N = len(cmap_list)
-  if fig == None:
+  if fig is None:
     fig=plt.figure(figsize=(8,1.2*N))
   for i in range(N) :
     ax = fig.add_subplot(N,1,i+1)

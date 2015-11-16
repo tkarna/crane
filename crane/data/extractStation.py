@@ -27,253 +27,31 @@ python extractStation.py -d /home/workspace/ccalmr42/karnat/runs/db28dev/run03/o
 
 Tuomas Karna 2012-10-10
 """
-
-import numpy as np
-import time as timeMod
 import os
 import sys
 import datetime
 import glob
-
+import time as timeMod
 # set Ctrl-C to default signal (terminates fortran routines immediately)
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-from data.dataContainer import dataContainer
-from data.timeArray import timeArray
-from data.loadHindcastStations import excludeNaNs,VALID_MIN
-from files.csvStationFile import csvStationFile, csvStationFileWithDepth
+import numpy as np
 
-import extract_mod
+from crane.data import dataContainer
+from crane.data import timeArray
+from crane.data import loadHindcastStations
+from crane.files import csvStationFile
+from crane.physicalVariableDefs import addTracers
+
+# TODO extracting legacy selfe format is now obsolete?
+#import extract_mod
 
 #------------------------------------------------------------------------------
 # Constants
 #------------------------------------------------------------------------------
 
-# use consistent field names throughout the skill assessment package
-fieldNameToFilename = { 'temp':'temp.63',
-                        'elev':'elev.61',
-                        'salt':'salt.63',
-                        'alongvel':'hvel.64',
-                        'kine':'kine.63',
-                        'vdff':'vdff.63',
-                        'tdff':'tdff.63',
-                        'mixl':'mixl.63',
-                        'hvel':'hvel.64',
-                        'vert':'vert.63',
-                        'dens':'conc.63',
-                        'srad':'srad.61',
-                        'dahv':'dahv.62',
-                        'wind':'wind.62',
-                        'wist':'wist.62',
-                        'trcr_1':'trcr_1.63',
-                        'trcr_2':'trcr_2.63',
-                        'trcr_3':'trcr_3.63',
-                        'trcr_4':'trcr_4.63',
-                        'trcr_5':'trcr_5.63',
-                        'trcr_6':'trcr_6.63',
-                        'trcr_7':'trcr_7.63',
-                        'trcr_8':'trcr_8.63',
-                        'trcr_9':'trcr_9.63',
-                        'trcr_10':'trcr_10.63',
-                        'trcr_11':'trcr_11.63',
-                        'trcr_12':'trcr_12.63',
-                        'trcr_13':'trcr_13.63',
-                        'trcr_14':'trcr_14.63',
-                        'bnth_1':'bnth_1.61',
-                        'bnth_2':'bnth_2.61',
-                        'bnth_3':'bnth_3.61',
-                        'bnth_4':'bnth_4.61',
-                        'carai':'nem_DAVG.61',
-                        'Diag':'Diag.63',
-                        'Dia2':'Dia2.61',
-                        'nem':'nem.63',
-                        'nem_DAVG':'nem_DAVG.61',
-                        'nem_DI':'nem_DI.61',
-                        'nemb':'nemb.61',
-                        'nemi':'nemi.61',
-                        'prod':'prod.63',
-                        'prfr':'prfr.63',
-                        'prma':'prma.63',
-                        'resp':'resp.63',
-                        'rezo':'rezo.63',
-                        'reba':'reba.63',
-                        'ream':'ream.63',
-                        'rere':'rere.63',
-                        'totalN':'totalN.63',
-                        'turbidity':'turbidity.63',
-                        'bed_depth':'bed_depth.61',
-                        'bed_stress':'bed_stress.61',
-                        'bed_flux':'bed_flux.61'}
-
-fieldNameList = { 'temp':['temp'],
-                  'elev':['elev'],
-                  'salt':['salt'],
-                  'alongvel':['u','v'],
-                  'kine':['kine'],
-                  'vdff':['vdff'],
-                  'tdff':['tdff'],
-                  'mixl':['mixl'],
-                  'hvel':['u','v'],
-                  'wind':['u','v'],
-                  'wist':['u','v'],
-                  'vert':['w'],
-                  'dens':['dens'],
-                  'dahv':['u','v'],
-                  'trcr_1':['trcr_1'],
-                  'trcr_2':['trcr_2'],
-                  'trcr_3':['trcr_3'],
-                  'trcr_4':['trcr_4'],
-                  'trcr_5':['trcr_5'],
-                  'trcr_6':['trcr_6'],
-                  'trcr_7':['trcr_7'],
-                  'trcr_8':['trcr_8'],
-                  'trcr_9':['trcr_9'],
-                  'trcr_10':['trcr_10'],
-                  'trcr_11':['trcr_11'],
-                  'trcr_12':['trcr_12'],
-                  'trcr_13':['trcr_13'],
-                  'trcr_14':['trcr_14'],
-                  'bnth_1':['bnth_1'],
-                  'bnth_2':['bnth_2'],
-                  'bnth_3':['bnth_3'],
-                  'bnth_4':['bnth_4'],
-                  'carai':['nem_DAVG'],
-                  'Diag':['Diag'],
-                  'Dia2':['Dia2'],
-                  'nem':['nem'],
-                  'nem_DAVG':['nem_DAVG'],
-                  'nem_DI':['nem_DI'],
-                  'nemb':['nemb'],
-                  'nemi':['nemi'],
-                  'prod':['prod'],
-                  'prfr':['prfr'],
-                  'prma':['prma'],
-                  'resp':['resp'],
-                  'rezo':['rezo'],
-                  'reba':['reba'],
-                  'ream':['ream'],
-                  'rere':['rere'],
-                  'totalN':['totalN'],
-                  'turbidity':['turbidity'],
-                  'bed_depth':['bed_depth'],
-                  'bed_stress':['bed_stress'],
-                  'bed_flux': ['bed_flux']}
-
-# observational data that can be compared to model outputs for each tracer model
-tracerModelObsVariables = {'sed': ['turbidity'],
-                           'oxy': ['NO3', 'oxy'],
-                           'bio': ['NO3', 'oxy']
-                           }
-
-#-------------------------------------------------------------------------------
-# Functions
-#------------------------------------------------------------------------------
-
-def addTracers( tracerModelName, varList=None, numTracers=None ) :
-  """Appends constants used throughout processing to support tracers from coupled
-  models.
-  """
-  print 'Adding tracer model '+tracerModelName
-  global fieldNameToFilename
-  global fieldNameList
-
-  if varList is None:
-    varList = []
-  else:
-    varList = list(varList)
-
-  # parse tracerModelName 'oxy' or 'oxy.70'
-  if len(tracerModelName.split('.')) == 2 :
-    tracerName,fileExtension = tracerModelName.split('.')
-  else :
-    tracerName = tracerModelName
-    fileExtension = '63'
-
-  if tracerName == 'oxy' :
-    fieldNameToFilename['NO3'] = 'trcr_1.'+fileExtension
-    fieldNameToFilename['NH4'] = 'trcr_2.'+fileExtension
-    fieldNameToFilename['phy'] = 'trcr_3.'+fileExtension
-    fieldNameToFilename['zoo'] = 'trcr_4.'+fileExtension
-    fieldNameToFilename['det'] = 'trcr_5.'+fileExtension
-    fieldNameToFilename['oxy'] = 'trcr_6.'+fileExtension
-
-    fieldNameList['NO3'] = ['NO3']
-    fieldNameList['NH4'] = ['NH4']
-    fieldNameList['phy'] = ['Phy']
-    fieldNameList['zoo'] = ['Zoo']
-    fieldNameList['det'] = ['Det']
-    fieldNameList['oxy'] = ['Oxy']
-
-    trcr_vars = ['NO3', 'NH4', 'phy', 'zoo', 'det', 'oxy']
-
-    for i in range(1, len(trcr_vars)+1):
-      varList.append('trcr_%d.%s' % (i, fileExtension))
-
-  elif tracerName == 'oxy2' :
-    fieldNameToFilename['oxy'] = 'trcr_1.'+fileExtension
-    fieldNameList['oxy'] = ['oxygen']
-    trcr_vars = ['oxy']
-    varList.append('trcr_1.%s' % (fileExtension))
-
-  elif tracerName == 'bio' :
-    # these are internal names used in processing lib to identify tracers
-    # these can be anything, they appear in file names, but not in plots
-    trcr_vars = ['NO3', 'NH4', 'PHYM', 'PHYF', 'SZOO', 'BZOO', 'DETN',
-                 'DETC', 'BACT', 'DON', 'DOC', 'CHLM', 'CHLF', 'oxy' ]
-    # maps each var to selfe output file
-    for i,v in enumerate(trcr_vars):
-      fieldNameToFilename[v] = 'trcr_{0:d}.{1:s}'.format(i+1, fileExtension)
-
-    # these will be stored in dataContainer fieldnames list
-    # to distinguish different components (e.g. hvel -> [u,v])
-    # for tracers the same string can be used
-    for v in trcr_vars:
-      fieldNameList[v] = [v]
-
-    for i in range(len(trcr_vars)):
-      varList.append('trcr_{0:d}.{1:s}'.format(i+1, fileExtension))
-
-  elif tracerName == 'age' :
-    # water age model with 2 indicator tracers: river and ocean
-    trcr_vars = ['iRiv', 'iOce', 'aRiv', 'aOce']
-    for i,v in enumerate(trcr_vars):
-      fieldNameToFilename[v] = 'trcr_{0:d}.{1:s}'.format(i+1, fileExtension)
-
-    for v in trcr_vars:
-      fieldNameList[v] = [v]
-
-    for i in range(len(trcr_vars)):
-      varList.append('trcr_{0:d}.{1:s}'.format(i+1, fileExtension))
-
-  elif tracerName == 'age2' :
-    # water age model with 3 indicator tracers: river, ocean and plume
-    trcr_vars = ['iRiv', 'iOce', 'iPlu', 'aRiv', 'aOce', 'aPlu',
-                 'ARiv', 'AOce', 'APlu']
-    for i,v in enumerate(trcr_vars):
-      fieldNameToFilename[v] = 'trcr_{0:d}.{1:s}'.format(i+1, fileExtension)
-
-    for v in trcr_vars:
-      fieldNameList[v] = [v]
-
-    for i in range(len(trcr_vars)):
-      varList.append('trcr_{0:d}.{1:s}'.format(i+1, fileExtension))
-
-  elif tracerName == 'sed' :
-    for t in range( 1, numTracers+1) :
-      fieldNameToFilename['sed_%d' % t] = 'trcr_%d.%s' % (t, fileExtension)
-      fieldNameList['sed_%d' % t] = ['sed_class_%d' % t]
-      varList.append('trcr_%d.%s' % (t, fileExtension))
-  elif tracerName == 'generic' :
-    for t in range( 1, numTracers+1) :
-      fieldNameToFilename['trcr_%d' % t] = 'trcr_%d.%s' % (t, fileExtension)
-      fieldNameList['trcr_%d' % t] = ['trcr_%d' % t]
-      varList.append('trcr_%d.%s' % (t, fileExtension))
-  else:
-    raise Exception('Tracer model not supported: '+tracerName)
-
-  return varList
-
+VALID_MIN = -89
 
 def extractForXYZ( dataDir, var, stationFile, startTime, endTime, profile=False,
                    modelCoordSys='spcs', tracers=None, ntracers=0) :
@@ -296,14 +74,14 @@ def extractForXYZ( dataDir, var, stationFile, startTime, endTime, profile=False,
   """
 
   if profile:
-    csvReader = csvStationFile()
+    csvReader = csvStationFile.csvStationFile()
     csvReader.readFromFile(stationFile)
     tuples = csvReader.getTuples() # all entries (loc,x,y)
     stationNames = [ t[0] for t in tuples ]
     x = np.array([ t[1] for t in tuples ])
     y = np.array([ t[2] for t in tuples ])
   else:
-    csvReader = csvStationFileWithDepth()
+    csvReader = csvStationFile.csvStationFileWithDepth()
     csvReader.readFromFile(stationFile)
     tuples = csvReader.getTuples() # all entries (loc,x,y,z,zType,var)
     stationNames = [ t[0] for t in tuples ]
@@ -380,7 +158,7 @@ def extractForOfferings( dataDir, var, offerings, startTime, endTime, profile=Fa
   """
 
   # read station file
-  staReader = csvStationFile()
+  staReader = csvStationFile.csvStationFile()
   staReader.readFromFile(stationFile)
 
   # screen possible duplicates in the offerings (e.g. instrument can be ignored)
@@ -813,7 +591,7 @@ class extractStation(extractBase) :
     t,d = self.extractor.extract(stacks)
     if t == []:
       return []
-    ta = timeArray(t, 'simulation', self.extractor.startTime).asEpoch()
+    ta = timeArray.timeArray(t, 'simulation', self.extractor.startTime).asEpoch()
     var = self.fieldName
     dcList = []
     if not self.profile :
@@ -822,7 +600,9 @@ class extractStation(extractBase) :
       # Reshaping is determined by data type (scalar vs. vector & time series vs. transect)
       nComponents = self.extractor.getNumberOfComponents()
       if not self.profile :
-        ti,di = excludeNaNs( t, d[i,:] )
+        goodIx = np.isfinite(t) * np.isfinite(d[i, :])
+        ti = t[goodIx]
+        di = d[i, goodIx]
         if len(ti) == 0 :
           print 'all bad data',station,len(t)
           continue
@@ -862,7 +642,7 @@ class extractStation(extractBase) :
         datai = datai.swapaxes(0,1) # from (dim,xyz,time) to (xyz,dim,time)
         msldepth = 'prof'
 
-      tai = timeArray(ti, 'simulation', self.extractor.startTime).asEpoch()
+      tai = timeArray.timeArray(ti, 'simulation', self.extractor.startTime).asEpoch()
       # if suspected bad values, print warning
       hasBadValues = np.isnan(datai).any() or np.isinf(datai).any() or np.any( datai < VALID_MIN )
       if hasBadValues :
@@ -879,7 +659,7 @@ class extractStation(extractBase) :
         meta['bracket'] = 'F' if self.zRelativeToSurf else 'A'
         meta['msldepth'] = msldepth
         meta['dataType'] = 'timeseries'
-      dc = dataContainer('', tai, x,y,z, datai, fieldNameList[var],
+      dc = dataContainer.dataContainer('', tai, x,y,z, datai, fieldNameList[var],
                          coordSys='spcs',metaData=meta)
 
       dcList.append( dc )
@@ -1017,7 +797,7 @@ def parseCommandLine() :
   for var in varList :
     if noOfferings :
       if readNetcdf :
-        from data.ncExtract import extractForStations as extractNetCDF
+        from crane.data.ncExtract import extractForStations as extractNetCDF
         dcs = extractNetCDF(dataDir, var, stationFile, startTime, endTime,
                             profile, stacks=stacks)
       else :
@@ -1025,7 +805,7 @@ def parseCommandLine() :
                             profile, modelCoordSys )
     else :
       # get all available offerings
-      import data.netcdfCacheInterface as netcdfDB
+      import crane.data.netcdfCacheInterface as netcdfDB
       if allOfferings :
         print('fetching {0:s} offerings from the database for all stations'.format(var))
         offerings = netcdfDB.getAllOfferings( [var.split('.')[0]] )
@@ -1035,7 +815,7 @@ def parseCommandLine() :
       if len(offerings) == 0:
           print('No offerings received, skipping variable {0:s}'.format(var))
       if readNetcdf :
-        from data.ncExtract import extractForOfferings as extractNetCDF
+        from crane.data.ncExtract import extractForOfferings as extractNetCDF
         dcs = extractNetCDF( dataDir, var, offerings, startTime, endTime,
                             profile, stationFile)
       else :
@@ -1043,12 +823,12 @@ def parseCommandLine() :
                                   profile, modelCoordSys, stationFile )
     for dc in dcs :
       dc.setMetaData( 'tag',runTag )
-    import data.dirTreeManager as dtm
+    import crane.data.dirTreeManager as dtm
     if saveInTree :
-      rule = dtm.defaultTreeRule()
+      rule = 'monthlyFile'
     else :
-      rule = dtm.oldTreeRule()
-    dtm.saveDataContainerInTree( dcs, path=outDir, rule=rule, dtype=np.float32,
+      rule = 'singleFile'
+    dtm.saveDataContainerInTree( dcs, rootPath=outDir, rule=rule, dtype=np.float32,
                                  overwrite=True, compress=True, digits=digits )
 
 if __name__=='__main__' :

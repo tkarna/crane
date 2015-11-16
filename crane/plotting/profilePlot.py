@@ -6,10 +6,13 @@ Tuomas Karna 2012-11-02
 """
 
 import numpy as np
-from data.timeArray import *
-from plotting.plotBase import *
+# TODO import only modules
+from crane.data.timeArray import *
+from crane.plotting import plotBase
+from crane import matplotlib
+from crane import plt
 
-class verticalProfilePlot(plotBase) :
+class verticalProfilePlot(plotBase.plotBase) :
   """Class that plots vertical profiles in (variable,z) line graphs."""
   def __init__(self, **defaultArgs) :
     """Constructor. defaultArgs are the default plot options.
@@ -34,7 +37,7 @@ class verticalProfilePlot(plotBase) :
     self.xlabel=defaultArgs.pop('xlabel','')
     self.xunit=defaultArgs.pop('xunit','')
     self.invert_yaxis=defaultArgs.pop('invert_yaxis',False)
-    plotBase.__init__(self, **defaultArgs)
+    super(verticalProfilePlot, self).__init__(defaultArgs)
 
   def setAxes(self, ax) :
     """Set axes for the diagram where data will be plotted.
@@ -114,7 +117,7 @@ class verticalProfilePlotDC(verticalProfilePlot) :
     x = dc.data[:,iField,iTime]
     verticalProfilePlot.addSample(self,z,x,label,**kw)
 
-class profileTimeSeries(colorPlotBase) :
+class profileTimeSeries(plotBase.colorPlotBase) :
   """Class that plots time-dependent vertical profiles in (t,z) plot,
   colored by variable."""
   def __init__(self, **defaultArgs) :
@@ -136,9 +139,9 @@ class profileTimeSeries(colorPlotBase) :
     defaultArgs.setdefault('N',20)
     if self.logScale and self.unit :
       self.unit = r'$\log10($'+self.unit+'$)$'
-    colorPlotBase.__init__(self,**defaultArgs)
+    super(profileTimeSeries, self).__init__(**defaultArgs)
     if self.xlim and self.xIsTime :
-      self.xlim = [ convertEpochToPlotTime( datetimeToEpochTime( dt ) )
+      self.xlim = [ plotBase.convertEpochToPlotTime( timeArray.datetimeToEpochTime( dt ) )
                  for dt in self.xlim ]
 
   def setAxes(self, ax) :
@@ -156,7 +159,7 @@ class profileTimeSeries(colorPlotBase) :
 
   def addSample(self, time, zCoord, variable, **kwargs) :
     """Add signal to the diagram. Time is assumed to be in epoch format."""
-    t = convertEpochToPlotTime( time )
+    t = plotBase.convertEpochToPlotTime( time )
     z = zCoord.copy()
     if len(t.shape) == 1 and z.shape[1] == len(t) :
       # z time dependent, copy singleton time to correct shape
@@ -196,7 +199,7 @@ class profileTimeSeries(colorPlotBase) :
 
   def addOverlay(self, time, zCoord, variable, **kwargs) :
     """Adds time series on top of contour image. Time is assumed to be in epoch format."""
-    t = convertEpochToPlotTime( time )
+    t = plotBase.convertEpochToPlotTime( time )
     z = zCoord.copy()
     if len(z) == 1 :
       z = np.ones_like(t)*z
@@ -254,7 +257,7 @@ class profileTimeSeriesDC(profileTimeSeries) :
       var = np.squeeze( dc.data[:,iField,r[0]:r[1]+1] )
       profileTimeSeries.addOverlay( self, t, zCoord, var, **kwargs )
 
-class stackProfileTimeSeries(stackPlotBase) :
+class stackProfileTimeSeries(plotBase.stackPlotBase) :
   """A class for stacking multiple profiles in the same plot."""
   def addPlot(self, tag, **kwargs) :
     """Adds a new subplot to the diagram"""

@@ -1,0 +1,175 @@
+#!/usr/bin/env python
+"""
+Generate elev2D, salt3D, temp3D.th files from a transect generated 
+from the open ocean boundary nodes to allow for a selfe simulation nested inside
+another selfe simulation.
+
+Extract the boundary of interest from hgrid.gr3 - this script does not do this - and generate a transect using
+extractTransect.
+
+For example, extract the transect:
+
+extractTransect -v salt,temp -t openbound.bp -n openbound -r run20-2012 -s 2012-03-14 -e 2012-04-25 -d /home/workspace/ccalmr/hindcasts/db33/2012/combined -C > extractTransect-salt-temp-2012-03.out 2>&1
+
+Then run the following to generated the elev2D.th, salt3D.th and temp3D.th
+
+transect2Nested -s 2012-3-15 -e 2012-4-25 -t 36.0 openbound_salt_0_2012-03-14_2012-04-25.nc openbound_temp_0_2012-03-14_2012-04-25.nc
+
+P. Turner 2015-06-01
+"""
+import sys,os,getopt
+import netCDF4 as nc
+import numpy as np
+import os
+import datetime
+import struct
+
+from crane.data import dataContainer
+from crane.data import timeArray
+from scipy.interpolate import interp1d, griddata
+
+# output direct access binary for fortran
+def thWriteBinary(fn, t, var, nlevels=37):
+# shape is nlevels, npts, time
+    flag = len(np.shape(var))
+    tf = open(fn, 'wb')
+# Ctemp
+#real(time),((real(tfg(i,k)),k=1,nvrt_fg),i=1,npfg)
+#(37, 27, 96001) (96001,) (37, 27) (37, 27) (37, 27, 96001)
+# skip the '0' timestep or selfe will not run
+    for i in range(1, len(t)):
+        tf.write(struct.pack('f', t[i]))
+        if flag == 2:
+            for j in range(0, np.shape(var)[0]):
+                tf.write(struct.pack('f', var[j,i]))
+        else:
+# No interpolation
+            if nlevels == 37:
+                for j in range(0, np.shape(var)[1]):
+# bandaid for dry transect points
+                    if np.isnan(var[:,j,i]).any():
+                        doj = j+1
+                    else:
+                        doj = j
+                    for k in range(0, np.shape(var)[0]):
+                        if np.isnan(var[k,doj,i]):
+                            print 'Impossible NaN found: ', k,j,i,var[:,j,i]
+                            sys.exit(1)
+                        tf.write(struct.pack('f', var[k,doj,i]))
+            else:
+# do interpolation in the vertical here
+# go from 0-1.0
+                iold = np.array(np.arange(1.0 * np.shape(var)[0])) / (np.shape(var)[0] - 1.0)
+                inew = np.array(1.0 * np.arange(nlevels)) / (nlevels - 1.0)
+                for j in range(0, np.shape(var)[1]):
+                    f = interp1d(iold, var[:,j,i])
+                    varnew = f(inew)
+                    for k in range(0, len(varnew)):
+                        tf.write(struct.pack('f', varnew[k]))
+    tf.close()
+
+def transect2Nested(sFile, tFile, startTime, endTime, dt, nLevels):
+    # parameters for interpolation
+    #startTime = datetime.datetime(2012,3,15,0,0,0)
+    #endTime   = datetime.datetime(2012,4,25,0,0,0)
+    #dt = 36.0
+
+    # read the extracted temperature transect
+    dctemp = dataContainer.dataContainer.loadFromNetCDF(tFile)
+    ta = timeArray.generateSimulationTimeArray(startTime,endTime,dt)
+    dctemp = dctemp.interpolateInTime(ta,acceptNaNs=True)
+    (Ttemp,Xtemp,Ytemp,Ztemp,Ctemp) = dcToTransect( dctemp )
+    ind = np.isnan(Ctemp).any()
+    # write binary
+    thWriteBinary('temp3D.th', Ttemp, Ctemp, nLevels)
+
+    # read the extracted salt transect
+    dcsalt = dataContainer.dataContainer.loadFromNetCDF(sFile)
+    ta = timeArray.generateSimulationTimeArray(startTime,endTime,dt)
+    dcsalt = dcsalt.interpolateInTime(ta,acceptNaNs=True)
+    (Tsalt,Xsalt,Ysalt,Zsalt,Csalt) = dcToTransect( dcsalt )
+    # write binary
+    thWriteBinary('salt3D.th', Tsalt, Csalt, nLevels)
+
+    # write elevations - top level of Z
+    thWriteBinary('elev2D.th', Tsalt, Zsalt[-1,:,:])
+
+#-------------------------------------------------------------------------------
+# Main: Commandline interface
+#-------------------------------------------------------------------------------
+def parseCommandLine() :
+
+  from optparse import OptionParser
+
+  parser = OptionParser("""Usage: %prog -s [start date YYYY-MM-DD] -e [end date YYYY-MM-DD] -t [new dt] saltTransect temperatureTransect
+
+Generate elev2D, salt3D, temp3D.th files from a transect generated
+from the open ocean boundary nodes to allow for a selfe simulation nested inside
+another selfe simulation.
+
+Extract the boundary of interest from hgrid.gr3 - this script does not do this - and generate a transect using
+extractTransect.
+
+For example, extract the transect:
+
+extractTransect -v salt,temp -t openbound.bp -n openbound -r run20-2012 -s 2012-03-14 -e 2012-04-25 -d /home/workspace/ccalmr/hindcasts/db33/2012/combined -C > extractTransect-salt-temp-2012-03.out 2>&1
+
+Then run the following to generated the elev2D.th, salt3D.th and temp3D.th
+
+%prog -s 2012-3-15 -e 2012-4-25 -t 36.0 openbound_salt_0_2012-03-14_2012-04-25.nc openbound_temp_0_2012-03-14_2012-04-25.nc\n
+
+Use the -n flag if the levels in the outputs are not equal to 37
+
+%prog -n 21 -s 2012-6-01 -e 2012-6-14 -t 36.0 openbound_brandy_salt_0_2012-05-31_2012-06-14.nc openbound_brandy_temp_0_2012-05-31_2012-06-14.nc\n
+""")
+
+  parser.add_option('-t', '--timeStep', action='store', type='float',
+                      dest='timeStep',
+                      help='time step for output time series in seconds')
+  parser.add_option('-s', '--start', action='store', type='string',
+                      dest='startStr', help='Date to start processing')
+  parser.add_option('-e', '--end', action='store', type='string',
+                      dest='endStr', help='Date to end processing')
+  parser.add_option('-n', '--nLevels', action='store', type='int',
+                      dest='nLevels', help='Number of vertical levels (transect is assumed to be 37 levels)', default=37)
+                      
+  (options, args) = parser.parse_args()
+  if len(args) != 2 :
+    parser.print_help()
+    parser.error('Need both salinity and temperature transect files.')
+  sFile = args[0]
+  tFile = args[1]
+  startStr      = options.startStr
+  endStr        = options.endStr
+  timeStep      = options.timeStep
+  nLevels       = options.nLevels
+  
+  if not startStr:
+    parser.print_help()
+    parser.error('startStr undefined')
+  if not endStr:
+    parser.print_help()
+    parser.error('endStr   undefined')
+  if not timeStep:
+    parser.print_help()
+    parser.error('timeStep  undefined')
+
+  startTime = parseTimeStr( startStr )
+  endTime = parseTimeStr( endStr )
+
+  print 'Parsed options:'
+  if startTime :
+    print ' - time range:',str(startTime),'->', str(endTime)
+  if timeStep :
+    print ' - resampling to time step:',str(timeStep)
+  if sFile :
+    print ' - salt transect:',sFile
+  if tFile :
+    print ' - temperature transect:',tFile
+  if nLevels :
+    print ' - number of levels to outputs:',nLevels
+
+  transect2Nested(sFile, tFile, startTime, endTime, timeStep, nLevels)
+
+if __name__=='__main__' :
+  parseCommandLine()
