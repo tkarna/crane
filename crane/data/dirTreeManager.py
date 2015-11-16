@@ -313,6 +313,7 @@ class singleFileTree(fileTree):
         rootPath = kwargs.get('rootPath')
         st = kwargs.get('startTime')
         et = kwargs.get('endTime')
+        dataType = kwargs.pop('dataType')
         files = self.findMatchingFiles(**kwargs)
         dcList = []
         for f in files:
@@ -322,7 +323,7 @@ class singleFileTree(fileTree):
                     desc, ta = nc.readHeader(verbose=self.verbose)
                     if (st is not None and et is not None and not ta.overlaps(st, et)):
                         continue  # time out of requested range
-                    dc = nc.readToDataContainer(st, et, verbose=self.verbose)
+                    dc = nc.readToDataContainer(st, et, verbose=self.verbose, dataType=dataType)
                     dcList.append(dc)
                 except Exception as e:
                     print 'Error while reading file: {0:s}'.format(f)
@@ -558,6 +559,7 @@ class monthlyFileTree(fileTree):
         """
         st = kwargs.get('startTime')
         et = kwargs.get('endTime')
+        dataType = kwargs.pop('dataType')
         rootPath = kwargs.get('rootPath')
         files = self.findMatchingFiles(**kwargs)
         samples = self.getAvailableSamples(files, rootPath)
@@ -584,7 +586,7 @@ class monthlyFileTree(fileTree):
                         # skip file if its start time is greater than query end
                         if (et is not None and file_st > et):
                             continue
-                        dc = nc.readToDataContainer(st, et, verbose=self.verbose)
+                        dc = nc.readToDataContainer(st, et, verbose=self.verbose, dataType=dataType)
                         if outputDC is None:
                             outputDC = dc
                         else:

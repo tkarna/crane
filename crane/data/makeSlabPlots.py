@@ -29,6 +29,7 @@ from crane.physicalVariableDefs import UNITS
 from crane.plotting import slabPlot
 from crane.utility import createDirectory
 from crane.utility import saveFigure
+from crane.utility import parseTimeStr
 
 import multiprocessing
 # NOTE this must not be a local function in runTasksInQueue
@@ -87,7 +88,8 @@ def processFrame(dcs, time, logScaleVars, aspect, clim, diffClim, cmap, bBox,
     climIsLog = logScale
     tag = str(dc.getMetaData('tag',suppressError=True))
     pltTag = tag+name+dc.getMetaData('variable')+'-'+str(i)
-    titleStr = tag+' '+dateStr+' (PST)'
+    #titleStr = tag+' '+dateStr+' (PST)'
+    titleStr = dateStr+' (PST)'
 
     dia.addPlot(pltTag, clabel=VARS.get(var,var), unit=UNITS.get(var,'-'), bbox=bBox)
     # add bathymetry contours (if any)
