@@ -7,6 +7,7 @@ import datetime
 import os
 from crane import plt
 
+
 def parseTimeStr(timeStr):
     """
     Parses time string to datetime object.
@@ -51,7 +52,14 @@ def createDirectory(path):
         os.makedirs(path)
     return path
 
-def saveFigure(path, filename, extensions, verbose=False, dpi=200, bbox_tight=False):
+
+def saveFigure(
+        path,
+        filename,
+        extensions,
+        verbose=False,
+        dpi=200,
+        bbox_tight=False):
     """
     Saves currently open figure in the given format.
     If extensions is a list, figure is saved in multiple formats

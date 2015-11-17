@@ -10,5 +10,5 @@ Tuomas Karna 2013-11-06
 # just a wrapper to parseCommandLine method
 from crane.data import convSurrogateOutputToNC
 
-if __name__=='__main__' :
-  convSurrogateOutputToNC.parseCommandLine()
+if __name__ == '__main__':
+    convSurrogateOutputToNC.parseCommandLine()

@@ -5,131 +5,134 @@ A parser designed to read and write to param.in SELFE configuration files.
 Parser design lifted from http://www.decalage.info/en/python/configparser
 
 Writing out the values is ugly, more sophisticated approach in the works. I just
-threw it in on a whim. 
+threw it in on a whim.
 
 lopezj - 08/04/2012
 """
 
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # Imports
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 import os
 
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # Constants
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 DEFAULT_FILE = "/home/workspace/users/lopezj/src/selfe/trunk/src/param.in.sample"
 COMMENT_CHAR = '!'
 PARAM_CHAR = '='
 
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # Classes and functions
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+
 class ParamParser(object):
-  """Parses param.in and can read/write to the file
-    
-  If no file is given to the constructor, then a "default" param.in file is
-  loaded based on hindcast runs.
-   
-  Attributes:
-    Object is a dictionary of all the settings read in from a param.in file
-  """
+    """Parses param.in and can read/write to the file
 
-  def __init__(self, paramPath=DEFAULT_FILE):
-    """Initializes by reading and parsing a param.in file"""
-    self._dict = {}
-    self.path = paramPath
-    self.parseFile(paramPath) 
+    If no file is given to the constructor, then a "default" param.in file is
+    loaded based on hindcast runs.
 
-  def parseFile(self, paramPath):
-    """Parses a param.in file.
-
-    Parses a param.in file and dumps all settings into a dictionary attribute 
-    of this instance named params.
-      
-    Args:
-      paramPath -- String of path the a param.in file
-    Returns:
-      NOTHING
+    Attributes:
+      Object is a dictionary of all the settings read in from a param.in file
     """
-    params = {}
-    f = open(paramPath,'r')
-    for line in f:
-      # Ditch comments
-      if COMMENT_CHAR in line:
-        # Only keep part before comment
-        line, comment = line.split(COMMENT_CHAR,1)
-      # Find lines with param = value
-      if PARAM_CHAR in line:
-        param, value = line.split(PARAM_CHAR,1)
-        param = param.strip()
-        value = value.strip()
-        try :
-          value = float(value)
-        except :
-          pass
-        self._dict[param] = value
-    f.close()
 
-  def __getitem__(self, key):
-    """Retrieve parameter value by name."""
-    return self._dict[key]
+    def __init__(self, paramPath=DEFAULT_FILE):
+        """Initializes by reading and parsing a param.in file"""
+        self._dict = {}
+        self.path = paramPath
+        self.parseFile(paramPath)
 
-  def __setitem__(self, key, value):
-    """Associate the value with the key."""
-    self._dict[key] = value
+    def parseFile(self, paramPath):
+        """Parses a param.in file.
 
-  def __len__(self):
-    return len(self.dict)
-      
-  def has_key(self, key):
-    """Test whether 'key' exists."""
-    return self._dict.has_key(k)
+        Parses a param.in file and dumps all settings into a dictionary attribute
+        of this instance named params.
 
-  def keys(self):
-    """List of keys."""
-    return [k for k in self._dict.keys()]
+        Args:
+          paramPath -- String of path the a param.in file
+        Returns:
+          NOTHING
+        """
+        params = {}
+        f = open(paramPath, 'r')
+        for line in f:
+            # Ditch comments
+            if COMMENT_CHAR in line:
+                # Only keep part before comment
+                line, comment = line.split(COMMENT_CHAR, 1)
+            # Find lines with param = value
+            if PARAM_CHAR in line:
+                param, value = line.split(PARAM_CHAR, 1)
+                param = param.strip()
+                value = value.strip()
+                try:
+                    value = float(value)
+                except:
+                    pass
+                self._dict[param] = value
+        f.close()
 
-  def values(self):
-    """List of values."""
-    return [v for v in self._dict.vlaues()]
-
-  def get(self, key):
-    """Return value associated with key"""
-    try:
+    def __getitem__(self, key):
+        """Retrieve parameter value by name."""
         return self._dict[key]
-    except KeyError:
-        return default
 
-  def __contains__(self, key):
-    return self._dict.has_key(key)
+    def __setitem__(self, key, value):
+        """Associate the value with the key."""
+        self._dict[key] = value
 
-  def __repr__(self):
-    """String representation of the dictionary"""
-    items = ", ".join([("%r: %r" % (k,v)) for k,v in self._dict.items()])
+    def __len__(self):
+        return len(self.dict)
 
-  def __str__(self):
-    """String representation of the dictionary."""
-    return repr(self)
+    def has_key(self, key):
+        """Test whether 'key' exists."""
+        return k in self._dict
 
-  def writeParam(self, paramPath, forced=False):
-    """Writes out the param values into a new param.in file.
-    
-    Args:
-      paramPath -- String path to the file to write to.
-      forced -- Boolean if you want to force overwriting of a file if one
-        already exists.
-    """
-    try:
-      if not forced and os.path.isfile(paramPath):
-        raise IOError
-      f = open(paramPath,'w') 
-      f.write('!This param.in file autogenerated using ParamParser. All comments removed\n')
-      f.write('This is difficult for humans to read\n')
-      f.write('!See param.in.sample in selfe source for documentation\n')
-      for key, value in self.params.items():
-        f.write('\t%s=%s\n' % (key, value))
-      f.close()
-    except IOError:
-      print "Problem creating param.in file.\n" 
-      print "If file already exists use second arg force=True to overwrite file.\n"
+    def keys(self):
+        """List of keys."""
+        return [k for k in self._dict.keys()]
+
+    def values(self):
+        """List of values."""
+        return [v for v in self._dict.vlaues()]
+
+    def get(self, key):
+        """Return value associated with key"""
+        try:
+            return self._dict[key]
+        except KeyError:
+            return default
+
+    def __contains__(self, key):
+        return key in self._dict
+
+    def __repr__(self):
+        """String representation of the dictionary"""
+        items = ", ".join([("%r: %r" % (k, v)) for k, v in self._dict.items()])
+
+    def __str__(self):
+        """String representation of the dictionary."""
+        return repr(self)
+
+    def writeParam(self, paramPath, forced=False):
+        """Writes out the param values into a new param.in file.
+
+        Args:
+          paramPath -- String path to the file to write to.
+          forced -- Boolean if you want to force overwriting of a file if one
+            already exists.
+        """
+        try:
+            if not forced and os.path.isfile(paramPath):
+                raise IOError
+            f = open(paramPath, 'w')
+            f.write(
+                '!This param.in file autogenerated using ParamParser. All comments removed\n')
+            f.write('This is difficult for humans to read\n')
+            f.write('!See param.in.sample in selfe source for documentation\n')
+            for key, value in self.params.items():
+                f.write('\t%s=%s\n' % (key, value))
+            f.close()
+        except IOError:
+            print "Problem creating param.in file.\n"
+            print "If file already exists use second arg force=True to overwrite file.\n"

@@ -27,8 +27,13 @@ def parseCommandLine():
     from optparse import OptionParser
 
     parser = OptionParser()
-    parser.add_option('-o', '--outfile', action='store', type='string',
-                      dest='outfile', help='Output file name (default: generated from dataContainer metadata')
+    parser.add_option(
+        '-o',
+        '--outfile',
+        action='store',
+        type='string',
+        dest='outfile',
+        help='Output file name (default: generated from dataContainer metadata')
 
     (options, args) = parser.parse_args()
     outfile = options.outfile

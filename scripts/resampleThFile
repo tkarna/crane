@@ -11,123 +11,153 @@ from scipy.interpolate import interp1d
 from crane.data import timeArray
 from crane.utility import parseTimeStr
 
-def resampleThFile(infile, outfile, simStartDate, startTime, endTime,dt=None, colIx=None, scalar=1.0) :
 
-  print 'Reading file',infile,'...'
-  d = np.loadtxt(infile)
-  time = d[:,0]
-  if colIx == None :
-    vals = scalar*d[:,1:]
-  else :
-    vals = scalar*d[:,[colIx]]
-  # pad vals for t=0
-  time = np.hstack(([0],time))
-  vals = np.vstack((vals[0,:],vals))
-  
-  # convert time to epoch for cropping and interpolation
-  oldta = timeArray.timeArray(time, 'simulation', simStartDate).asEpoch()
-  olddt = time[2]-time[1]
-  newdt = dt if dt else olddt
-  print 'old dt:', olddt
-  print 'new dt:', newdt
-  newta = timeArray.generateSimulationTimeArray(startTime +
-                                                datetime.timedelta(seconds=newdt),
-                                                endTime,newdt).asEpoch()
-  print ' * old time steps:\n',oldta
-  print ' * new time steps:\n',newta
-  
-  time = oldta.array
-  
-  time = oldta.array
-  newTime = newta.array
+def resampleThFile(
+        infile,
+        outfile,
+        simStartDate,
+        startTime,
+        endTime,
+        dt=None,
+        colIx=None,
+        scalar=1.0):
 
-  if ( not oldta.covers( newta.getDatetime(0) ) or
-       not oldta.covers( newta.getDatetime(-1) ) ) :
-    raise Exception('Cannot interpolate: input time series does not cover '
-                     'the requested period')
-  print newTime.min()-time.min(),time.max()-newTime.max()
-  newVals = interp1d(time,vals.T)(newTime).T
+    print 'Reading file', infile, '...'
+    d = np.loadtxt(infile)
+    time = d[:, 0]
+    if colIx is None:
+        vals = scalar * d[:, 1:]
+    else:
+        vals = scalar * d[:, [colIx]]
+    # pad vals for t=0
+    time = np.hstack(([0], time))
+    vals = np.vstack((vals[0, :], vals))
 
-  # convert newTime back to simulation seconds, starting at startTime
-  newTime = newta.asSimulation(startTime).array
-  
-  # write to disk
-  d = np.hstack((newTime[:,None],newVals))
-  fname = outfile
-  print 'saving to',fname
-  np.savetxt(fname,d)
+    # convert time to epoch for cropping and interpolation
+    oldta = timeArray.timeArray(time, 'simulation', simStartDate).asEpoch()
+    olddt = time[2] - time[1]
+    newdt = dt if dt else olddt
+    print 'old dt:', olddt
+    print 'new dt:', newdt
+    newta = timeArray.generateSimulationTimeArray(
+        startTime + datetime.timedelta(seconds=newdt),
+        endTime, newdt).asEpoch()
+    print ' * old time steps:\n', oldta
+    print ' * new time steps:\n', newta
 
-#-------------------------------------------------------------------------------
+    time = oldta.array
+
+    time = oldta.array
+    newTime = newta.array
+
+    if (not oldta.covers(newta.getDatetime(0)) or
+            not oldta.covers(newta.getDatetime(-1))):
+        raise Exception('Cannot interpolate: input time series does not cover '
+                        'the requested period')
+    print newTime.min() - time.min(), time.max() - newTime.max()
+    newVals = interp1d(time, vals.T)(newTime).T
+
+    # convert newTime back to simulation seconds, starting at startTime
+    newTime = newta.asSimulation(startTime).array
+
+    # write to disk
+    d = np.hstack((newTime[:, None], newVals))
+    fname = outfile
+    print 'saving to', fname
+    np.savetxt(fname, d)
+
+#-------------------------------------------------------------------------
 # Main: Commandline interface
-#-------------------------------------------------------------------------------
-def parseCommandLine() :
+#-------------------------------------------------------------------------
 
-  from optparse import OptionParser
 
-  parser = OptionParser('Usage: %prog -d [orig. start date YYYY-MM-DD] -s [start date YYYY-MM-DD] -e [end date YYYY-MM-DD] -o [path] thFile\n')
-  parser.add_option('-d', '--simStartDate', action='store', type='string',
+def parseCommandLine():
+
+    from optparse import OptionParser
+
+    parser = OptionParser(
+        'Usage: %prog -d [orig. start date YYYY-MM-DD] -s [start date YYYY-MM-DD] -e [end date YYYY-MM-DD] -o [path] thFile\n')
+    parser.add_option('-d', '--simStartDate', action='store', type='string',
                       dest='simStartStr',
                       help='Original simulation start date '
-                           '(corresponds to t=0s in *.th file)')
-  parser.add_option('', '--timeStep', action='store', type='float',
+                      '(corresponds to t=0s in *.th file)')
+    parser.add_option('', '--timeStep', action='store', type='float',
                       dest='timeStep',
                       help='time step for output time series in seconds'
-                           ' (Default: same as in input)')
-  parser.add_option('-o', '--outFile', action='store', type='string',
+                      ' (Default: same as in input)')
+    parser.add_option('-o', '--outFile', action='store', type='string',
                       dest='outFile', help='name of output th file')
-  parser.add_option('-s', '--start', action='store', type='string',
+    parser.add_option('-s', '--start', action='store', type='string',
                       dest='startStr', help='Date to start processing')
-  parser.add_option('-e', '--end', action='store', type='string',
+    parser.add_option('-e', '--end', action='store', type='string',
                       dest='endStr', help='Date to end processing')
-  parser.add_option('', '--scale', action='store', type='float',
-                      dest='scalar', help='Scale flux by multiplying by this factor',
-                      default=1.0)
-  parser.add_option('-i', '--colIndex', action='store', type='int',
-                      dest='colIx', help='Read only given column from the file (1 is fist data col)')
-                      
-  (options, args) = parser.parse_args()
-  if len(args) < 1 :
-    parser.print_help()
-    parser.error('input th file missing')
-  thFile = args[0]
-  outFile       = options.outFile
-  simStartStr   = options.simStartStr
-  startStr      = options.startStr
-  endStr        = options.endStr
-  timeStep      = options.timeStep
-  scalar        = options.scalar
-  colIx         = options.colIx
-  
-  if not outFile :
-    parser.print_help()
-    parser.error('outFile   undefined')
-  if not simStartStr :
-    parser.print_help()
-    parser.error('simStartDate undefined')
-  if not startStr :
-    parser.print_help()
-    parser.error('startStr undefined')
-  if not endStr :
-    parser.print_help()
-    parser.error('endStr   undefined')
+    parser.add_option(
+        '',
+        '--scale',
+        action='store',
+        type='float',
+        dest='scalar',
+        help='Scale flux by multiplying by this factor',
+        default=1.0)
+    parser.add_option(
+        '-i',
+        '--colIndex',
+        action='store',
+        type='int',
+        dest='colIx',
+        help='Read only given column from the file (1 is fist data col)')
 
-  startTime = parseTimeStr( startStr )
-  endTime = parseTimeStr( endStr )
-  simStartTime = parseTimeStr( simStartStr )
+    (options, args) = parser.parse_args()
+    if len(args) < 1:
+        parser.print_help()
+        parser.error('input th file missing')
+    thFile = args[0]
+    outFile = options.outFile
+    simStartStr = options.simStartStr
+    startStr = options.startStr
+    endStr = options.endStr
+    timeStep = options.timeStep
+    scalar = options.scalar
+    colIx = options.colIx
 
-  print 'Parsed options:'
-  print ' - original start time:',simStartTime
-  if startTime :
-    print ' - new time range:',str(startTime),'->', str(endTime)
-  if timeStep :
-    print ' - resampling to time step:',str(timeStep)
-  print ' - output file',outFile
-  if colIx :
-    print ' - reading data from column',colIx
-  if scalar != 1.0 :
-    print ' - scaling results by',scalar
+    if not outFile:
+        parser.print_help()
+        parser.error('outFile   undefined')
+    if not simStartStr:
+        parser.print_help()
+        parser.error('simStartDate undefined')
+    if not startStr:
+        parser.print_help()
+        parser.error('startStr undefined')
+    if not endStr:
+        parser.print_help()
+        parser.error('endStr   undefined')
 
-  resampleThFile(thFile, outFile, simStartTime, startTime, endTime, timeStep, colIx, scalar)
+    startTime = parseTimeStr(startStr)
+    endTime = parseTimeStr(endStr)
+    simStartTime = parseTimeStr(simStartStr)
 
-if __name__=='__main__' :
-  parseCommandLine()
+    print 'Parsed options:'
+    print ' - original start time:', simStartTime
+    if startTime:
+        print ' - new time range:', str(startTime), '->', str(endTime)
+    if timeStep:
+        print ' - resampling to time step:', str(timeStep)
+    print ' - output file', outFile
+    if colIx:
+        print ' - reading data from column', colIx
+    if scalar != 1.0:
+        print ' - scaling results by', scalar
+
+    resampleThFile(
+        thFile,
+        outFile,
+        simStartTime,
+        startTime,
+        endTime,
+        timeStep,
+        colIx,
+        scalar)
+
+if __name__ == '__main__':
+    parseCommandLine()

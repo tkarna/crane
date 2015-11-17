@@ -9,5 +9,5 @@ Tuomas Karna 2014-10-29
 # just a wrapper to parseCommandLine method
 from crane.data import testFluxConservation
 
-if __name__=='__main__' :
-  testFluxConservation.parseCommandLine()
+if __name__ == '__main__':
+    testFluxConservation.parseCommandLine()

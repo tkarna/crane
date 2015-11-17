@@ -54,16 +54,16 @@ createDirectory(imgDir)
 
 # bounding box for image
 # this is in the same coordinates as the mesh
-#bBox = [-50000, 490000, -500000, 740000]  # whole domain
+# bBox = [-50000, 490000, -500000, 740000]  # whole domain
 bBox = [330000, 403000, 275000, 312000]  # estuary
 mc = mc.cropGrid(bBox)
 
 # figure size is 15 by 15 inch
-fig = plt.figure(figsize=(15,15))
+fig = plt.figure(figsize=(15, 15))
 ax = fig.add_subplot(111)
 
 coordSys = 'latlon'  # will plot lat/lon coords
-#coordSys = 'spcs'    # will plot distances in km
+# coordSys = 'spcs'    # will plot distances in km
 
 dia = slabSnapshotDC(clabel='', unit='-', coordSys=coordSys)
 dia.setAxes(ax)

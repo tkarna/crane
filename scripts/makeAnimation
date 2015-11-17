@@ -2,22 +2,23 @@
 
 # usage:
 # makeAnimation some/dir/with/png/files animationName
-# creates subdirectory frames, symlink all png files there and create frames/animation.mp4
+# creates subdirectory frames, symlink all png files there and create
+# frames/animation.mp4
 
 # UTIL=avconv
-UTIL=ffmpeg
+UTIL = ffmpeg
 
-if [[ $# -ne 2 ]]
+if [[$  # -ne 2 ]]
 then
   echo "Usage: $0 img-dir name"
   exit 1
 fi
 
-oldwd=`pwd`
+oldwd = `pwd`
 echo "moving to $1"
 cd $1
 mkdir frames
-if [[ $? -eq 1 ]];
+if [[$? -eq 1]];
 then
   echo "moving frames to frames.old"
   mv frames frames.old
@@ -25,7 +26,7 @@ then
 fi
 echo "moving to frames"
 cd frames
-j=0; for i in `ls ../*.png`; do ln -fs $i frame_`printf "%05d".png $j` ; ((j++)); done
-$UTIL -r 10 -i frame_%5d.png -r 25 -b 6000k $2.mp4
+j = 0; for i in `ls .. / *.png`; do ln - fs $i frame_`printf "%05d".png $j`; ((j + +)); done
+$UTIL - r 10 - i frame_ % 5d.png - r 25 - b 6000k $2.mp4
 echo "moving back to $oldwd"
 cd $oldwd

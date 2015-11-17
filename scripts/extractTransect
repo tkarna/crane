@@ -13,5 +13,5 @@ Tuomas Karna 2012-11-16
 # just a wrapper to parseCommandLine method
 from crane.data import extractTransect
 
-if __name__=='__main__' :
-  extractTransect.parseCommandLine()
+if __name__ == '__main__':
+    extractTransect.parseCommandLine()

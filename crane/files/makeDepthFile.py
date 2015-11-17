@@ -155,16 +155,16 @@ def makeDepthFile(data_file_path, method='avg'):
         top = good_3d_data[t, 1:, :]
         bot = good_3d_data[t, :-1, :]
         if method == 'int':
-            di_data[t, :] = np.sum((top+bot)/2.0*elem_height, axis=0)
+            di_data[t, :] = np.sum((top + bot) / 2.0 * elem_height, axis=0)
         else:
-            height_weights = elem_height/total_height
-            di_data[t, :] = np.sum((top+bot)/2.0*height_weights, axis=0)
+            height_weights = elem_height / total_height
+            di_data[t, :] = np.sum((top + bot) / 2.0 * height_weights, axis=0)
 
     # Create NetCDF file
     if method == 'int':
-        di_var = var+'_'+DEPTH_INT_DESC
+        di_var = var + '_' + DEPTH_INT_DESC
     else:
-        di_var = var+'_'+DEPTH_AVG_DESC
+        di_var = var + '_' + DEPTH_AVG_DESC
     di_filename = '{0}_{1}.61.nc'.format(stack, di_var)
     print ' - Creating {0}'.format(di_filename)
     di_file_path = os.path.join(os.path.dirname(data_file_path), di_filename)
@@ -191,8 +191,8 @@ def process3DFiles(data_dir, var, first_stack, last_stack, method='avg'):
     """
     print ('Creating {0}_{1}.61.nc depth integrated files for stacks {2} to '
            '{3} in {4}'.format(var, method.upper(), first_stack, last_stack,
-           os.path.abspath(data_dir)))
-    for s in np.arange(first_stack, last_stack+1):
+                               os.path.abspath(data_dir)))
+    for s in np.arange(first_stack, last_stack + 1):
         data_file = '%s_%s.63.nc' % (s, var)
         data_file_path = os.path.join(data_dir, data_file)
         makeDepthFile(data_file_path, method)
@@ -205,11 +205,19 @@ def parseCommandLine():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser()
     parser.add_argument('data_dir', help='path to combined data directory')
-    parser.add_argument('var', help='variable to operate on (salt, temp, etc.)')
+    parser.add_argument(
+        'var', help='variable to operate on (salt, temp, etc.)')
     parser.add_argument('first_stack', type=int, help='first stack to process')
     parser.add_argument('last_stack', type=int, help='last stack to process')
-    parser.add_argument('-m', '--method', type=str, choices=['avg', 'int'],
-                        default='avg', help=("operation over vertical (default 'avg')"))
+    parser.add_argument(
+        '-m',
+        '--method',
+        type=str,
+        choices=[
+            'avg',
+            'int'],
+        default='avg',
+        help=("operation over vertical (default 'avg')"))
 
     args = parser.parse_args()
 

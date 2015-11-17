@@ -5,30 +5,37 @@ from crane.data import adpInterface
 from crane.plotting import profilePlot
 from crane.utility import saveFigure
 
-class TestNetCDFInterface(unittest.TestCase) :
 
-     def test_oneMonth(self) :
+class TestNetCDFInterface(unittest.TestCase):
+
+    def test_oneMonth(self):
         Vs = 'vel_mag'
         sT = datetime.datetime(2012, 11, 1)
         eT = datetime.datetime(2012, 11, 30)
         dc = adpInterface.getADPData('saturn01.1950.A.ADP', sT, eT, Vs)
         print dc
 
-     def test_twoMonths(self) :
+    def test_twoMonths(self):
         Vs = 'vel_mag'
         sT = datetime.datetime(2011, 11, 1)
         eT = datetime.datetime(2011, 12, 30)
         dc = adpInterface.getADPData('saturn01.1950.A.ADP', sT, eT, Vs)
         print dc
 
-     def test_2013(self) :
+    def test_2013(self):
         Vs = 'vel_mag'
         sT = datetime.datetime(2013, 1, 1)
         eT = datetime.datetime(2013, 1, 30)
 
-        self.failUnlessRaises(Exception, getADPData, 'saturn01.1950.A.ADP', sT, eT, Vs)
+        self.failUnlessRaises(
+            Exception,
+            getADPData,
+            'saturn01.1950.A.ADP',
+            sT,
+            eT,
+            Vs)
 
-     def test_Components(self) : # FAILS
+    def test_Components(self):  # FAILS
         Vs = 'vel_N'
         sT = datetime.datetime(2012, 11, 1)
         eT = datetime.datetime(2012, 11, 30)
@@ -47,7 +54,7 @@ class TestNetCDFInterface(unittest.TestCase) :
         dc = adpInterface.getADPData('saturn01.1950.A.ADP', sT, eT, Vs)
         print dc
 
-     def test_plot(self) :
+    def test_plot(self):
 
         Vs = 'vel_mag'
         sT = datetime.datetime(2011, 11, 15)
@@ -56,10 +63,10 @@ class TestNetCDFInterface(unittest.TestCase) :
 
         print dc
 
-        dia = stackProfileTimeSeriesDC(clabel='Velocity mag',unit='m/s')
-        dia.addSample( 'one', dc )
+        dia = stackProfileTimeSeriesDC(clabel='Velocity mag', unit='m/s')
+        dia.addSample('one', dc)
         dia.showColorBar()
-        saveFigure( '','adcp','png', verbose=True )
+        saveFigure('', 'adcp', 'png', verbose=True)
 
         '''
         sT = time.mktime(datetime.datetime(2012, 11, 1).timetuple())
@@ -72,7 +79,7 @@ class TestNetCDFInterface(unittest.TestCase) :
         self.assertEqual(v['bindepth'].size, t.size)
         '''
 
-     '''
+    '''
      def test_ncReader(self):
 
         sT = datetime.datetime(2012, 11, 1)
@@ -84,11 +91,7 @@ class TestNetCDFInterface(unittest.TestCase) :
 
         self.assertEqual(t.size, d.size)
      '''
-        
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     unittest.main()
-
-
-
-

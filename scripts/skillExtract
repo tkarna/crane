@@ -26,312 +26,382 @@ from crane.data import stationCollection
 from crane.physicalVariableDefs import addTracers
 from crane.physicalVariableDefs import tracerModelObsVariables
 
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # Constants
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 
 # default station file on (CMOP file system)
 default_stationfile = '/home/users/karnat/share/real_stations.csv'
 
 # artificial stations where model output is not needed
-excludedStations = [ '45N125W' ]
+excludedStations = ['45N125W']
 
 # variables for profiles
-profVars = [ 'hvel', 'temp', 'salt', 'vdff', 'tdff', 'kine', 'mixl' ]
+profVars = ['hvel', 'temp', 'salt', 'vdff', 'tdff', 'kine', 'mixl']
 
 # stations where profiles should be extracted
 profStations = [
-                #'abpoa',
-                'am169', 'bono3', 'bvao3',
-                'cbnc3', #'chaba',
-                #'chnke', 'chnkr',
-                'coaof', 'coaww', 'csbo3', 'dsdma',
-                'eliot', 'grays', 'hmndb', 'hmdo3', 'jetta',
-                'lapw1', 'lght2', 'lght6', 'lonw1', #'lowercolrivest',
-                'lwsck', 'marsh', 'nb243', 'nbd29',
-                'nbd41', 'nbd89', 'ncbn1', 'neaw1',
-                'nh10', 'ogi01', # bug in vertical coords, mem issue ??
-                'red26', #'riverrad',
-                'sandi', 'saturn01', 'saturn02', 'saturn03',
-                'saturn04', 'saturn05', 'saturn06', 'saturn07',
+    #'abpoa',
+    'am169', 'bono3', 'bvao3',
+    'cbnc3',  # 'chaba',
+    #'chnke', 'chnkr',
+    'coaof', 'coaww', 'csbo3', 'dsdma',
+    'eliot', 'grays', 'hmndb', 'hmdo3', 'jetta',
+    'lapw1', 'lght2', 'lght6', 'lonw1',  # 'lowercolrivest',
+    'lwsck', 'marsh', 'nb243', 'nbd29',
+    'nbd41', 'nbd89', 'ncbn1', 'neaw1',
+    'nh10', 'ogi01',  # bug in vertical coords, mem issue ??
+    'red26',  # 'riverrad',
+    'sandi', 'saturn01', 'saturn02', 'saturn03',
+    'saturn04', 'saturn05', 'saturn06', 'saturn07',
                 'seahs', 'skaw1', 'stho3', 'sveni',
                 'tansy', 'tnslh', 'tokw1', 'tpoin', 'vanw1',
                 'wauo3', 'wilo3', 'woody', 'wptw1', 'yacht',
                 #'yb101',
-                ]
+]
 
 sedStations = ['saturn01', 'saturn03', 'saturn04', 'saturn07', 'ncbn1']
 sedVars = ['turbidity']
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # Main routine
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+
 def skillExtract(startTime, endTime, getObs, runTag, modelDir, hindcastTag,
                  hindcastBaseDir, stationFile, extractMode='obs',
                  onlineObs=False, readNetcdf=False, noProfiles=False,
-                 tracerModel=None, nTracers=None, customVarNames={}) :
-  global profVars
-  global sedVars
+                 tracerModel=None, nTracers=None, customVarNames={}):
+    global profVars
+    global sedVars
 
-  # remove bad values from the hindcast data
-  removeBadValues = True
-  # subdirectory name: *.nc files are stored to runTag/dataDir/
-  dataDir = 'data'
-  # hardcoded tag for observations
-  obsTag = 'obs'
-  updatedTags = []
+    # remove bad values from the hindcast data
+    removeBadValues = True
+    # subdirectory name: *.nc files are stored to runTag/dataDir/
+    dataDir = 'data'
+    # hardcoded tag for observations
+    obsTag = 'obs'
+    updatedTags = []
 
-  # define all variables to fetch from database or extract from model
-  variables = ['elev', 'temp', 'salt', 'flux']
-  if tracerModel :
-    if tracerModel == 'all':
-      for varList in tracerModelObsVariables.keys():
-        variables += varList
-    elif tracerModel in tracerModelObsVariables:
-      variables += tracerModelObsVariables[tracerModel]
-      if tracerModel not in ['sed', 'generic']:
-        profVars += tracerModelObsVariables[tracerModel]
+    # define all variables to fetch from database or extract from model
+    variables = ['elev', 'temp', 'salt', 'flux']
+    if tracerModel:
+        if tracerModel == 'all':
+            for varList in tracerModelObsVariables.keys():
+                variables += varList
+        elif tracerModel in tracerModelObsVariables:
+            variables += tracerModelObsVariables[tracerModel]
+            if tracerModel not in ['sed', 'generic']:
+                profVars += tracerModelObsVariables[tracerModel]
+        else:
+            raise Exception('Unknown tracer model:' + tracerModel)
+
+    #-------------------------------------------------------------------------
+    # Part I  : get observation data
+    #-------------------------------------------------------------------------
+
+    obsColl = None
+    if (not (getObs or onlineObs)) and os.path.isdir(
+            os.path.join(obsTag, dataDir)):
+        try:
+            obsColl = stationCollection.StationCollection.loadFromNetCDFCollection(
+                obsTag, startTime, endTime, obsTag, dataDir)
+        except Exception as e:
+            print 'Could not read existing observations'
+            print e
+    if not obsColl or len(obsColl) == 0:
+        obsColl = stationCollection.fetchAvailableObservations(
+            startTime, endTime, obsTag, variables=variables)
+
+        # fetch additional products
+        obsColl.fetchDischargeData()
+        obsColl.fetchTidalData()
+        obsColl.fetchCoastalUpwellingData()
+        if not onlineObs:
+            obsColl.saveAsNetCDFCollection(dataDir)
+        updatedTags.append(obsTag)
+    print ' *** obs data *** '
+    for t in obsColl.getTuples():
+        print t
+
+    #-------------------------------------------------------------------------
+    # Part IIa  : extract model output
+    #-------------------------------------------------------------------------
+
+    if extractMode == 'obs':
+        # extract for all stations where there is observations
+        offerings = obsColl.getSubset(
+            exclude=True, location=excludedStations).getOfferings()
+    elif extractMode == 'all':
+        # extract for all possible station locations and depth
+        from crane.data import netcdfCacheInterface as netcdfDB
+        offerings = netcdfDB.getAllOfferings(variables=variables)
     else:
-      raise Exception('Unknown tracer model:' + tracerModel)
+        raise Exception('extractMode not supported: ' + extractMode)
 
-  #-------------------------------------------------------------------------------
-  # Part I  : get observation data
-  #-------------------------------------------------------------------------------
+    if modelDir:
+        if customVarNames:
+            # convert variable names for extraction hvel -> hvel.67
+            for o in offerings:
+                o['variable'] = customVarNames.get(
+                    o['variable'], o['variable'])
 
-  obsColl = None
-  if ( not (getObs or onlineObs) ) and os.path.isdir( os.path.join(obsTag,dataDir) ) :
-    try :
-      obsColl = stationCollection.StationCollection.loadFromNetCDFCollection( obsTag, startTime, endTime, obsTag, dataDir )
-    except Exception as e :
-      print 'Could not read existing observations'
-      print e
-  if not obsColl or len(obsColl) == 0:
-    obsColl = stationCollection.fetchAvailableObservations(startTime, endTime,
-                                                           obsTag,
-                                                           variables=variables)
+        # extract station time series
+        modColl = stationCollection.extractForOfferings(
+            runTag, modelDir, offerings, startTime, endTime,
+            modelCoordSys='spcs', stationFile=stationFile, netcdf=readNetcdf)
+        if not noProfiles:
+            if tracerModel == 'sed':
+                for i in range(1, nTracers + 1):
+                    sedVars.append('trcr_%d' % i)
+                if customVarNames:
+                    sedVars = [customVarNames.get(v, v) for v in sedVars]
+                print 'Extracting sediment model profiles of : '
+                for p in sedVars:
+                    print p
+                modColl3 = stationCollection.extractProfiles(
+                    runTag, modelDir, sedVars, startTime, endTime, stationFile,
+                    sedStations, modelCoordSys='spcs', netcdf=readNetcdf)
+                modColl.update(modColl3)
+            if customVarNames:
+                profVars = [customVarNames.get(v, v) for v in profVars]
+            modColl2 = stationCollection.extractProfiles(
+                runTag, modelDir, profVars, startTime, endTime, stationFile,
+                profStations, modelCoordSys='spcs', netcdf=readNetcdf)
+            modColl.update(modColl2)
+        # exclude last time step from extracted data
+        for k in modColl.getKeys():
+            dc = modColl.getSample(**k)
+            truncated = dc.timeWindow(startTime, endTime, includeEnd=False)
+            modColl.addSample(truncated, **k)
+        modColl.saveAsNetCDFCollection(dataDir)
+        updatedTags.append(runTag)
+        obsColl.update(modColl)
+        print ' *** extracted model data *** '
+        for t in modColl.getTuples():
+            print t
 
-    # fetch additional products
-    obsColl.fetchDischargeData()
-    obsColl.fetchTidalData()
-    obsColl.fetchCoastalUpwellingData()
-    if not onlineObs :
-      obsColl.saveAsNetCDFCollection( dataDir )
-    updatedTags.append( obsTag )
-  print ' *** obs data *** '
-  for t in obsColl.getTuples() :
-    print t
+    #-------------------------------------------------------------------------
+    # Part IIb  : get hindcast data
+    #-------------------------------------------------------------------------
+    if hindcastTag:
+        modColl = stationCollection.fetchHindcastFromDatFiles(
+            runTag, hindcastTag, offerings, startTime, endTime,
+            removeBadValues, stationFile)
+        modColl.saveAsNetCDFCollection(dataDir)
+        updatedTags.append(runTag)
+        print ' *** hindcast data *** '
+        for k in modColl:
+            print k
 
-  #-------------------------------------------------------------------------------
-  # Part IIa  : extract model output
-  #-------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
+    # Part III  : compute derived data products
+    #-------------------------------------------------------------------------
+    derivedColl = stationCollection.computeDerivedProducts(
+        obsColl, updatedTags)
+    if onlineObs:
+        # do not store obs derived products
+        derivedColl = derivedColl.getSubset(exclude=True, tag=obsTag)
+    derivedColl.saveAsNetCDFCollection(dataDir)
 
-  if extractMode == 'obs' :
-    # extract for all stations where there is observations
-    offerings = obsColl.getSubset(exclude=True, location=excludedStations).getOfferings()
-  elif extractMode == 'all' :
-    # extract for all possible station locations and depth
-    from crane.data import netcdfCacheInterface as netcdfDB
-    offerings = netcdfDB.getAllOfferings(variables=variables)
-  else :
-    raise Exception( 'extractMode not supported: '+extractMode )
 
-  if modelDir :
-    if customVarNames :
-      # convert variable names for extraction hvel -> hvel.67
-      for o in offerings :
-        o['variable'] = customVarNames.get(o['variable'],o['variable'])
-
-    # extract station time series
-    modColl = stationCollection.extractForOfferings( runTag, modelDir,
-                                  offerings, startTime, endTime,
-                                  modelCoordSys='spcs', stationFile=stationFile,
-                                  netcdf=readNetcdf )
-    if not noProfiles :
-      if tracerModel == 'sed' :
-        for i in range(1, nTracers+1):
-          sedVars.append('trcr_%d' % i)
-        if customVarNames :
-          sedVars = [ customVarNames.get(v,v) for v in sedVars ]
-        print 'Extracting sediment model profiles of : '
-        for p in sedVars :
-          print p
-        modColl3 = stationCollection.extractProfiles( runTag, modelDir, sedVars,
-                                                     startTime, endTime,
-                                                     stationFile, sedStations,
-                                                     modelCoordSys='spcs',
-                                                     netcdf=readNetcdf )
-        modColl.update(modColl3)
-      if customVarNames :
-        profVars = [ customVarNames.get(v,v) for v in profVars ]
-      modColl2 = stationCollection.extractProfiles( runTag, modelDir, profVars,
-                                                    startTime, endTime,
-                                                    stationFile, profStations,
-                                                    modelCoordSys='spcs',
-                                                    netcdf=readNetcdf )
-      modColl.update(modColl2)
-    # exclude last time step from extracted data
-    for k in modColl.getKeys():
-        dc = modColl.getSample(**k)
-        truncated = dc.timeWindow(startTime, endTime, includeEnd=False)
-        modColl.addSample(truncated, **k)
-    modColl.saveAsNetCDFCollection( dataDir )
-    updatedTags.append( runTag )
-    obsColl.update(modColl)
-    print ' *** extracted model data *** '
-    for t in modColl.getTuples() :
-      print t
-
-  #-------------------------------------------------------------------------------
-  # Part IIb  : get hindcast data
-  #-------------------------------------------------------------------------------
-  if hindcastTag :
-    modColl = stationCollection.fetchHindcastFromDatFiles( runTag,
-                                hindcastTag, offerings,
-                                startTime, endTime, removeBadValues, stationFile )
-    modColl.saveAsNetCDFCollection( dataDir )
-    updatedTags.append( runTag )
-    print ' *** hindcast data *** '
-    for k in modColl :
-      print k
-
-  #-------------------------------------------------------------------------------
-  # Part III  : compute derived data products
-  #-------------------------------------------------------------------------------
-  derivedColl = stationCollection.computeDerivedProducts( obsColl, updatedTags )
-  if onlineObs :
-    # do not store obs derived products
-    derivedColl = derivedColl.getSubset( exclude=True, tag=obsTag )
-  derivedColl.saveAsNetCDFCollection( dataDir )
-  
-
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # Parse commandline arguments
-#-------------------------------------------------------------------------------
-if __name__=='__main__' :
+#-------------------------------------------------------------------------
+if __name__ == '__main__':
 
-  usage = ('Usage: %prog -r [run id] -s [start date YYYY-MM-DD] -e [end date YYYY-MM-DD] -f -d [path] -i [hindcastTag] -b [hindcastBaseDirectory] -t [stationFile]\n')
+    usage = (
+        'Usage: %prog -r [run id] -s [start date YYYY-MM-DD] -e [end date YYYY-MM-DD] -f -d [path] -i [hindcastTag] -b [hindcastBaseDirectory] -t [stationFile]\n')
 
-  parser = OptionParser(usage=usage)
-  parser.add_option('-r', '--runID', action='store', type='string',
-                      dest='runTag', help='Run ID, used in the directory structure and as a label in post-proc.')
-  parser.add_option('-s', '--start', action='store', type='string',
+    parser = OptionParser(usage=usage)
+    parser.add_option(
+        '-r',
+        '--runID',
+        action='store',
+        type='string',
+        dest='runTag',
+        help='Run ID, used in the directory structure and as a label in post-proc.')
+    parser.add_option('-s', '--start', action='store', type='string',
                       dest='startStr', help='Date to start processing')
-  parser.add_option('-e', '--end', action='store', type='string',
+    parser.add_option('-e', '--end', action='store', type='string',
                       dest='endStr', help='Date to end processing')
-  parser.add_option('-f', '--fetchObservations', action='store_true',
-                      dest='getObs', help='forces to fetch observations from database', default=False)
-  parser.add_option('-d', '--modelDirectory', action='store', type='string',
+    parser.add_option(
+        '-f',
+        '--fetchObservations',
+        action='store_true',
+        dest='getObs',
+        help='forces to fetch observations from database',
+        default=False)
+    parser.add_option('-d', '--modelDirectory', action='store', type='string',
                       dest='modelDir', help='model outputs directory')
-  parser.add_option('-i', '--hindcastTag', action='store', type='string',
-                      dest='hindcastTag', help='subdirectory tag in hindcast database, e.g. 22 for 2002-xx-22', default=None)
-  parser.add_option('-b', '--hindcastBaseDirectory', action='store', type='string',
-                      dest='hindcastBaseDir', help='hindcast database base directory',
-                      default='/home/workspace/ccalmr/hindcasts/')
-  parser.add_option('-t', '--stationFile', action='store', type='string',
-                      dest='stationFile', help='text file (*.cvs) containing stations '
-                             'and horizontal coordinates (in spcs coordinates)',
-                             default=default_stationfile)
-  parser.add_option('-A', '--allStations', action='store_true', dest='allOfferings',
-                    help='Extract data for all possible station locations in the database (default %default)',default=False)
-  parser.add_option('-N', '--onlineObservations', action='store_true',
-                    dest='onlineObs',
-                    help='Do not store observations on disk, fetch from database each time (default %default)',default=False)
-  parser.add_option('-C', '--read-netcdf', action='store_true',
-                    dest='readNetcdf',
-                    help='Extract from SELFE netcdf output files instead of SELFE binary files (default %default)',default=False)
-  parser.add_option('', '--no-profiles', action='store_true',
-                    dest='noProfiles',
-                    help='Skip extraction of profiles (default %default)',default=False)
-  parser.add_option('-T', '--tracerModel', action='store', type='string', dest='tracerModel',
-                     help='Enable extraction of tracers: sed, oxy, generic. Must '
-                         'supply number of tracers for \'sed\' and \'generic\' '
-                         'models via the -n switch', default=None)
-  parser.add_option('-n', '--numTracers', action='store', type='int', dest='numTracers',
-                    help='Number of tracers to support for \'sed\' and \'generic\' models',
-                    default=None)
-  parser.add_option('', '--variables', action='store', type='string', dest='customVars',
-                    help='Use custom output files for extracting data, e.g. hvel:hvel.67,temp:temp70',
-                    default=None)
-       
-  (options, args) = parser.parse_args()
+    parser.add_option(
+        '-i',
+        '--hindcastTag',
+        action='store',
+        type='string',
+        dest='hindcastTag',
+        help='subdirectory tag in hindcast database, e.g. 22 for 2002-xx-22',
+        default=None)
+    parser.add_option(
+        '-b',
+        '--hindcastBaseDirectory',
+        action='store',
+        type='string',
+        dest='hindcastBaseDir',
+        help='hindcast database base directory',
+        default='/home/workspace/ccalmr/hindcasts/')
+    parser.add_option(
+        '-t', '--stationFile', action='store', type='string',
+        dest='stationFile',
+        help='text file (*.cvs) containing stations '
+        'and horizontal coordinates (in spcs coordinates)',
+        default=default_stationfile)
+    parser.add_option(
+        '-A',
+        '--allStations',
+        action='store_true',
+        dest='allOfferings',
+        help='Extract data for all possible station locations in the database (default %default)',
+        default=False)
+    parser.add_option(
+        '-N',
+        '--onlineObservations',
+        action='store_true',
+        dest='onlineObs',
+        help='Do not store observations on disk, fetch from database each time (default %default)',
+        default=False)
+    parser.add_option(
+        '-C',
+        '--read-netcdf',
+        action='store_true',
+        dest='readNetcdf',
+        help='Extract from SELFE netcdf output files instead of SELFE binary files (default %default)',
+        default=False)
+    parser.add_option(
+        '',
+        '--no-profiles',
+        action='store_true',
+        dest='noProfiles',
+        help='Skip extraction of profiles (default %default)',
+        default=False)
+    parser.add_option(
+        '-T', '--tracerModel', action='store', type='string',
+        dest='tracerModel',
+        help='Enable extraction of tracers: sed, oxy, generic. Must '
+        'supply number of tracers for \'sed\' and \'generic\' '
+        'models via the -n switch', default=None)
+    parser.add_option(
+        '-n',
+        '--numTracers',
+        action='store',
+        type='int',
+        dest='numTracers',
+        help='Number of tracers to support for \'sed\' and \'generic\' models',
+        default=None)
+    parser.add_option(
+        '',
+        '--variables',
+        action='store',
+        type='string',
+        dest='customVars',
+        help='Use custom output files for extracting data, e.g. hvel:hvel.67,temp:temp70',
+        default=None)
 
-  runTag = options.runTag
-  startStr = options.startStr
-  endStr = options.endStr
-  modelDir = options.modelDir
-  hindcastTag = options.hindcastTag
-  hindcastBaseDir = options.hindcastBaseDir
-  getObs = options.getObs
-  stationFile = options.stationFile
-  allOfferings = options.allOfferings
-  onlineObs = options.onlineObs
-  readNetcdf = options.readNetcdf
-  noProfiles = options.noProfiles
-  tracerModel = options.tracerModel
-  numTracers = options.numTracers
-  customVars = options.customVars
-  
-  if tracerModel :
-    if not numTracers and tracerModel.split('.')[0] in ['sed','generic']:
-      parser.print_help()
-      parser.error('numTracers must be provided if sed or generic tracer models are used.')
-    addTracers( tracerModel, numTracers=numTracers)
+    (options, args) = parser.parse_args()
 
-  if (modelDir or hindcastTag) and runTag == None :
-    parser.print_help()
-    parser.error('runTag undefined')
-  if startStr == None:
-    parser.print_help()
-    parser.error('Start date undefined')
-  if endStr == None:
-    parser.print_help()
-    parser.error('End date undefined')
-  if not getObs and not modelDir and not hindcastTag :
-    parser.print_help()
-    parser.error('fetchObservations, modelDirectory or hindcastTag must be set')
-  if modelDir and hindcastTag :
-    parser.print_help()
-    parser.error('modelDirectory and hindcastTag cannot be set at the same time')
+    runTag = options.runTag
+    startStr = options.startStr
+    endStr = options.endStr
+    modelDir = options.modelDir
+    hindcastTag = options.hindcastTag
+    hindcastBaseDir = options.hindcastBaseDir
+    getObs = options.getObs
+    stationFile = options.stationFile
+    allOfferings = options.allOfferings
+    onlineObs = options.onlineObs
+    readNetcdf = options.readNetcdf
+    noProfiles = options.noProfiles
+    tracerModel = options.tracerModel
+    numTracers = options.numTracers
+    customVars = options.customVars
 
-  startTime = datetime.datetime.strptime( startStr ,'%Y-%m-%d')
-  endTime = datetime.datetime.strptime( endStr ,'%Y-%m-%d')
+    if tracerModel:
+        if not numTracers and tracerModel.split('.')[0] in ['sed', 'generic']:
+            parser.print_help()
+            parser.error(
+                'numTracers must be provided if sed or generic tracer models are used.')
+        addTracers(tracerModel, numTracers=numTracers)
 
-  extractMode = 'obs'
-  if allOfferings :
-    extractMode = 'all'
+    if (modelDir or hindcastTag) and runTag is None:
+        parser.print_help()
+        parser.error('runTag undefined')
+    if startStr is None:
+        parser.print_help()
+        parser.error('Start date undefined')
+    if endStr is None:
+        parser.print_help()
+        parser.error('End date undefined')
+    if not getObs and not modelDir and not hindcastTag:
+        parser.print_help()
+        parser.error(
+            'fetchObservations, modelDirectory or hindcastTag must be set')
+    if modelDir and hindcastTag:
+        parser.print_help()
+        parser.error(
+            'modelDirectory and hindcastTag cannot be set at the same time')
 
-  customVarNames = {}
-  if customVars :
-    for entry in customVars.split(',') :
-      var,replacement = entry.split(':')
-      customVarNames[var] = replacement
+    startTime = datetime.datetime.strptime(startStr, '%Y-%m-%d')
+    endTime = datetime.datetime.strptime(endStr, '%Y-%m-%d')
 
-  print 'Parsed options:'
-  print ' - extract mode:', extractMode
-  print ' - time range:',str(startTime),'->', str(endTime)
-  if getObs :
-    print ' - get observations from database'
-  if runTag and modelDir :
-    print ' - extract model output from', modelDir
-    print ' - SELFE output format:','netCDF' if readNetcdf else 'binary'
-  if runTag and hindcastTag :
-    print ' - fetch hindcast data using tag', hindcastTag
-    print '   basedir', hindcastBaseDir
-  if runTag and (modelDir or hindcastTag):
-    print ' - run ID:', runTag
-  if stationFile :
-    print ' - using stationFile',stationFile
-  if onlineObs :
-    print ' - observations are not stored to disk'
-  if not noProfiles :
-    print ' - extraction of profiles enabled'
-  if tracerModel:
-    print ' - using tracer model ', tracerModel
-  if tracerModel and numTracers:
-    print ' - with tracers n=', numTracers
-  if customVarNames :
-    print ' - with custom variables',customVarNames
-  sys.stdout.flush()
-  
-  skillExtract(startTime, endTime, getObs, runTag, modelDir, hindcastTag, 
-               hindcastBaseDir, stationFile, extractMode, onlineObs, readNetcdf, 
-               noProfiles, tracerModel, numTracers, customVarNames)
+    extractMode = 'obs'
+    if allOfferings:
+        extractMode = 'all'
+
+    customVarNames = {}
+    if customVars:
+        for entry in customVars.split(','):
+            var, replacement = entry.split(':')
+            customVarNames[var] = replacement
+
+    print 'Parsed options:'
+    print ' - extract mode:', extractMode
+    print ' - time range:', str(startTime), '->', str(endTime)
+    if getObs:
+        print ' - get observations from database'
+    if runTag and modelDir:
+        print ' - extract model output from', modelDir
+        print ' - SELFE output format:', 'netCDF' if readNetcdf else 'binary'
+    if runTag and hindcastTag:
+        print ' - fetch hindcast data using tag', hindcastTag
+        print '   basedir', hindcastBaseDir
+    if runTag and (modelDir or hindcastTag):
+        print ' - run ID:', runTag
+    if stationFile:
+        print ' - using stationFile', stationFile
+    if onlineObs:
+        print ' - observations are not stored to disk'
+    if not noProfiles:
+        print ' - extraction of profiles enabled'
+    if tracerModel:
+        print ' - using tracer model ', tracerModel
+    if tracerModel and numTracers:
+        print ' - with tracers n=', numTracers
+    if customVarNames:
+        print ' - with custom variables', customVarNames
+    sys.stdout.flush()
+
+    skillExtract(
+        startTime,
+        endTime,
+        getObs,
+        runTag,
+        modelDir,
+        hindcastTag,
+        hindcastBaseDir,
+        stationFile,
+        extractMode,
+        onlineObs,
+        readNetcdf,
+        noProfiles,
+        tracerModel,
+        numTracers,
+        customVarNames)

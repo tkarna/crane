@@ -8,5 +8,5 @@ Tuomas Karna 2014-06-18
 # just a wrapper to parseCommandLine method
 from crane.data import reportMeshQuality
 
-if __name__=='__main__' :
-  reportMeshQuality.parseCommandLine()
+if __name__ == '__main__':
+    reportMeshQuality.parseCommandLine()

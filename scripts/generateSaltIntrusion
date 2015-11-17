@@ -7,5 +7,5 @@ Tuomas Karna 2013-03-01
 # just a wrapper to parseCommandLine method
 from crane.data import generateSaltIntrusion
 
-if __name__=='__main__' :
-  generateSaltIntrusion.parseCommandLine()
+if __name__ == '__main__':
+    generateSaltIntrusion.parseCommandLine()

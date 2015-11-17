@@ -19,4 +19,3 @@ setup(name='crane',
                 'crane.files'],
       scripts=scripts,
       )
-

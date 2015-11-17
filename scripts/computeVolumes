@@ -8,5 +8,5 @@ Generalized version of computePlumeMetrics.py
 # just a wrapper to parseCommandLine method
 from crane.data import computeVolumes
 
-if __name__=='__main__':
-  computeVolumes.parseCommandLine()
+if __name__ == '__main__':
+    computeVolumes.parseCommandLine()

@@ -47,13 +47,13 @@ def elementToNodalValues(elem_data, connectivity):
     """
     ntimes = elem_data.shape[0]
     nelems = elem_data.shape[1]
-    nnodes = connectivity.max()+1
+    nnodes = connectivity.max() + 1
 
     n_data = np.zeros((ntimes, nnodes))
     n_count = np.zeros((nnodes,))
 
     for t in np.arange(ntimes):
-        n_count = n_count*0
+        n_count = n_count * 0
         for e in np.arange(nelems):
             # 3 nodes for each element
             for n in np.arange(3):
@@ -86,7 +86,7 @@ def calculateBedFlux(bed_depth, start_depth=None):
     bd = bed_depth.variables['bed_depth'][:]
     bed_flux_nodes = bd[1:, :] - bd[:-1, :]
     # Change from 1-base to 0-base
-    face_nodes = bed_depth.variables['face_nodes'][:]-1
+    face_nodes = bed_depth.variables['face_nodes'][:] - 1
     bed_flux_elems = bed_flux_nodes[:, face_nodes].mean(axis=2)
     elem_areas = mc.computeAreas(face_nodes,
                                  bed_depth.variables['node_x'],
@@ -105,7 +105,7 @@ def calculateBedFlux(bed_depth, start_depth=None):
         first_bed_flux = np.expand_dims(first_bed_flux, 0)
         bed_flux = np.concatenate([first_bed_flux, bed_flux_nodes])
     else:
-        fill = np.ones((1, bed_flux_nodes[0, :].shape[0]))*MISSING_VALUE
+        fill = np.ones((1, bed_flux_nodes[0, :].shape[0])) * MISSING_VALUE
         bed_flux = np.concatenate([fill, bed_flux_nodes])
 
     return bed_flux
@@ -133,7 +133,9 @@ def makeBedFlux(bed_depth_path, start_depth=None):
     stack = bed_depth_path.split('/')[-1].split('_')[0]
     bed_flux_file = '%s_bed_flux.61.nc' % stack
     print ' - Creating %s' % bed_flux_file
-    bed_flux_path = os.path.join(os.path.dirname(bed_depth_path), bed_flux_file)
+    bed_flux_path = os.path.join(
+        os.path.dirname(bed_depth_path),
+        bed_flux_file)
     shutil.copyfile(bed_depth_path, bed_flux_path)
 
     # Alter copied file for deposition and erosion
@@ -164,7 +166,7 @@ def processBedDepth(data_dir, first_stack, last_stack):
     print ' Creating bed_flux.61.nc files for stacks %s to %s in %s' % (
         first_stack, last_stack, os.path.abspath(data_dir))
     last_depth = None
-    for s in np.arange(first_stack, last_stack+1):
+    for s in np.arange(first_stack, last_stack + 1):
         bed_depth_file = '%s_bed_depth.61.nc' % s
         bed_depth_path = os.path.join(data_dir, bed_depth_file)
         last_depth = makeBedFlux(bed_depth_path, last_depth)
@@ -177,7 +179,10 @@ def parseCommandLine():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser()
     parser.add_argument('data_dir', help='Path to combined data directory')
-    parser.add_argument('first_stack', type=int, help='First stack to processes')
+    parser.add_argument(
+        'first_stack',
+        type=int,
+        help='First stack to processes')
     parser.add_argument('last_stack', type=int, help='Last stack to processes')
 
     args = parser.parse_args()

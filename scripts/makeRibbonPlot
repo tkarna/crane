@@ -9,5 +9,5 @@ Tuomas Karna 2013-11-08
 # just a wrapper to parseCommandLine method
 from crane.plotting import ribbonPlot
 
-if __name__=='__main__' :
-  ribbonPlot.parseCommandLine()
+if __name__ == '__main__':
+    ribbonPlot.parseCommandLine()

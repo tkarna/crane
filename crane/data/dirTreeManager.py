@@ -47,8 +47,11 @@ def detectTreeRule(verbose=False, **kwargs):
             if verbose:
                 print '* directory structure detected:', r.__class__.__name__
             return r
-    argsStr = ' '.join(['{0:s}={1:s}'.format(k, repr(kwargs[k])) for k in kwargs])
-    raise Exception('Could not detect rule: No matching files found: '+argsStr)
+    argsStr = ' '.join(['{0:s}={1:s}'.format(
+        k, repr(kwargs[k])) for k in kwargs])
+    raise Exception(
+        'Could not detect rule: No matching files found: ' +
+        argsStr)
 
 
 def getDataContainer(rootPath=None, rule=None, dataType=None, tag=None,
@@ -149,12 +152,13 @@ def getAllDataContainers(rootPath=None, rule=None, dataType=None, tag=None,
         elif rule in ruleAlias['monthlyFile']:
             tree = monthlyFileTree(verbose=verbose)
         else:
-            raise Exception('Unknown dir tree rule: '+rule)
+            raise Exception('Unknown dir tree rule: ' + rule)
     else:
         # assume that user provided the tree object
         tree = rule
 
-    argsStr = ' '.join(['{0:s}={1:s}'.format(k, repr(kwargs[k])) for k in kwargs])
+    argsStr = ' '.join(['{0:s}={1:s}'.format(
+        k, repr(kwargs[k])) for k in kwargs])
     dcList = tree.readFiles(**kwargs)
     if len(dcList) == 0:
         raise Exception('Reading data from tree failed: ' + argsStr)
@@ -196,7 +200,7 @@ def saveDataContainerInTree(dcs, rootPath=None, rule=None, dtype=np.float64,
         elif rule in ruleAlias['monthlyFile']:
             tree = monthlyFileTree()
         else:
-            raise Exception('Unknown dir tree rule: '+rule)
+            raise Exception('Unknown dir tree rule: ' + rule)
     else:
         raise Exception('rule must be a string')
 
@@ -212,10 +216,12 @@ class fileTree(object):
     """
 
     def readFiles(self, *args, **kwargs):
-        raise NotImplementedError('This method must be implemented in derived class')
+        raise NotImplementedError(
+            'This method must be implemented in derived class')
 
     def saveDataContainer(self, *args, **kwargs):
-        raise NotImplementedError('This method must be implemented in derived class')
+        raise NotImplementedError(
+            'This method must be implemented in derived class')
 
 
 class singleFileTree(fileTree):
@@ -253,7 +259,7 @@ class singleFileTree(fileTree):
                                var=variable, st=startStr, et=endStr)
         else:  # any other data type
             if slevel is None or slevel == '*':
-                dep = '0' 
+                dep = '0'
                 if slevel == '*':
                     dep = '*'
             else:
@@ -323,7 +329,8 @@ class singleFileTree(fileTree):
                     desc, ta = nc.readHeader(verbose=self.verbose)
                     if (st is not None and et is not None and not ta.overlaps(st, et)):
                         continue  # time out of requested range
-                    dc = nc.readToDataContainer(st, et, verbose=self.verbose, dataType=dataType)
+                    dc = nc.readToDataContainer(
+                        st, et, verbose=self.verbose, dataType=dataType)
                     dcList.append(dc)
                 except Exception as e:
                     print 'Error while reading file: {0:s}'.format(f)
@@ -373,9 +380,9 @@ class monthlyFileTree(fileTree):
             directory = os.path.join(tag, 'data', subdir, location, offer)
         else:
             if msldepth is not None and msldepth != '*':
-                variable += '.'+msldepth
+                variable += '.' + msldepth
             elif slevel is not None and slevel != '*':
-                variable += '.s'+str(slevel)
+                variable += '.s' + str(slevel)
             directory = os.path.join(tag, 'data', subdir, location, variable)
         if isinstance(startTime, str):
             fname = '{0:s}.nc'.format(startTime)
@@ -411,7 +418,7 @@ class monthlyFileTree(fileTree):
         windows = []
         dtstart = datetime.datetime(startTime.year, startTime.month, 1)
         for dt in rrule.rrule(rrule.MONTHLY, until=endTime, dtstart=dtstart):
-            windows.append((dt, dt+relativedelta.relativedelta(months=1)))
+            windows.append((dt, dt + relativedelta.relativedelta(months=1)))
         return windows
 
     def saveDataContainer(self, dc, dtype=np.float64, overwrite=False,
@@ -440,7 +447,8 @@ class monthlyFileTree(fileTree):
             createDirectory(os.path.split(fn)[0])
             # crop data dataContainer
             try:
-                cropped_dc = dc.timeWindow(win_start, win_end, includeEnd=False)
+                cropped_dc = dc.timeWindow(
+                    win_start, win_end, includeEnd=False)
             except Exception as e:
                 # NOTE this should not happen as win_start/end come from dc
                 print 'cropping time window failed:'
@@ -563,10 +571,12 @@ class monthlyFileTree(fileTree):
         rootPath = kwargs.get('rootPath')
         files = self.findMatchingFiles(**kwargs)
         samples = self.getAvailableSamples(files, rootPath)
-        # discard all samples that do not match the query (after parsing the filename)
+        # discard all samples that do not match the query (after parsing the
+        # filename)
         dcList = []
         for s in samples:
-            # search for files that are mergeable, i.e. belong to the same data set
+            # search for files that are mergeable, i.e. belong to the same data
+            # set
             s['startTime'] = st
             s['endTime'] = et
             s['rootPath'] = rootPath
@@ -580,13 +590,15 @@ class monthlyFileTree(fileTree):
                         desc, ta = nc.readHeader(verbose=self.verbose)
                         file_st = ta.getDatetime(0)
                         file_et = ta.getDatetime(-1)
-                        # skip file if its end time is less than query start time
+                        # skip file if its end time is less than query start
+                        # time
                         if (st is not None and file_et < st):
                             continue
                         # skip file if its start time is greater than query end
                         if (et is not None and file_st > et):
                             continue
-                        dc = nc.readToDataContainer(st, et, verbose=self.verbose, dataType=dataType)
+                        dc = nc.readToDataContainer(
+                            st, et, verbose=self.verbose, dataType=dataType)
                         if outputDC is None:
                             outputDC = dc
                         else:

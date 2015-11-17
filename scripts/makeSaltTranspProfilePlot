@@ -10,5 +10,5 @@ Tuomas Karna 2013-11-08
 # just a wrapper to parseCommandLine method
 from plotting import plotSaltTranspProfile
 
-if __name__=='__main__' :
-  plotSaltTranspProfile.parseCommandLine()
+if __name__ == '__main__':
+    plotSaltTranspProfile.parseCommandLine()
