@@ -354,13 +354,6 @@ class selfeNCFile(object) :
     self.verbose = verbose
     self.headerIsRead = False
 
-  def __delete__(self) :
-    if self.verbose :
-      print 'closing',self.filenamefull
-    if self.ncfile != None :
-      self.ncfile.close()
-      self.variables = None
-
   def readHeader(self, meshSearchObj=None) :
     """
     Reads header of the netcdf file and prepares data structures.

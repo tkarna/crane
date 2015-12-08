@@ -29,6 +29,7 @@ from crane.physicalVariableDefs import UNITS
 from crane.plotting import slabPlot
 from crane.utility import createDirectory
 from crane.utility import saveFigure
+from crane.utility import parseTimeStr
 
 import multiprocessing
 # NOTE this must not be a local function in runTasksInQueue
