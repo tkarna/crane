@@ -449,11 +449,12 @@ class StationCollection(tinyDB):
                 m = truncated.getMetaData()
                 print 'time series too short', m['location'], m['variable'], m['msldepth']
                 return
-            if len(kwargs) == 0:
+            kw = dict(kwargs)
+            if len(kw) == 0:
                 # try to get keywords from dataContainer (should be default
                 # usage)
-                kwargs = self.getKeywordsFromDC(dc)
-            tinyDB.addSample(self, truncated, **kwargs)
+                kw = self.getKeywordsFromDC(dc)
+            tinyDB.addSample(self, truncated, **kw)
         except Exception as e:
             print e
 
@@ -557,20 +558,13 @@ class StationCollection(tinyDB):
                 dc, rule=treeType, overwrite=True)
 
     @classmethod
-    def loadFromNetCDFCollection(
-            cls,
-            tag,
-            startTime=None,
-            endTime=None,
-            obsTag=None,
-            dataDir='data',
-            treeRule=None,
-            dataType=None,
-            variable=None,
-            verbose=True):
+    def loadFromNetCDFCollection(cls, tag, startTime=None, endTime=None,
+                                 obsTag=None, dataDir='data', treeRule=None,
+                                 dataType=None, variable=None, verbose=True):
         dcs = dirTreeManager.getAllDataContainers(
             tag=tag, dataType=dataType, variable=variable, startTime=startTime,
-            endTime=endTime, msldepth=None, verbose=True)
+            endTime=endTime, msldepth=None, rule=treeRule, verbose=True)
+        print dcs
         sc = cls(startTime, endTime, obsTag)
         # add to collection
         for dc in dcs:

@@ -18,7 +18,7 @@ from optparse import OptionParser
 
 import crane.data.stationCollection as StationCollection
 from crane.data.loadHindcastStations import readDateRange
-from crane.files.stationFile import StationFile
+from crane.files.csvStationFile import csvStationFile
 
 from crane.plotting.plot import Plots
 from crane.utility import createDirectory
@@ -80,11 +80,9 @@ def skillPlots(
     #-------------------------------------------------------------------------
 
     # get "all" station names and coordinates
-    sta = StationFile()
-    sta.readFileFromDisk(stationFile)
-    stationNames = sta.stations.keys()
-    stationXY = sta.stations
-    stationX = dict((s, stationXY[s][0]) for s in stationXY)
+    sta = csvStationFile().readFromFile(stationFile)
+    stationNames = sta.getStations()
+    stationX = dict((s, sta.getX(s)) for s in stationNames)
 
     # all stations for elevation comparison
     elevStations = [
@@ -318,7 +316,8 @@ def skillPlots(
         obsColl.update(derColl)
     elif os.path.isdir(os.path.join(obsTag, dataDir)):
         obsColl = StationCollection.StationCollection.loadFromNetCDFCollection(
-            obsTag, startTime, endTime, obsTag, dataDir, dataType=dataTypeToRead)
+            obsTag, startTime, endTime, obsTag, dataDir,
+            dataType=dataTypeToRead, treeRule='monthlyFile')
     if obsColl:
         print ' *** obs data *** '
         for k in obsColl:
@@ -334,7 +333,8 @@ def skillPlots(
         path = os.path.join(runTag, dataDir)
         if os.path.isdir(path):
             modColl = StationCollection.StationCollection.loadFromNetCDFCollection(
-                runTag, startTime, endTime, obsTag, dataDir, dataType=dataTypeToRead)
+                runTag, startTime, endTime, obsTag, dataDir,
+                dataType=dataTypeToRead, treeRule='monthlyFile')
         else:
             raise Exception(
                 'run data not found {0:s} {1:s}'.format(
@@ -618,7 +618,7 @@ if __name__ == '__main__':
         action='store',
         type='string',
         dest='stationFile',
-        help='file that defines station coordinates')
+        help='csv station file with station coordinates')
     parser.add_option(
         '-N',
         '--onlineObservations',
@@ -662,6 +662,9 @@ if __name__ == '__main__':
     if imgDir is None:
         parser.print_help()
         parser.error('imgDir undefined')
+    if stationFile is None:
+        parser.print_help()
+        parser.error('stationFile undefined')
     if startStr is None:
         parser.print_help()
         parser.error('Start date undefined')
