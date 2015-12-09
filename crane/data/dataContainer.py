@@ -107,7 +107,7 @@ class dataContainer(object):
         self.description = str(description)
         self.coordSys = str(coordSys)
         self.fieldNames = fieldNames
-        self.metaData = metaData
+        self.metaData = dict(metaData)
 
     def setMetaData(self, name, value=None):
         """Assigns metaData for given name."""
