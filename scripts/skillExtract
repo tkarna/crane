@@ -104,7 +104,7 @@ def skillExtract(startTime, endTime, getObs, runTag, modelDir, hindcastTag,
             os.path.join(obsTag, dataDir)):
         try:
             obsColl = stationCollection.StationCollection.loadFromNetCDFCollection(
-                obsTag, startTime, endTime, obsTag, dataDir)
+                obsTag, startTime, endTime, obsTag, dataDir, treeRule='monthlyFile')
         except Exception as e:
             print 'Could not read existing observations'
             print e
