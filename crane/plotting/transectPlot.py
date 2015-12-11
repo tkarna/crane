@@ -203,7 +203,11 @@ def generateTransectFromDataContainer(dc, timeStamp, flipDirection=False):
         data = dc.data[:, :, timeStamp]  # shape (npts,nComp)
         time = dc.time.getDatetime(timeStamp)
     # find unique x,y pairs
-    xyHashed = x + 1e6 * y
+    x_mag = np.abs(x).max()
+    y_mag = np.abs(y).max()
+    # TODO is this reliable??
+    decs = 6
+    xyHashed = np.round(x/x_mag, decimals=decs) + 10*np.round(y/y_mag, decimals=decs)
     uniqueXYHash, uniqueIx = np.unique(xyHashed, return_index=True)
     uniqueIx.sort()  # keep ordering
     uniqueXYHash = xyHashed[uniqueIx]
