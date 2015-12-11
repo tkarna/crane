@@ -9,6 +9,7 @@ import traceback
 import datetime
 import time as timeMod
 from glob import glob
+from scipy.interpolate import interp1d
 
 import numpy as np
 from netCDF4 import Dataset as NetCDFFile
