@@ -12,6 +12,7 @@ from crane import matplotlib
 from crane import plt
 from crane.physicalVariableDefs import VARS
 from crane.physicalVariableDefs import UNITS
+from crane.utility import parseTimeStr
 from crane.utility import saveFigure
 from crane.utility import createDirectory
 from crane.plotting import transectPlot
