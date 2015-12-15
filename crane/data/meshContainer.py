@@ -22,7 +22,7 @@ class meshContainer(dataContainer.dataContainer) :
   # TODO add a tag for element types, pol. order, discretization type (continuous, discontinuos, non-conf. etc) ?
   # TODO element type (etc) could be an array for mixed mesh
   # TODO test
-  def __init__(self, description, time, x,y,z, data, connectivity, fieldNames, coordSys='',metaData=None, dtype=np.float64) :
+  def __init__(self, description, time, x,y,z, data, connectivity, fieldNames, coordSys='',metaData={}, dtype=np.float64) :
     """Creates new meshData object
 
     description -- string to identify the data array
