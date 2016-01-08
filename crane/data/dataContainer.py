@@ -107,7 +107,10 @@ class dataContainer(object):
         self.description = str(description)
         self.coordSys = str(coordSys)
         self.fieldNames = fieldNames
-        self.metaData = dict(metaData)
+        if metaData is None:
+            self.metaData = {}
+        else:
+            self.metaData = dict(metaData)
 
     def setMetaData(self, name, value=None):
         """Assigns metaData for given name."""
@@ -295,7 +298,7 @@ class dataContainer(object):
         copy   : bool
             if True copies the data array instead of using a view
         """
-        copy = kwargs.get(copy, False)
+        copy = kwargs.get('copy', False)
         indices = []
         names = []
         for f in fields:
