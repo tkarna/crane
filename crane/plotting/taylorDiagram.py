@@ -470,6 +470,9 @@ class BiasNMSEDiagram(diagramBase):
             self.ax.set_ylim(ylim)
             yrange = self.dataLim[1] - self.dataLim[0]
             self.ax.set_aspect(2 * xTickMax / yrange)
+        # Do not allow y_max to be too large
+        y_max = min(self.ax.dataLim.ymax, 4.0)
+        self.ax.set_ylim([0, y_max])
         return l
 
 
@@ -666,6 +669,7 @@ class normalizedStatisticsDiagram(object):
         l2 = self.biasDiags[tag].plotSample(bias, nmse, **kwargs)
         self.murphyLim[0] = 0.0  # min(self.murphyLim[0], nmse*1.05)
         self.murphyLim[1] = max(self.murphyLim[1], nmse * 1.05)
+        self.murphyLim[1] = min(self.murphyLim[1], 4.0)
         self.biasAx.set_ylim(self.murphyLim)
         yrange = self.murphyLim[1] - self.murphyLim[0]
         xTickMax = max(self.biasAx.get_xticks())
