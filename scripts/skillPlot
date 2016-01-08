@@ -392,183 +392,77 @@ def skillPlots(
     # minmax plot
     pl.makeStationExtremaPlot(stationCoords=elevStationX)
     # time series stack plot
-    pl.makeTimeSeries(
-        xlim=[
-            startTime,
-            endTime],
-        ylim=ts_ylim,
-        err_ylim=ts_err_ylim)
-    pl.makeTimeSeriesStack(
-        elevStationX,
-        xlim=[
-            startTime,
-            endTime],
-        ylim=ts_ylim['elev'],
-        plotError=True)
+    pl.makeTimeSeries(xlim=[startTime, endTime], ylim=ts_ylim, err_ylim=ts_err_ylim)
+    pl.makeTimeSeriesStack(elevStationX, xlim=[startTime, endTime], ylim=ts_ylim['elev'], plotError=True)
     # error histogram stack plot
-    pl.makeErrorHistograms(
-        plotMinMax=True,
-        range=eh_lim['elev'],
-        bins=eh_bins,
-        shadedLim=eh_shadelim['elev'])
-    pl.makeErrorHistogramStack(
-        elevStationX,
-        plotMinMax=True,
-        range=eh_lim['elev'],
-        bins=eh_bins,
-        shadedLim=eh_shadelim['elev'])
+    pl.makeErrorHistograms(plotMinMax=True, range=eh_lim['elev'], bins=eh_bins, shadedLim=eh_shadelim['elev'])
+    pl.makeErrorHistogramStack(elevStationX, plotMinMax=True, range=eh_lim['elev'], bins=eh_bins, shadedLim=eh_shadelim['elev'])
     # error spectral plot
     pl.makeErrorSpectralPlots()
     pl.makeErrorSpectralStack(elevStationX, ylim=esp_ylim)
     # harmonic analysis NOTE slow!!
-    pl.makeHarmonicAnalysisErrorPlots(
-        elevStationX, amplim=haErr_ylim, phalim=[-180, 180])
+    pl.makeHarmonicAnalysisErrorPlots(elevStationX, amplim=haErr_ylim, phalim=[-180, 180])
     pl.makeHarmonicAnalysisPlots(elevStationX)
 
     # all salt
     data = sc.getSubset(variable='salt')
     pl = Plots(imgDir, data)
-    pl.makeTimeSeries(
-        xlim=[
-            startTime,
-            endTime],
-        ylim=ts_ylim,
-        err_ylim=ts_err_ylim)
+    pl.makeTimeSeries(xlim=[startTime, endTime], ylim=ts_ylim, err_ylim=ts_err_ylim)
     pl.makeErrorHistograms(plotMinMax=True, range=eh_lim['salt'], bins=eh_bins)
 
     # surface salt
     data = sc.getSubset(surfSaltFilter)
     pl = Plots(imgDir, data)
-    pl.makeStationExtremaPlot(
-        varPrefix='surface',
-        stationCoords=surfSaltStationX)
+    pl.makeStationExtremaPlot(varPrefix='surface', stationCoords=surfSaltStationX)
     pl.makeTaylorDiagramsVar(varPrefix='surface')
-    pl.makeTimeSeriesStack(
-        surfSaltStationX,
-        varPrefix='surface',
-        xlim=[
-            startTime,
-            endTime],
-        ylim=ts_ylim['salt'])
-    pl.makeErrorHistogramStack(
-        surfSaltStationX,
-        varPrefix='surface',
-        plotMinMax=True,
-        range=eh_lim['salt'],
-        bins=eh_bins)
+    pl.makeTimeSeriesStack(surfSaltStationX, varPrefix='surface', xlim=[startTime, endTime], ylim=ts_ylim['salt'])
+    pl.makeErrorHistogramStack(surfSaltStationX, varPrefix='surface', plotMinMax=True, range=eh_lim['salt'], bins=eh_bins)
 
     # bottom salt
     data = sc.getSubset(botSaltFilter)
     pl = Plots(imgDir, data)
-    pl.makeStationExtremaPlot(
-        varPrefix='bottom',
-        stationCoords=botSaltStationX)
+    pl.makeStationExtremaPlot(varPrefix='bottom', stationCoords=botSaltStationX)
     pl.makeTaylorDiagramsVar(varPrefix='bottom')
-    pl.makeTimeSeriesStack(
-        botSaltStationX,
-        varPrefix='bottom',
-        xlim=[
-            startTime,
-            endTime],
-        ylim=ts_ylim['salt'])
-    pl.makeErrorHistogramStack(
-        botSaltStationX,
-        varPrefix='bottom',
-        plotMinMax=True,
-        range=eh_lim['salt'],
-        bins=eh_bins)
+    pl.makeTimeSeriesStack(botSaltStationX, varPrefix='bottom', xlim=[startTime, endTime], ylim=ts_ylim['salt'])
+    pl.makeErrorHistogramStack(botSaltStationX, varPrefix='bottom', plotMinMax=True, range=eh_lim['salt'], bins=eh_bins)
 
     # all temp
-    data = sc.getSubset(
-        variable='temp').getSubset(
-        exclude=True,
-        location='saturn01',
-        msldepth='0')
+    data = sc.getSubset(variable='temp').getSubset(exclude=True, location='saturn01', msldepth='0')
     pl = Plots(imgDir, data)
-    pl.makeTimeSeries(
-        xlim=[
-            startTime,
-            endTime],
-        ylim=ts_ylim,
-        err_ylim=ts_err_ylim)
+    pl.makeTimeSeries(xlim=[startTime, endTime], ylim=ts_ylim, err_ylim=ts_err_ylim)
     pl.makeErrorHistograms(plotMinMax=True, range=eh_lim['temp'], bins=eh_bins)
 
     # surface temperature
     data = sc.getSubset(surfTempFilter)
     pl = Plots(imgDir, data)
-    pl.makeStationExtremaPlot(
-        varPrefix='surface',
-        stationCoords=surfTempStationX)
+    pl.makeStationExtremaPlot(varPrefix='surface', stationCoords=surfTempStationX)
     pl.makeTaylorDiagramsVar(varPrefix='surface')
-    pl.makeTimeSeriesStack(
-        surfTempStationX,
-        varPrefix='surface',
-        xlim=[
-            startTime,
-            endTime],
-        ylim=ts_ylim['temp'])
-    pl.makeErrorHistogramStack(
-        surfTempStationX,
-        varPrefix='surface',
-        plotMinMax=True,
-        range=eh_lim['temp'],
-        bins=eh_bins)
+    pl.makeTimeSeriesStack(surfTempStationX, varPrefix='surface', xlim=[startTime, endTime], ylim=ts_ylim['temp'])
+    pl.makeErrorHistogramStack(surfTempStationX, varPrefix='surface', plotMinMax=True, range=eh_lim['temp'], bins=eh_bins)
 
     # bottom temperature
     data = sc.getSubset(botTempFilter)
     pl = Plots(imgDir, data)
-    pl.makeStationExtremaPlot(
-        varPrefix='bottom',
-        stationCoords=botTempStationX)
+    pl.makeStationExtremaPlot(varPrefix='bottom', stationCoords=botTempStationX)
     pl.makeTaylorDiagramsVar(varPrefix='bottom')
-    pl.makeTimeSeriesStack(
-        botTempStationX,
-        varPrefix='bottom',
-        xlim=[
-            startTime,
-            endTime],
-        ylim=ts_ylim['temp'])
-    pl.makeErrorHistogramStack(
-        botTempStationX,
-        varPrefix='bottom',
-        plotMinMax=True,
-        range=eh_lim['temp'],
-        bins=eh_bins)
+    pl.makeTimeSeriesStack(botTempStationX, varPrefix='bottom', xlim=[startTime, endTime], ylim=ts_ylim['temp'])
+    pl.makeErrorHistogramStack(botTempStationX, varPrefix='bottom', plotMinMax=True, range=eh_lim['temp'], bins=eh_bins)
 
     # sediment
-    data = sc.getSubset(
-        variable='turbidity').getSubset(
-        exclude=True,
-        location='saturn01',
-        msldepth='0')
+    data = sc.getSubset(variable='turbidity').getSubset(exclude=True, location='saturn01', msldepth='0')
     pl = Plots(imgDir, data)
-    pl.makeTimeSeries(
-        xlim=[
-            startTime,
-            endTime],
-        ylim=ts_ylim,
-        err_ylim=ts_err_ylim)
+    pl.makeTimeSeries(xlim=[startTime, endTime], ylim=ts_ylim, err_ylim=ts_err_ylim)
 
     # NO3
     data = sc.getSubset(variable='NO3')
     pl = Plots(imgDir, data)
-    pl.makeTimeSeries(
-        xlim=[
-            startTime,
-            endTime],
-        ylim=ts_ylim,
-        err_ylim=ts_err_ylim)
+    pl.makeTimeSeries(xlim=[startTime, endTime], ylim=ts_ylim, err_ylim=ts_err_ylim)
     pl.makeTaylorDiagramsVar()
 
     # oxygen
     data = sc.getSubset(variable='oxy')
     pl = Plots(imgDir, data)
-    pl.makeTimeSeries(
-        xlim=[
-            startTime,
-            endTime],
-        ylim=ts_ylim,
-        err_ylim=ts_err_ylim)
+    pl.makeTimeSeries(xlim=[startTime, endTime], ylim=ts_ylim, err_ylim=ts_err_ylim)
     pl.makeTaylorDiagramsVar()
 
     # stratification
@@ -585,12 +479,7 @@ def skillPlots(
     if not noProfiles:
         pl = Plots(imgDir, sc)
         pl.makeVertProfileTimeSeriesPlot(clim=vprof_clim)
-        pl.makeProfilerPlots(
-            clim=vprof_clim,
-            ylim=sta01_dep_lim,
-            xlim=[
-                startTime,
-                endTime])
+        pl.makeProfilerPlots(clim=vprof_clim, ylim=sta01_dep_lim, xlim=[startTime, endTime])
 
 #-------------------------------------------------------------------------
 # Parse commandline arguments
