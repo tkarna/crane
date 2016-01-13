@@ -12,7 +12,7 @@ from crane.data import timeArray
 from crane.plotting import plotBase
 import matplotlib.tri as tri
 from crane.data import coordSys as coordSysModule
-
+from scipy.spatial import cKDTree
 
 def generateTriangulation(x, y, connectivity):
     """Return a Triangulation from a connectivity array"""
@@ -367,6 +367,9 @@ class slabSnapshotDC(slabSnapshot):
                         If datetime object, temporal interpolation is performed.
            kwargs    -- (**) passed to slabSnapshot.addSample
         """
+        if kwargs.get('plotType') == 'quiver':
+            self._plot_quiver(mc, timeStamp, **kwargs)
+            return
         triang, var, time = generateSlabFromMeshContainer(mc, timeStamp)
         #triang = generateTriangulation( mc.x, mc.y, mc.connectivity )
 
@@ -375,6 +378,72 @@ class slabSnapshotDC(slabSnapshot):
             '.')[0] + ' ' + time.strftime('%Y-%m-%d %H:%M:%S') + ' (PST)'
         titleStr = kwargs.pop('title', titleStr)
         self.addTitle(titleStr)
+
+    def _plot_quiver(self, mc, timeStamp, **kwargs):
+        """Does a 2D quiver vector plot.
+        Must first plot a scalar field on the diagram.
+
+        Quiver specific kwargs:
+        nquiverpoints : int
+            number of points to draw along the longest edge of the plot
+        maxmagnitude : float
+            draw only vectors whose lenght is less than this value
+        scale : float
+            define arrow scaling factor, smaller value yields longer arrows
+        """
+        assert mc.data.shape[1] == 2, 'quiver plot requires 2d vector data'
+        kwargs.pop('plotType')
+        npoints = kwargs.pop('nquiverpoints', 120)
+        maxmag = kwargs.pop('maxmagnitude', 100.0)
+        kwargs.setdefault('units', 'dots')
+        kwargs.setdefault('width', 1.7)
+        kwargs.setdefault('headlength', 6)
+        # get x,y,u,v arrays
+        uv_x = mc.x.ravel()
+        uv_y = mc.y.ravel()
+        uv_x, uv_y = self.coordTransformer.transform(uv_x, uv_y)
+        u = mc.data[:, 0, timeStamp]
+        v = mc.data[:, 1, timeStamp]
+        # filter too long vectors
+        mag = np.hypot(u, v)
+        ix = mag < maxmag
+        u = u[ix]
+        v = v[ix]
+        uv_x = uv_x[ix]
+        uv_y = uv_y[ix]
+        # generate regular grid that spans the plot
+        # FIXME take bbox into account if given
+        xlim = uv_x.min(), uv_x.max()
+        ylim = uv_y.min(), uv_y.max()
+        lx = xlim[1] - xlim[0]
+        ly = ylim[1] - ylim[0]
+        aspect = ly/lx
+        if lx > ly:
+            nx = npoints
+            ny = aspect*npoints
+        else:
+            nx = npoints/aspect
+            ny = npoints
+        xgrid = np.linspace(xlim[0], xlim[1], nx)
+        ygrid = np.linspace(ylim[0], ylim[1], ny)
+        # filter by taking nearest nodes to the regular grid
+        tree = cKDTree(np.concatenate((uv_x[:, None], uv_y[:, None]), axis=1))
+        xx, yy = np.meshgrid(xgrid, ygrid)
+        p = np.vstack((xx.ravel(), yy.ravel())).T
+        nearestnodes = tree.query(p)[1]
+        ix = np.unique(nearestnodes)
+        q = self.ax.quiver(uv_x[ix], uv_y[ix], u[ix], v[ix], **kwargs)
+        self.quiverobj = q
+        return q
+
+    def addQuiverLegend(self, x, y, u, label, **kwargs):
+        """Adds a quiver legend to plot at location (x,y) and lenght u"""
+        coords = kwargs.pop('coordinates', 'axes')
+        if coords == 'data':
+            xx, yy = self.coordTransformer.transform(x, y)
+        else:
+            xx, yy = x, y
+        self.ax.quiverkey(self.quiverobj, xx, yy, u, label, **kwargs)
 
     def updatePlot(self, mc, timeStamp, **kwargs):
         """Updates the most recent plotted data array with new values."""
