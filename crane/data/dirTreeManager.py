@@ -586,7 +586,7 @@ class monthlyFileTree(fileTree):
                         # skip file if its start time is greater than query end
                         if (et is not None and file_st > et):
                             continue
-                        dc = nc.readToDataContainer(st, et, verbose=self.verbose, dataType=dataType)
+                        dc = nc.readToDataContainer(st, et, verbose=self.verbose)
                         if outputDC is None:
                             outputDC = dc
                         else:
