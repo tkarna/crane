@@ -247,7 +247,7 @@ def removeTides( dc, dt=None, gapFactor=20, T=T_M2 ) :
   """A low-pass filter to remove tidal signal from the data"""
   from scipy import signal
   time = dc.time.array
-  vals = dc.data[0,0,:]
+  vals = dc.data
   if dt==None :
     dt = np.diff(time).mean()
   # try to calculate exact dt by omitting large gaps
@@ -261,47 +261,58 @@ def removeTides( dc, dt=None, gapFactor=20, T=T_M2 ) :
   # filter design, low-pass butterworth
   T0 = (2*dt) # period of Nyquist frequency
   Tpass = 8*T # period of pass frequency
-  Gpass = 3.0       # max dB loss in pass band 
+  Gpass = 3.0       # max dB loss in pass band
   Tstop = 1*T # period of stop frequency
   Gstop = 30.0     # min dB atennuation in stop band
   o,Wn = signal.buttord(T0/Tpass,T0/Tstop,Gpass,Gstop)
   if o < 0 :
     raise Exception('Cannot create tidal filter. Data sampling frequency may be too low, dt='+str(dt))
   b,a = signal.butter(o,Wn,'low')
-  newvals = []
-  newtime = []
   # filter each contiquous data range separately
-  for i in range( ranges.shape[0] ) :
-    twin = time[ ranges[i,0]:ranges[i,1] ]
-    vwin = vals[ ranges[i,0]:ranges[i,1] ]
-    if len(vwin) > 3*len(a) :
-      try :
-        # default forward-backward filter
-        # filtered = signal.filtfilt(b, a, vwin, padtype='constant')
-        # forward-backward filter with custom boundary conditions
-        # pad with mean of 1/2 pass window lenght
-        N_init = int(np.ceil(Tpass/dt/2))
-        # forward filter
-        x_init = vwin[:N_init]
-        y_init = x_init.mean()*np.ones_like(x_init)
-        z_init = signal.lfiltic(b,a,y_init,x_init)
-        filtered,_ = signal.lfilter(b, a, vwin, zi=z_init)
-        # backward filter
-        x_init = vwin[-N_init:][::-1]
-        y_init = x_init.mean()*np.ones_like(x_init)
-        z_init = signal.lfiltic(b,a,y_init,x_init)
-        filtered,_ = signal.lfilter(b, a, filtered[::-1], zi=z_init)
-        filtered = filtered[::-1]
-        newvals.append( filtered )
-        newtime.append( twin )
-      except Exception as e :
-        print a.shape, vwin.shape
-        raise e
-  newvals = np.concatenate( tuple(newvals), axis=0 )
-  newtime = np.concatenate( tuple(newtime), axis=0 )
+  # filter each contiquous data range separately
+  npoints = len(vals[:,0,0])
+  nfields = len(vals[0,:,0])
+  for j in range(npoints):
+    for k in range(nfields):
+      newvals = []
+      newtime = []
+      for i in range( ranges.shape[0] ) :
+        twin = time[ ranges[i,0]:ranges[i,1] ]
+        vwin = vals[j, k, ranges[i,0]:ranges[i,1] ]
+        if len(vwin) > 3*len(a) :
+          try :
+            # default forward-backward filter
+            # filtered = signal.filtfilt(b, a, vwin, padtype='constant')
+            # forward-backward filter with custom boundary conditions
+            # pad with mean of 1/2 pass window lenght
+            N_init = int(np.ceil(Tpass/dt/2))
+            # forward filter
+            x_init = vwin[:N_init]
+            y_init = x_init.mean()*np.ones_like(x_init)
+            z_init = signal.lfiltic(b,a,y_init,x_init)
+            filtered,_ = signal.lfilter(b, a, vwin, zi=z_init)
+            # backward filter
+            x_init = vwin[-N_init:][::-1]
+            y_init = x_init.mean()*np.ones_like(x_init)
+            z_init = signal.lfiltic(b,a,y_init,x_init)
+            filtered,_ = signal.lfilter(b, a, filtered[::-1], zi=z_init)
+            filtered = filtered[::-1]
+            newvals.append( filtered )
+            newtime.append( twin )
+          except Exception as e :
+            print a.shape, vwin.shape
+            raise e
+
+      if j == 0:
+        newvals = np.concatenate( tuple(newvals), axis=0 )
+        data = np.empty((npoints, nfields, len(newvals)))
+        time = np.concatenate( tuple(newtime), axis=0 )
+      else:
+        newvals = np.concatenate( tuple(newvals), axis=0 )
+      data[j, k, :] = newvals
   dc2 = dc.copy()
-  dc2.data = newvals[None,None,:]
-  dc2.time.array = newtime
+  dc2.data = data
+  dc2.time.array = time
   return dc2
 
 def smooth(time, vals, dt=None, gapFactor=20, T=T_M2):
