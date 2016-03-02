@@ -99,7 +99,7 @@ def processFrame(
 
     varList = []
     for i, dc in enumerate(dcs):
-        dateStr = dc.time.getDatetime(it).strftime('%Y-%m-%d %H:%M')
+        dateStr = dc.time.getDatetime(it).strftime('%Y-%m-%d %H:%M:%S')
         meta = dc.getMetaData()
         name = meta.get('location', '')
         var = dc.fieldNames[0]

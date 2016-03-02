@@ -86,7 +86,7 @@ def processFrame(
             cmap = plt.get_cmap(cmapDict)
         dateEpoch = round(dc.time.asEpoch()[it] / 60) * 60
         dateStr = timeArray.epochToDatetime(
-            dateEpoch).strftime('%Y-%m-%d %H:%M')
+            dateEpoch).strftime('%Y-%m-%d %H:%M:%S')
         titleStr = tag + ' ' + transectName + ' ' + dateStr + ' (PST)'
         if it == 0:
             dia.addSample(pltTag, dc, it, N=nCLines.get(var, defaultNCLines),

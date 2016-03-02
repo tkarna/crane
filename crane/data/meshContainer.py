@@ -34,7 +34,7 @@ class meshContainer(dataContainer.dataContainer):
             connectivity,
             fieldNames,
             coordSys='',
-            metaData=None,
+            metaData={},
             dtype=np.float64):
         """Creates new meshData object
 
