@@ -7,6 +7,7 @@ import datetime
 import os
 import string
 from crane import plt, matplotlib
+from crane.plotting.plotDataContainer import plotDataContainer
 
 
 def parseTimeStr(timeStr):
@@ -92,7 +93,8 @@ def saveFigure(
         plt.savefig(f, dpi=dpi, **kw)
 
 
-def add_colorbar(parent_ax, p, pos='left', label=None, pad=None, aspect=None):
+def add_colorbar(parent_ax, p, pos='left', label=None, pad=None, aspect=None, **kwargs):
+    """Adds a colorbar to parent axis without reshaping the parent axes"""
     parent_pos = parent_ax.get_position()
     fig = parent_ax.get_figure()
     parent_dx = parent_pos.x1 - parent_pos.x0
@@ -102,32 +104,48 @@ def add_colorbar(parent_ax, p, pos='left', label=None, pad=None, aspect=None):
         orientation = 'vertical'
         y0 = parent_pos.y0
         dy = parent_dy
-        if aspect is None: 
-            aspect = 1.0/10.0
-        dx = aspect*dy
-        if pos == 'left':
+        if aspect is None:
+            aspect = 1.0/12.0
+        dx = aspect*dy*parent_dx
+        if pos == 'right':
             if pad is None:
-                pad = -0.05*parent_dx
-            x0 = 1.0 + pad
+                pad = 0.02
+            offset = pad*parent_dx
+            x0 = parent_pos.x1 + offset
         else:
-            raise NotImplementedError('right colorbar not implemented yet')
+            if pad is None:
+                pad = -0.30
+            offset = pad*parent_dx
+            x0 = parent_pos.x0 + offset
     else:
         orientation = 'horizontal'
         x0 = parent_pos.x0
         dx = parent_dx
         if aspect is None:
-            aspect = 1.0/20.0
-        dy = aspect*dx
+            aspect = 1.0/12.0
+        dy = aspect*dx*parent_dy
         if pos == 'bottom':
             if pad is None:
-                pad = -0.12*parent_dy
-            y0 = 0.0 + pad
+                pad = -0.18
+            offset = pad*parent_dy
+            y0 = parent_pos.y0 + offset
         else:
-            raise NotImplementedError('top colorbar not implemented yet')
+            if pad is None:
+                pad = 0.02
+            offset = pad*parent_dy
+            y0 = parent_pos.y1 + offset
     cb_ax = fig.add_axes((x0, y0, dx, dy))
-    cb = plt.colorbar(p, cax=cb_ax, format='%.1f', orientation=orientation)
+    kwargs.setdefault('orientation', orientation)
+    cb = plt.colorbar(p, cax=cb_ax, **kwargs)
+    if pos == 'left':
+        cb_ax.yaxis.tick_left()
+        cb_ax.yaxis.set_label_position('right')
+    if pos == 'top':
+        cb_ax.xaxis.tick_top()
+        cb_ax.xaxis.set_label_position('top')
     if label:
         cb.set_label(label)
+    return cb, cb_ax
 
 
 class AxisLabeler(object):
