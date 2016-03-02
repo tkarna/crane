@@ -145,7 +145,7 @@ def printMurphyStats(fid, allStats, refTag, runTags):
     entries = [(loc, var, msld)
                for tag, loc, var, msld in allStats.getTuples()]
     tag = allStats.getTuples()[0][0]
-    entries = uniqueList(entries)
+    entries = collection.uniqueList(entries)
     # sort by var,loc,msldepth
     entries = sorted(entries, key=lambda s: s[2])
     entries = sorted(entries, key=lambda s: s[0])
@@ -170,7 +170,7 @@ def printGlobalStats(fid, allStats, refTag, runTags):
 
     # find all unique station,variable,depth combinations
     entries = [var for tag, var in allStats.getTuples()]
-    entries = uniqueList(entries)
+    entries = collection.uniqueList(entries)
     # sort by var
     entries = sorted(entries)
     for var in entries:
@@ -328,7 +328,7 @@ def processStats(refTag, runTags, stationFile, startTime=None, endTime=None,
 
     # compute global statistics
     globalStats = stationCollection.tinyDB(['tag', 'variable'])
-    allVars = uniqueList([t[1] for t in allData])
+    allVars = collection.uniqueList([t[1] for t in allData])
     for var in allVars:
         for tag in runTags:
             try:
