@@ -133,9 +133,11 @@ class dataContainer(object):
         return name in self.metaData.keys()
 
     @classmethod
-    def fromTimeSeries(cls, description, time, data, fieldNames,
+    def fromTimeSeries(cls, time, data, fieldNames=None,
                        x=np.nan, y=np.nan, z=np.nan,
-                       timeFormat='', coordSys='', metaData=None):
+                       variable=None, msldepth='0',
+                       location=None, tag=None,
+                       timeFormat='', coordSys='', **kwargs):
         """Alternative constructor.
         Creates new dataContainer object from time series.
 
@@ -151,6 +153,13 @@ class dataContainer(object):
                     'If time is an array, timeFormat must be specified')
             time = timeArray.timeArray(time, timeFormat)
 
+        metadata = kwargs
+        metadata.setdefault('dataType', 'timeseries')
+        metadata.setdefault('variable', variable)
+        metadata.setdefault('location', location)
+        metadata.setdefault('tag', tag)
+        metadata.setdefault('msldepth', '0')
+        
         nTime = len(time)
         nPoints = 1
         nFields = 1
@@ -169,17 +178,14 @@ class dataContainer(object):
             print len(time), data.shape
             raise Exception('data array length does not match time series')
 
+        if fieldNames is None:
+            if nFields == 1:
+                fieldNames = [variable]
+            else:
+                raise Exception('fieldNames must be provided')
+
         data = data.reshape((nPoints, nFields, nTime))  # correct shape
-        return cls(
-            description,
-            time,
-            x,
-            y,
-            z,
-            data,
-            fieldNames,
-            coordSys,
-            metaData)
+        return cls('', time, x, y, z, data, fieldNames, coordSys, metadata)
 
     def copy(self):
         """Deep copy, all numpy arrays are copied instead of referenced."""
