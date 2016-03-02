@@ -340,10 +340,10 @@ class colorPlotBase(plotBase):
                      ticks=None, **kwargs):
         """Adds a colorbar in the axes."""
         if self.ax and self.cax:
-            #title = r'TKE [$\log_{10} (m^2 s^{-2}) $]'
             title = self.clabel
             if self.unit:
-                title += r'$\ [$' + self.unit + '$]$'
+                # title += r'$\ [$' + self.unit + '$]$'
+                title += ' [' + self.unit + ']'
             title = kwargs.pop('title', title)
             # try to guess good format
             clim = self.cax.get_clim()
