@@ -10,13 +10,22 @@ import numpy as np
 import datetime
 from crane.data import timeArray
 from crane.plotting import plotBase
-import matplotlib.tri as tri
+from  matplotlib.tri import Triangulation
 from crane.data import coordSys as coordSysModule
 from scipy.spatial import cKDTree
 
+
 def generateTriangulation(x, y, connectivity):
     """Return a Triangulation from a connectivity array"""
-    return tri.Triangulation(x.copy(), y.copy(), connectivity.copy())
+    return Triangulation(x.copy(), y.copy(), connectivity.copy())
+
+
+def transformBBox(bbox, trans):
+    """Apply coordinate transformation on bounding box"""
+    new_bbox = [0, 0, 0, 0]
+    new_bbox[0], new_bbox[2] = trans.transform(bbox[0], bbox[2])
+    new_bbox[1], new_bbox[3] = trans.transform(bbox[1], bbox[3])
+    return new_bbox
 
 
 def convertTriCoords(tri, bbox=None, scalar=1, coordSys='spcs',
@@ -24,19 +33,20 @@ def convertTriCoords(tri, bbox=None, scalar=1, coordSys='spcs',
     if not bbox:
         bbox = [tri.x.min(), tri.x.max(), tri.y.min(), tri.y.max()]
 
-    if coordSys == 'latlon':
+    if coordSys.lower() == 'none':
+        return tri, unitTransform, bbox
+    elif coordSys == 'latlon':
         trans = latlonTransformer(bbox[0], bbox[2], scalar, flipXCoord)
     elif coordSys == 'utm':
         trans = utmTransformer(bbox[0], bbox[2], scalar)
     else:
         trans = coordTransformer(bbox[0], bbox[2], scalar)
 
-    tri.x, tri.y = trans.transform(tri.x, tri.y)
-    # update bbox
-    newBBox = [0, 0, 0, 0]
-    newBBox[0], newBBox[2] = trans.transform(bbox[0], bbox[2])
-    newBBox[1], newBBox[3] = trans.transform(bbox[1], bbox[3])
-    return tri, trans, newBBox
+    new_x, new_y = trans.transform(tri.x, tri.y)
+    new_tri = generateTriangulation(new_x, new_y, tri.triangles)
+    new_tri.set_mask(tri.mask)
+    new_bbox = transformBBox(bbox, trans)
+    return new_tri, trans, new_bbox
 
 
 class coordTransformer(object):
@@ -83,12 +93,9 @@ class utmTransformer(object):
 
 unitTransform = coordTransformer(0.0, 0.0, 1.0)
 
-# class that takes the data (slab time series) and plots a snaphot (for
-# certain time)
-
 
 class slabSnapshot(plotBase.colorPlotBase):
-    """slabSnapshot histogram class"""
+    """Plots a horizontal map of a triangular mesh"""
 
     def __init__(self, **defaultArgs):
         # default plot options for all diagrams
@@ -213,15 +220,20 @@ class slabSnapshot(plotBase.colorPlotBase):
 
     def addSample(self, tri, variable=None, **kwargs):
         """Add scalar field to the diagram"""
-        data, kw = self.prepDataForPlotting(tri, variable, **kwargs)
+        if kwargs.get('plotType') == 'quiver':
+            self.plot_quiver(tri, variable, **kwargs)
+            return
+
+        # NOTE only plots the first component
+        data, kw = self.prepDataForPlotting(tri, variable[:, 0], **kwargs)
 
         plotType = kw.pop('plotType', 'color')
         dataByElems = kw.pop('dataByElems', False)
         bbox = kw.pop('bbox', [])
         if self.coordSys == 'none':
-            tri, trans, convertedBBox = tri, unitTransform, bbox
+            tri_trans, trans, convertedBBox = tri, unitTransform, bbox
         else:
-            tri, trans, convertedBBox = convertTriCoords(
+            tri_trans, trans, convertedBBox = convertTriCoords(
                 tri, bbox, scalar=self.coordScalar, coordSys=self.coordSys,
                 flipXCoord=self.flipXCoord)
 
@@ -229,20 +241,107 @@ class slabSnapshot(plotBase.colorPlotBase):
 
         if plotType == 'mesh':
             kw.setdefault('linewidth', 0.3)
-            self.ax.triplot(tri, **kw)
+            self.ax.triplot(tri_trans, **kw)
         elif plotType == 'contour':
-            self.cax = self.ax.tricontour(tri, data, **kw)
+            self.cax = self.ax.tricontour(tri_trans, data, **kw)
         elif plotType == 'contourf':
-            self.cax = self.ax.tricontourf(tri, data, **kw)
+            self.cax = self.ax.tricontourf(tri_trans, data, **kw)
         else:  # color
             if not dataByElems:
                 kw.setdefault('shading', 'gouraud')
             kw.pop('coordsys', None)
-            self.cax = self.ax.tripcolor(tri, data, **kw)
+            self.cax = self.ax.tripcolor(tri_trans, data, **kw)
         self.ax.set_aspect(self.aspect)
         if bbox:
             self.ax.set_xlim(convertedBBox[:2])
             self.ax.set_ylim(convertedBBox[2:])
+
+    def plot_quiver(self, tri, var, **kwargs):
+        """Does a 2D quiver vector plot.
+        Must first plot a scalar field on the diagram.
+
+        Quiver specific kwargs:
+        nquiverpoints : int
+            number of points to draw along the longest edge of the plot
+        maxmagnitude : float
+            draw only vectors whose lenght is less than this value
+        scale : float
+            define arrow scaling factor, smaller value yields longer arrows
+        """
+        assert var.shape[1] == 2, 'quiver plot requires 2d vector data'
+
+        kw = dict(self.defaultArgs)
+        kw.update(kwargs)
+
+        bbox = kw.pop('bbox', None)
+        if self.coordTransformer is None:
+            tri_trans, trans, convertedBBox = convertTriCoords(
+                tri, bbox, scalar=self.coordScalar, coordSys=self.coordSys,
+                flipXCoord=self.flipXCoord)
+            self.coordTransformer = trans
+        else:
+            if bbox is not None:
+                convertedBBox = transformBBox(bbox, self.coordTransformer)
+
+        kwargs.pop('plotType')
+        npoints = kwargs.pop('nquiverpoints', 120)
+        maxmag = kwargs.pop('maxmagnitude', 100.0)
+        kwargs.setdefault('units', 'dots')
+        kwargs.setdefault('width', 1.7)
+        kwargs.setdefault('headlength', 6)
+        # get x,y,u,v arrays
+        uv_x = tri.x.ravel()
+        uv_y = tri.y.ravel()
+        uv_x, uv_y = self.coordTransformer.transform(uv_x, uv_y)
+        u = var[:, 0]
+        v = var[:, 1]
+        # filter too long vectors
+        mag = np.hypot(u, v)
+        ix = mag < maxmag
+        u = u[ix]
+        v = v[ix]
+        uv_x = uv_x[ix]
+        uv_y = uv_y[ix]
+        # generate regular grid that spans the plot
+        xlim = uv_x.min(), uv_x.max()
+        ylim = uv_y.min(), uv_y.max()
+        if bbox is not None:
+            xlim = max(convertedBBox[0], xlim[0]), min(convertedBBox[1], xlim[1])
+            ylim = max(convertedBBox[2], ylim[0]), min(convertedBBox[3], ylim[1])
+        lx = xlim[1] - xlim[0]
+        ly = ylim[1] - ylim[0]
+        aspect = ly/lx
+        if lx > ly:
+            nx = npoints
+            ny = aspect*npoints
+        else:
+            nx = npoints/aspect
+            ny = npoints
+        xgrid = np.linspace(xlim[0], xlim[1], nx)
+        ygrid = np.linspace(ylim[0], ylim[1], ny)
+        # filter by taking nearest nodes to the regular grid
+        tree = cKDTree(np.concatenate((uv_x[:, None], uv_y[:, None]), axis=1))
+        xx, yy = np.meshgrid(xgrid, ygrid)
+        p = np.vstack((xx.ravel(), yy.ravel())).T
+        nearestnodes = tree.query(p)[1]
+        ix = np.unique(nearestnodes)
+        q = self.ax.quiver(uv_x[ix], uv_y[ix], u[ix], v[ix], **kwargs)
+        self.quiverobj = q
+
+        if bbox is not None:
+            self.ax.set_xlim(convertedBBox[:2])
+            self.ax.set_ylim(convertedBBox[2:])
+        return q
+
+    def addQuiverLegend(self, x, y, u, label, **kwargs):
+        """Adds a quiver legend to plot at location (x,y) and lenght u"""
+        assert hasattr(self, 'quiverobj'), 'quiver object has not been created'
+        coords = kwargs.pop('coordinates', 'axes')
+        if coords == 'data':
+            xx, yy = self.coordTransformer.transform(x, y)
+        else:
+            xx, yy = x, y
+        self.ax.quiverkey(self.quiverobj, xx, yy, u, label, **kwargs)
 
     def updatePlot(self, tri, variable=None, **kwargs):
         """Replaces the plot with new data without re-drawing the whole axes."""
@@ -367,88 +466,17 @@ class slabSnapshotDC(slabSnapshot):
                         If datetime object, temporal interpolation is performed.
            kwargs    -- (**) passed to slabSnapshot.addSample
         """
-        if kwargs.get('plotType') == 'quiver':
-            self._plot_quiver(mc, timeStamp, **kwargs)
-            return
-        triang, var, time = generateSlabFromMeshContainer(mc, timeStamp)
-        #triang = generateTriangulation( mc.x, mc.y, mc.connectivity )
-
-        slabSnapshot.addSample(self, triang, var[:, 0], **kwargs)
+        tri, var, time = generateSlabFromMeshContainer(mc, timeStamp)
+        slabSnapshot.addSample(self, tri, var, **kwargs)
         titleStr = mc.description.split(
             '.')[0] + ' ' + time.strftime('%Y-%m-%d %H:%M:%S') + ' (PST)'
         titleStr = kwargs.pop('title', titleStr)
         self.addTitle(titleStr)
 
-    def _plot_quiver(self, mc, timeStamp, **kwargs):
-        """Does a 2D quiver vector plot.
-        Must first plot a scalar field on the diagram.
-
-        Quiver specific kwargs:
-        nquiverpoints : int
-            number of points to draw along the longest edge of the plot
-        maxmagnitude : float
-            draw only vectors whose lenght is less than this value
-        scale : float
-            define arrow scaling factor, smaller value yields longer arrows
-        """
-        assert mc.data.shape[1] == 2, 'quiver plot requires 2d vector data'
-        kwargs.pop('plotType')
-        npoints = kwargs.pop('nquiverpoints', 120)
-        maxmag = kwargs.pop('maxmagnitude', 100.0)
-        kwargs.setdefault('units', 'dots')
-        kwargs.setdefault('width', 1.7)
-        kwargs.setdefault('headlength', 6)
-        # get x,y,u,v arrays
-        uv_x = mc.x.ravel()
-        uv_y = mc.y.ravel()
-        uv_x, uv_y = self.coordTransformer.transform(uv_x, uv_y)
-        u = mc.data[:, 0, timeStamp]
-        v = mc.data[:, 1, timeStamp]
-        # filter too long vectors
-        mag = np.hypot(u, v)
-        ix = mag < maxmag
-        u = u[ix]
-        v = v[ix]
-        uv_x = uv_x[ix]
-        uv_y = uv_y[ix]
-        # generate regular grid that spans the plot
-        # FIXME take bbox into account if given
-        xlim = uv_x.min(), uv_x.max()
-        ylim = uv_y.min(), uv_y.max()
-        lx = xlim[1] - xlim[0]
-        ly = ylim[1] - ylim[0]
-        aspect = ly/lx
-        if lx > ly:
-            nx = npoints
-            ny = aspect*npoints
-        else:
-            nx = npoints/aspect
-            ny = npoints
-        xgrid = np.linspace(xlim[0], xlim[1], nx)
-        ygrid = np.linspace(ylim[0], ylim[1], ny)
-        # filter by taking nearest nodes to the regular grid
-        tree = cKDTree(np.concatenate((uv_x[:, None], uv_y[:, None]), axis=1))
-        xx, yy = np.meshgrid(xgrid, ygrid)
-        p = np.vstack((xx.ravel(), yy.ravel())).T
-        nearestnodes = tree.query(p)[1]
-        ix = np.unique(nearestnodes)
-        q = self.ax.quiver(uv_x[ix], uv_y[ix], u[ix], v[ix], **kwargs)
-        self.quiverobj = q
-        return q
-
-    def addQuiverLegend(self, x, y, u, label, **kwargs):
-        """Adds a quiver legend to plot at location (x,y) and lenght u"""
-        coords = kwargs.pop('coordinates', 'axes')
-        if coords == 'data':
-            xx, yy = self.coordTransformer.transform(x, y)
-        else:
-            xx, yy = x, y
-        self.ax.quiverkey(self.quiverobj, xx, yy, u, label, **kwargs)
-
     def updatePlot(self, mc, timeStamp, **kwargs):
         """Updates the most recent plotted data array with new values."""
         triang, var, time = generateSlabFromMeshContainer(mc, timeStamp)
-        slabSnapshot.updatePlot(self, triang, var[:, 0], **kwargs)
+        slabSnapshot.updatePlot(self, triang, var, **kwargs)
         titleStr = mc.description.split(
             '.')[0] + ' ' + time.strftime('%Y-%m-%d %H:%M:%S') + ' (PST)'
         titleStr = kwargs.pop('title', titleStr)
@@ -513,11 +541,11 @@ class stackSlabPlotDC(stackSlabPlot):
            kwargs    -- (**) passed to transectSnapshot.addSample
         """
         triang, var, time = generateSlabFromMeshContainer(mc, timeStamp)
-        stackSlabPlot.addSample(self, tag, triang, var[:, 0], **kwargs)
+        stackSlabPlot.addSample(self, tag, triang, var, **kwargs)
 
     def updatePlot(self, tag, mc, timeStamp, **kwargs):
         triang, var, time = generateSlabFromMeshContainer(mc, timeStamp)
-        stackSlabPlot.updatePlot(self, tag, triang, var[:, 0], **kwargs)
+        stackSlabPlot.updatePlot(self, tag, triang, var, **kwargs)
 
     def addTransectMarker(self, tag, x, y, label=None, **kwargs):
         """Adds a marker to the plot, defined by the coordinates.
