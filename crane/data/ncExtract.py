@@ -1318,7 +1318,7 @@ class selfeExtract(selfeExtractBase):
         Extracts time series for the given time range.
         """
 
-        if varStr in vectorVars or fnmatch.filter([varStr], 'bed_load_?')
+        if varStr in vectorVars or fnmatch.filter([varStr], 'bed_load_?'):
             # recursion: if a vector field requested, extract components
             # separately
             varList = [varStr + '_x', varStr + '_y']  # hvel_x, hvel_y
@@ -1395,7 +1395,7 @@ class selfeExtract(selfeExtractBase):
         Extracts vertical profiles for the given time period.
         """
 
-        if varStr in vectorVars or fnmatch.filter([varStr], 'bed_load_?')
+        if varStr in vectorVars or fnmatch.filter([varStr], 'bed_load_?'):
             # recursion: if a vector field requested, extract components
             # separately
             varList = [varStr + '_x', varStr + '_y']  # hvel_x, hvel_y
@@ -1494,7 +1494,7 @@ class selfeExtract(selfeExtractBase):
         Extracts a transect for the given (x,y) points and time range.
         """
 
-        if varStr in vectorVars or fnmatch.filter([varStr], 'bed_load_?')
+        if varStr in vectorVars or fnmatch.filter([varStr], 'bed_load_?'):
             # recursion: if a vector field requested, extract components
             # separately
             varList = [varStr + '_x', varStr + '_y']  # hvel_x, hvel_y
@@ -1574,7 +1574,7 @@ class selfeExtract(selfeExtractBase):
         """Extracts track defined by X,Y,Z,T arrays for given stacks
            and variables."""
 
-        if varStr in vectorVars or fnmatch.filter([varStr], 'bed_load_?')
+        if varStr in vectorVars or fnmatch.filter([varStr], 'bed_load_?'):
             # recursion: if a vector field requested, extract components
             # separately
             varList = [varStr + '_x', varStr + '_y']  # hvel_x, hvel_y
@@ -1619,7 +1619,7 @@ class selfeExtract(selfeExtractBase):
                     zRelToSurf=None, wholeDays=True, stacks=None):
         """Extracts a horiontal slice for the given time range."""
 
-        if varStr in vectorVars or fnmatch.filter([varStr], 'bed_load_?')
+        if varStr in vectorVars or fnmatch.filter([varStr], 'bed_load_?'):
             # recursion: if a vector field requested, extract components
             # separately
             varList = [varStr + '_x', varStr + '_y']  # hvel_x, hvel_y
