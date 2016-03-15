@@ -152,6 +152,7 @@ VARS = {'salt': 'Salinity',
         'tavdavAOce': 'Oceanic water age',
         'tavdavAPlu': 'Plume water age',
         'tavdavARen': 'renewal water age',
+        'vort': 'vorticity',
         }
 
 # Units for variables
@@ -300,6 +301,7 @@ UNITS = {'salt': 'psu',
          'tavdavAOce': 'h',
          'tavdavAPlu': 'h',
          'tavdavARen': 'h',
+         'vort': 's-1',
          }
 
 # Associates each variable to a SELFE output file

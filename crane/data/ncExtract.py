@@ -1043,7 +1043,7 @@ class selfeExtractBase(object):
                     Zi = self.dataFile.meshSearch2d.convertNodalValuesToEdges(
                         Zi)
                 if self.dataFile.vertDiscrType == 'half':
-                    Zi = convertFullLevelProfileToHalfLevel(Zi.T).T
+                    Zi = gridUtils.convertFullLevelProfileToHalfLevel(Zi.T).T
                 dE, dN = self.elevFile.vCoords.computeDryElemMask(
                     eta, dep, self.elevFile.faceNodes)
                 Z[iT, :, :] = Zi.T

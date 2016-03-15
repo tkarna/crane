@@ -10,7 +10,7 @@ import numpy as np
 import datetime
 from crane.data import timeArray
 from crane.plotting import plotBase
-from  matplotlib.tri import Triangulation
+from matplotlib.tri import Triangulation
 from crane.data import coordSys as coordSysModule
 from scipy.spatial import cKDTree
 

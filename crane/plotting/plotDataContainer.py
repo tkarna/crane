@@ -11,6 +11,8 @@ import crane.data.dataContainer as dataContainer
 # TODO add support for all plot types
 # TODO must be able to plot multiple dcs at once
 
+TIMESERIES_TYPES = ['timeseries', 'sil']
+
 def plotDataContainer(dclist0, ax=None, show=False, dia=None, **kwargs):
     """
     Makes a default plot of the given dataContainer.
@@ -62,7 +64,7 @@ def plotDataContainer(dclist0, ax=None, show=False, dia=None, **kwargs):
         showLegend = kwargs.pop('showLegend', True)
 
         # create a diagram        
-        if datatype == 'timeseries':
+        if datatype in TIMESERIES_TYPES:
             if create_new_axes:
                 # default: each dc in its own subplot
                 for dc in dclist:
