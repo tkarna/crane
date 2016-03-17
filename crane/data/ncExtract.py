@@ -455,7 +455,6 @@ class selfeNCFile(object):
         self.kBottom = np.maximum(
             self.ncfile.variables['k_bottom'][:] - 1,
             0)  # NOTE starts at 1
-        #self.elev = self.ncfile.variables['elev'][:]
         self.nNodes = len(self.ncfile.dimensions['node'])
         self.nFaces = len(self.ncfile.dimensions['face'])
         if 'edge' in self.ncfile.dimensions:
@@ -982,14 +981,17 @@ class selfeExtractBase(object):
               z coordinates of the extracted horizontal slice.
         """
         ncfile = self.getNCFile(iStack)
-        etafile = self.getNCFile(iStack, fileName='elev.61')
+        if self.dataFile.discrType == 'node':
+            elevfile = ncfile
+        else:
+            elevfile = self.getNCFile(iStack, fileName='elev.61')
 
         time = ncfile.getTime()
         nTime = len(time)
 
         varStr = getNCVariableName(var)
         ncVar = ncfile.variables[varStr]
-        elev = etafile.variables['elev'][:]
+        elev = elevfile.variables['elev'][:]
         is3d = ncfile.variableIs3D(varStr)
 
         nTime = self.elevFile.nTime
@@ -1001,11 +1003,11 @@ class selfeExtractBase(object):
             raise Exception(
                 'File is corrupted, number of time steps is zero: ' +
                 ncfile.filenamefull)
-        if nTime != len(etafile.dimensions['time']):
-            print nTime, len(etafile.dimensions['time'])
+        if nTime != len(elevfile.dimensions['time']):
+            print nTime, len(elevfile.dimensions['time'])
             raise Exception(
                 'File is corrupted, wrong number of time steps: ' +
-                etafile.filenamefull)
+                elevfile.filenamefull)
 
         if not is3d:
             vals = ncVar[:].T
