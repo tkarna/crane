@@ -53,6 +53,9 @@ def constructNodeToElemTable(conn):
     for iE in range(nElems):
         for iN in conn[iE, :]:
             node2elem.setdefault(iN, []).append(iE)
+    # convert to numpy array
+    for iN in node2elem:
+        node2elem[iN] = np.array(node2elem[iN])
     return node2elem
 
 
@@ -75,8 +78,7 @@ def constructElemToNeighborTable(conn, node2elem):
             n1 = conn[iE, iEdge]
             n2 = conn[iE, (iEdge + 1) % nNodes]
             # all possible neighbors
-            ix = list(node2elem[n1])
-            ix += node2elem[n2]
+            ix = np.hstack((node2elem[n1], node2elem[n2]))
             # find elements that appear twice
             multiplicity = {}
             for i in ix:
