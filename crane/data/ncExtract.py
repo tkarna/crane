@@ -770,7 +770,7 @@ class selfeExtractBase(object):
             # if data is defined at half levels, convert to full levels
             if self.dataFile.vertDiscrType == 'half':
                 convType = 'naive'  # 'native'
-                vals, zcoords = convertHalfLevelProfileToFullLevel(
+                vals, zcoords = gridUtils.convertHalfLevelProfileToFullLevel(
                     vals, zcoords, convType)
         else:
             zcoords = np.zeros_like(vals)
@@ -1068,6 +1068,9 @@ class selfeExtractBase(object):
                     # k=-1 maps to nvrt
                     kk = self.elevFile.nVert + k
                     vals[:, :] = ncVar[:, kk, :].T  # (nTime,nVert,nNodes)
+                    if hasattr(ncVar, 'missing_value'):
+                        mask = (vals == ncVar.missing_value)
+                        vals[mask] = np.nan
                     zSlab[:, :] = Z[:, kk - kOffset, :].T
                 else:
                     # k=+1 maps to bottom
@@ -1076,6 +1079,9 @@ class selfeExtractBase(object):
                     for kk in uniqueK:
                         ix = np.nonzero(kArray == kk)[0]
                         v = ncVar[:, kk + kOffset, :].T
+                        if hasattr(ncVar, 'missing_value'):
+                            mask = (v == ncVar.missing_value)
+                            v[mask] = np.nan
                         vals[ix, :] = v[ix, :]
                         zi = Z[:, kk, :].T
                         zSlab[ix, :] = zi[ix, :]
@@ -1099,6 +1105,9 @@ class selfeExtractBase(object):
                                 :, iT]))[0]
                     # Vi (nTime,nVert,nNodes)
                     Vi = ncVar[iT, :, :]
+                    if hasattr(ncVar, 'missing_value'):
+                        mask = (Vi == ncVar.missing_value)
+                        Vi[mask] = np.nan
 
                     # find levels above and below z
                     Zdiff = np.abs(Zi[:, goodIx] - zArr[goodIx])

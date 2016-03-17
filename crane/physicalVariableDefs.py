@@ -152,7 +152,10 @@ VARS = {'salt': 'Salinity',
         'tavdavAOce': 'Oceanic water age',
         'tavdavAPlu': 'Plume water age',
         'tavdavARen': 'renewal water age',
-        'vort': 'vorticity',
+        'vort': 'Vorticity',
+        'tavvort': 'Time av. Vorticity',
+        'davvort': 'Depth av. Vorticity',
+        'tavdavvort': 'Vorticity',
         }
 
 # Units for variables
@@ -302,6 +305,9 @@ UNITS = {'salt': 'psu',
          'tavdavAPlu': 'h',
          'tavdavARen': 'h',
          'vort': 's-1',
+         'tavvort': 's-1',
+         'davvort': 's-1',
+         'tavdavvort': 's-1',
          }
 
 # Associates each variable to a SELFE output file
@@ -320,6 +326,7 @@ fieldNameToFilename = {'temp': 'temp.63',
                        'dahv': 'dahv.62',
                        'wind': 'wind.62',
                        'wist': 'wist.62',
+                       'vort': 'vort.63',
                        'trcr_1': 'trcr_1.63',
                        'trcr_2': 'trcr_2.63',
                        'trcr_3': 'trcr_3.63',
