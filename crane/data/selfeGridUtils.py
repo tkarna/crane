@@ -4,6 +4,7 @@ Collection of methods for manipulating mesh data.
 
 Tuomas Karna 2013-02-15
 """
+import os
 import sys
 import time as timeMod
 
