@@ -212,13 +212,14 @@ class plotBase(object):
 
     """The mother of all plots"""
 
-    def __init__(self, **defaultArgs):
-        """Constructor. defaultArgs are the default plot options."""
+    def __init__(self, **kwargs):
+        """Constructor. kwargs are the default plot options."""
+        self.defaultArgs = {}
+        self.defaultArgs.update(kwargs)
         if not hasattr(self, 'xIsTime'):
-            self.xIsTime = defaultArgs.pop('xIsTime', False)
+            self.xIsTime = self.defaultArgs.pop('xIsTime', False)
         if not hasattr(self, 'yIsTime'):
-            self.yIsTime = defaultArgs.pop('yIsTime', False)
-        self.defaultArgs = defaultArgs
+            self.yIsTime = self.defaultArgs.pop('yIsTime', False)
         self.ax = None
         self.titleObj = None
         # default color sequence for line plots etc
@@ -385,19 +386,20 @@ class colorPlotBase(plotBase):
 class stackPlotBase(object):
     """A class for stacking multiple transects in the same plot."""
 
-    def __init__(self, **defArgs):
-        self.plotheight = defArgs.pop(
+    def __init__(self, **kwargs):
+        self.defArgs = {}
+        self.defArgs.update(kwargs)
+        self.plotheight = self.defArgs.pop(
             'plotheight', 2)  # ~height of each subplot
-        self.figwidth = defArgs.pop('figwidth', 10)  # width of figure
-        self.topPad = defArgs.pop('topPad', 0.3)
-        self.bottomPad = defArgs.pop('bottomPad', 0.25)
-        self.rightPad = defArgs.pop('rightPad', 0.8)
-        self.sharex = defArgs.pop('sharex', True)
+        self.figwidth = self.defArgs.pop('figwidth', 10)  # width of figure
+        self.topPad = self.defArgs.pop('topPad', 0.3)
+        self.bottomPad = self.defArgs.pop('bottomPad', 0.25)
+        self.rightPad = self.defArgs.pop('rightPad', 0.8)
+        self.sharex = self.defArgs.pop('sharex', True)
         self.fig = plt.figure(figsize=(self.figwidth, self.plotheight))
-        self.plots = dict()  # stores all plots
+        self.plots = {}  # stores all plots
         self.tags = []  # to keep ordering
         self.axGrid = []
-        self.defArgs = defArgs
 
     def addPlot(self, plot, tag=None):
         """Adds a new subplot to the diagram"""

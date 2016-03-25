@@ -31,6 +31,8 @@ from crane.utility import createDirectory
 from crane.utility import saveFigure
 from crane.utility import parseTimeStr
 
+DIFFPREFIX = 'diff-'
+
 import multiprocessing
 # NOTE this must not be a local function in runTasksInQueue
 
@@ -68,24 +70,9 @@ def _runTasksInQueue(num_threads, tasks):
         raise e
 
 
-def processFrame(
-        dcs,
-        time,
-        logScaleVars,
-        aspect,
-        clim,
-        diffClim,
-        cmap,
-        bBox,
-        transectFile,
-        stationFileObj,
-        bathMC,
-        isobaths,
-        diff,
-        imgDir,
-        fPrefix,
-        filetype,
-        maxPlotSize=6.0):
+def processFrame(dcs, time, logScaleVars, aspect, clim, diffClim,
+                 cmap, bBox, transectFile, stationFileObj, bathMC, isobaths,
+                 diff, imgDir, fPrefix, filetype, maxPlotSize=6.0):
     """Plots only the first time step of the meshContainers."""
     it = 0
 
@@ -97,8 +84,43 @@ def processFrame(
     width += 1.3  # make room for colorbar & labels
     dia = slabPlot.stackSlabPlotDC(figwidth=width, plotheight=height)
 
+    dcs_to_plot = []
+    dcs_to_plot += dcs
+
+    _clim = {}
+    _clim.update(clim)
+
+    # append difference data sets
+    if diff:
+        nPairs = int(np.floor(len(dcs) / 2))
+        pairs = []
+        for i in range(nPairs):
+            pairs.append((dcs[2 * i], dcs[2 * i + 1]))
+        for joe, amy in pairs:
+            var = joe.getMetaData('variable')
+            assert var ==  amy.getMetaData('variable'), \
+                'Cannot compute difference between different variables'
+            diffDC = joe.copy()
+            diffDC.data = joe.data - amy.data
+
+            diffvar = DIFFPREFIX + var
+            if var in diffClim:
+                _clim[diffvar] = diffClim[var]
+            for i in range(len(diffDC.fieldNames)):
+                old_fn = diffDC.fieldNames[i]
+                new_fn = DIFFPREFIX + old_fn
+                diffDC.fieldNames[i] = new_fn
+                if old_fn in diffClim:
+                    _clim[new_fn] = diffClim[old_fn]
+
+            tag = '({:}-{:})'.format(str(joe.getMetaData('tag', suppressError=True)),
+                                     str(amy.getMetaData('tag', suppressError=True)))
+            diffDC.setMetaData('variable', diffvar)
+            diffDC.setMetaData('tag', tag)
+            dcs_to_plot.append(diffDC)
+
     varList = []
-    for i, dc in enumerate(dcs):
+    for i, dc in enumerate(dcs_to_plot):
         dateStr = dc.time.getDatetime(it).strftime('%Y-%m-%d %H:%M:%S')
         meta = dc.getMetaData()
         name = meta.get('location', '')
@@ -109,86 +131,27 @@ def processFrame(
         pltTag = tag + name + dc.getMetaData('variable') + '-' + str(i)
         titleStr = tag + ' ' + dateStr + ' (PST)'
 
-        dia.addPlot(
-            pltTag, clabel=VARS.get(
-                var, var), unit=UNITS.get(
-                var, '-'), bbox=bBox)
-        # add bathymetry contours (if any)
-        if bathMC is not None and len(isobaths) > 0:
-            dia.addSample(
-                pltTag,
-                bathMC,
-                0,
-                plotType='contour',
-                levels=isobaths,
-                colors='k',
-                bbox=bBox,
-                zorder=1,
-                draw_cbar=False)
-        dia.addSample(pltTag, dc, it,
-                      clabel=VARS.get(var, var), unit=UNITS.get(var, '-'),
-                      clim=clim.get(var, None), cmap=cmap, bbox=bBox,
+        if DIFFPREFIX in var:
+            origvar = var.replace(DIFFPREFIX, '')
+            clabel = 'Diff. ' + VARS.get(origvar, origvar)
+            unit = UNITS.get(origvar, '-')
+        else:
+            clabel = VARS.get(var, var)
+            unit = UNITS.get(var, '-')
+        dia.addPlot(pltTag, clabel=clabel, unit=unit, bbox=bBox)
+        dia.addSample(pltTag, dc, it, clim=_clim.get(var, None), cmap=cmap,
                       logScale=logScale, climIsLog=climIsLog, zorder=0)
 
         dia.addTitle(titleStr, tag=pltTag)
 
         varList.append(var)
 
-    # plot differences between slabs
-    if diff:
-        # assuming sequential dataContainers are comparable (salt,salt,
-        # temp,temp)
-        nPairs = int(np.floor(len(dcs) / 2))
-        pairs = []
-        for i in range(nPairs):
-            pairs.append((dcs[2 * i], dcs[2 * i + 1]))
-        for joe, amy in pairs:
-            diffDC = joe.copy()
-            diffDC.data = joe.data - amy.data
-            meta = diffDC.getMetaData()
-            name = meta.get('location', '')
-            var = diffDC.fieldNames[0]
-            tag = '(' + str(joe.getMetaData('tag', suppressError=True)) + '-' +\
-                  str(amy.getMetaData('tag', suppressError=True)) + ')'
-            pltTag = tag + name + var
-            titleStr = tag + ' ' + dateStr + ' (PST)'
-            # add bathymetry contours (if any)
-            if bathMC is not None and len(isobaths) > 0:
-                dia.addSample(
-                    pltTag,
-                    bathMC,
-                    0,
-                    plotType='contour',
-                    levels=isobaths,
-                    colors='k',
-                    clabel=VARS.get(
-                        'bath',
-                        'Bathymetry'),
-                    unit=UNITS.get(
-                        'bath',
-                        'm'),
-                    bbox=bBox,
-                    zorder=1)
-            dia.addSample(
-                pltTag,
-                diffDC,
-                it,
-                clabel='diff ' +
-                VARS.get(
-                    var,
-                    var),
-                unit=UNITS.get(
-                    var,
-                    '-'),
-                clim=diffClim.get(
-                    var,
-                    None),
-                cmap=cmap,
-                bbox=bBox,
-                logScale=logScale,
-                climIsLog=climIsLog)
-            dia.addTitle(titleStr, tag=pltTag)
-            varList.append('diff_' + var)
+    # add bathymetry contours (if any)
+    if bathMC is not None and len(isobaths) > 0:
+        for pltTag in dia.plots:
+            dia.addSample(pltTag, bathMC, 0, plotType='contour',
+                          levels=isobaths, colors='k',
+                          zorder=1, draw_cbar=False)
 
     # add transect markers (if any)
     if transectFile is not None:

@@ -97,11 +97,13 @@ unitTransform = coordTransformer(0.0, 0.0, 1.0)
 class slabSnapshot(plotBase.colorPlotBase):
     """Plots a horizontal map of a triangular mesh"""
 
-    def __init__(self, **defaultArgs):
+    def __init__(self, **kwargs):
+        defaultArgs = {}
+        defaultArgs.update(kwargs)
         # default plot options for all diagrams
-        self.unit = defaultArgs.pop('unit')
+        self.unit = defaultArgs.pop('unit', '-')
         self.coordSys = defaultArgs.pop('coordSys', 'spcs')
-        self.clabel = defaultArgs.pop('clabel')
+        self.clabel = defaultArgs.pop('clabel', '')
         self.flipXCoord = defaultArgs.pop('flipXCoord', False)
         if self.coordSys == 'latlon':
             xunit = u'\u00B0E'
@@ -163,7 +165,8 @@ class slabSnapshot(plotBase.colorPlotBase):
 
     def prepDataForPlotting(self, tri, variable=None, **kwargs):
         """Generates data array that to be sent to tripcolor/tricontour function"""
-        kw = dict(self.defaultArgs)
+        kw = {}
+        kw.update(self.defaultArgs)
         kw.update(kwargs)
         clim = kw.pop('clim', [])
         climIsLog = kw.pop('climIsLog', False)
@@ -488,24 +491,21 @@ class stackSlabPlot(plotBase.stackPlotBase):
 
     def addPlot(self, tag, **kwargs):
         """Adds a new subplot to the diagram"""
-        kw = dict(self.defArgs)
+        kw = {}
+        kw.update(self.defArgs)
         kw.update(kwargs)
         plot = slabSnapshot(**kw)
         super(stackSlabPlot, self).addPlot(plot, tag)
 
     def addSample(self, tag, tri, variable, **kwargs):
-        if tag not in self.tags:
-            self.addPlot(tag, **kwargs)
         self.plots[tag].addSample(tri, variable, **kwargs)
         if kwargs.get('draw_cbar', True):
             self.plots[tag].showColorBar()
 
     def updatePlot(self, tag, tri, variable, **kwargs):
-        if tag not in self.tags:
-            self.addPlot(tag, **kwargs)
         self.plots[tag].updatePlot(tri, variable, **kwargs)
 
-    def addTransectMarker(self, x, y, label=None, **kwargs):
+    def addTransectMarker(self, tag, x, y, label=None, **kwargs):
         """Adds a marker to the plot, defined by the coordinates.
         If label is given, adds text to the end point. kwargs are passed to ax.plot command."""
         if tag != 'all':
