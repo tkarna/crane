@@ -437,6 +437,20 @@ fieldNameList = {'temp': ['temp'],
                  'bed_load_4': ['bed_load_4'],
                  'bed_flux': ['bed_flux']}
 
+# File types
+SIDE_FILES = ['65', '67', '68', '71']
+NODE_FILES = ['61', '62', '63', '64']
+ELEM_FILES = ['66', '69', '70', '72']
+
+WHOLE_LEVELS = ['63', '64', '67', '69']
+HALF_LEVELS = ['68', '70']
+
+FILES_2D = ['61', '62', '65', '66', '71', '72']
+FILES_3D = ['63', '64', '67', '68', '69', '70']
+
+VECTOR_FILES = ['62', '64', '67', '71']
+SCALAR_FILES = ['61', '63', '65', '66', '68', '69', '70']
+
 # observational data that can be compared to model outputs for each tracer
 # model
 tracerModelObsVariables = {'sed': ['turbidity'],
@@ -444,9 +458,9 @@ tracerModelObsVariables = {'sed': ['turbidity'],
                            'bio': ['NO3', 'oxy']
                            }
 
-#-------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Functions
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 
 def addTracers(tracerModelName, varList=None, numTracers=None):

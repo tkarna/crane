@@ -1328,7 +1328,6 @@ class selfeExtract(selfeExtractBase):
         """
         Extracts time series for the given time range.
         """
-
         if varStr in vectorVars or fnmatch.filter([varStr], 'bed_load_?'):
             # recursion: if a vector field requested, extract components
             # separately
