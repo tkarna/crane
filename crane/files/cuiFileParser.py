@@ -94,8 +94,9 @@ class cuiParser(object):
         meta['bracket'] = 'A'
         meta['tag'] = 'obs'
         dc = dataContainer.dataContainer.fromTimeSeries(
-            '', self.time, self.data, ['cui'],
-            x, y, z, 'epoch', coordSys, metaData=meta)
+            self.time, self.data, fieldNames=['cui'],
+            x=x, y=y, z=z, timeFormat='epoch', coordSys=coordSys,
+            metaData=meta)
         if startTime and endTime:
             dc = dc.timeWindow(startTime, endTime, includeEnd=True)
         return dc

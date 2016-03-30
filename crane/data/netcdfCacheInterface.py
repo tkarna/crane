@@ -364,8 +364,8 @@ def getDataContainerFromOffering(
         meta.pop('msldepth')
     # TODO fetch and add all other useful data too, samplingrate etc
     return dataContainer.dataContainer.fromTimeSeries(
-        '', t, d, [meta['variable']],
-        x, y, z, timeFormat='epoch', coordSys=sta.coordSys, metaData=meta)
+        t, d, [meta['variable']], x=x, y=y, z=z, timeFormat='epoch',
+        coordSys=sta.coordSys, metaData=meta)
 
 # copied from cmop.ncdataextract
 

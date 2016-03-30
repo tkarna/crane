@@ -22,7 +22,7 @@ class dataContainer(object):
     """
 
     def __init__(self, description, time, x, y, z, data, fieldNames,
-                 coordSys='whatever', metaData={}, acceptNaNs=False,
+                 coordSys='whatever', metaData=None, acceptNaNs=False,
                  checkDataXDim=True, dtype=None):
         """Creates new dataContainer object
 
@@ -137,7 +137,7 @@ class dataContainer(object):
                        x=np.nan, y=np.nan, z=np.nan,
                        variable=None, msldepth='0',
                        location=None, tag=None,
-                       timeFormat='', coordSys='', **kwargs):
+                       timeFormat='', coordSys='', metaData=None):
         """Alternative constructor.
         Creates new dataContainer object from time series.
 
@@ -151,16 +151,20 @@ class dataContainer(object):
             if timeFormat == '':
                 raise Exception(
                     'If time is an array, timeFormat must be specified')
-            time = timeArray.timeArray(time, timeFormat)
+            ta = timeArray.timeArray(time, timeFormat)
+        else:
+            ta = time
+        assert isinstance(ta, timeArray.timeArray), 'unsupported time array type {:}'.format(type(ta))
 
-        metadata = kwargs
-        metadata.setdefault('dataType', 'timeseries')
-        metadata.setdefault('variable', variable)
-        metadata.setdefault('location', location)
-        metadata.setdefault('tag', tag)
-        metadata.setdefault('msldepth', '0')
-        
-        nTime = len(time)
+        if metaData is None:
+            metaData = {}
+        metaData.setdefault('dataType', 'timeseries')
+        metaData.setdefault('variable', variable)
+        metaData.setdefault('location', location)
+        metaData.setdefault('tag', tag)
+        metaData.setdefault('msldepth', '0')
+
+        nTime = len(ta)
         nPoints = 1
         nFields = 1
         # TODO a better way for doing this?
@@ -171,11 +175,11 @@ class dataContainer(object):
             elif data.shape[1] == nTime:
                 nFields = data.shape[0]
             else:
-                print time.array.shape, data.shape
+                print ta.array.shape, data.shape
                 raise Exception(
                     'data array size does not match time series specs')
         elif data.shape[0] != nTime:
-            print len(time), data.shape
+            print len(ta), data.shape
             raise Exception('data array length does not match time series')
 
         if fieldNames is None:
@@ -185,7 +189,7 @@ class dataContainer(object):
                 raise Exception('fieldNames must be provided')
 
         data = data.reshape((nPoints, nFields, nTime))  # correct shape
-        return cls('', time, x, y, z, data, fieldNames, coordSys, metadata)
+        return cls('', ta, x, y, z, data, fieldNames, coordSys, metaData)
 
     def copy(self):
         """Deep copy, all numpy arrays are copied instead of referenced."""

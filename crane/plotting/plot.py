@@ -5,7 +5,9 @@ High-level class to create timeseries and Taylor Diagrams.
 # Imports
 #-------------------------------------------------------------------------
 import os
+import sys
 import numpy as np
+import traceback
 
 from crane import matplotlib
 from crane import plt
@@ -907,12 +909,11 @@ class Plots(object):
             for modKey in modKeys:
                 # add model(s)
                 m = self.coll.getSample(**modKey).copy()
-                # m.z = np.tile(m.z.max(axis=0),(m.z.shape[0],1))-m.z # z
                 # coords to depth
                 for field in m.fieldNames:
                     # loop over fields (e.g. u,v in hvel)
                     try:
-                        mf = m.getFields(field)
+                        mf = m.extractFields(field)
                         dia.addSample(
                             modKey['tag'] + field,
                             mf,
@@ -924,15 +925,15 @@ class Plots(object):
                             if o.getMetaData('bracket') == 'F':
                                 # omit floating platform time series for now
                                 continue
-                            # o.z = -o.z # z coords to depth
                             dia.addOverlay(
                                 modKey['tag'] + field, o, plotType='scatter')
                         dia.showColorBar()
                         dia.addTitle(
                             '%s %s Dates: %s - %s (PST)' %
                             (station.upper(), modKey['tag'], sT, eT), tag=modKey['tag'] + field)
-                    except:
-                        pass
+                    except Exception:
+                        print 'Plotting failed: {:}: {:}'.format(modKey, field)
+                        traceback.print_exc(file=sys.stdout)
 
             # ----- Save file -----
             file = '_'.join([fPrefix, station, varStr, sT, eT])

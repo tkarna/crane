@@ -564,7 +564,6 @@ class StationCollection(tinyDB):
         dcs = dirTreeManager.getAllDataContainers(
             tag=tag, dataType=dataType, variable=variable, startTime=startTime,
             endTime=endTime, msldepth=None, rule=treeRule, verbose=True)
-        print dcs
         sc = cls(startTime, endTime, obsTag)
         # add to collection
         for dc in dcs:

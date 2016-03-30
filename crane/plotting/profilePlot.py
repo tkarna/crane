@@ -234,21 +234,6 @@ class profileTimeSeries(plotBase.colorPlotBase):
         kw['s'] = kw['s'] / 3
         self.ax.scatter(t, z, c=data, zorder=11, **kw)
 
-    def updateXAxis(self, xlim=None, numticks=12):
-        # dateticks
-        if not xlim:
-            if self.xlim:
-                xlim = self.xlim
-            else:
-                xlim = [self.ax.dataLim.xmin, self.ax.dataLim.xmax]
-        self.ax.set_xlim(xlim)
-        if self.xIsTime:
-            loc, fmt = date_ticker_factory(
-                xlim[1] - xlim[0], numticks=numticks)
-            self.ax.xaxis_date()
-            self.ax.xaxis.set_major_formatter(fmt)
-            self.ax.xaxis.set_major_locator(loc)
-
 
 class profileTimeSeriesDC(profileTimeSeries):
 
@@ -281,7 +266,7 @@ class stackProfileTimeSeries(plotBase.stackPlotBase):
         kw = dict(self.defArgs)
         kw.update(kwargs)
         plot = profileTimeSeries(**kw)
-        stackPlotBase.addPlot(self, plot, tag)
+        plotBase.stackPlotBase.addPlot(self, plot, tag)
 
     def addSample(self, tag, *args, **kwargs):
         if tag not in self.tags:

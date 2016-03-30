@@ -4,7 +4,7 @@ Reads dataContainer from netcdf file and prints summary on stdout.
 
 Tuomas Karna 2014-10-30
 """
-from data.dataContainer import dataContainer
+from crane.data.dataContainer import dataContainer
 from optparse import OptionParser
 
 #-------------------------------------------------------------------------
