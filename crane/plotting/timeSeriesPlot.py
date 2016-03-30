@@ -605,13 +605,13 @@ if __name__ == '__main__':
     ta3 = timeArray.timeArray(t3, 'corie')
 
     d0 = dataContainer.dataContainer.fromTimeSeries(
-        'Observation', ta0, m0, ['elev'])
+        ta0, m0, ['elev'])
     d1 = dataContainer.dataContainer.fromTimeSeries(
-        'model Eins', ta1, m1, ['elev'])
+        ta1, m1, ['elev'])
     d2 = dataContainer.dataContainer.fromTimeSeries(
-        'model Zwei', ta2, m2, ['elev'])
+        ta2, m2, ['elev'])
     d3 = dataContainer.dataContainer.fromTimeSeries(
-        'model Drei', ta3, m3, ['elev'])
+        ta3, m3, ['elev'])
 
     kwargs = {}
     kwargs['title'] = 'timeSeriesPlotDC example'

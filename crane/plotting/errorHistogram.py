@@ -455,10 +455,10 @@ if __name__ == '__main__':
     m3 = np.sin(t3 - 0.12) - 0.05 * np.random.randn(len(t3)) - 3.0
     ta3 = timeArray.timeArray(t3, 'corie')
 
-    d0 = dataContainer.fromTimeSeries('Observation', ta0, m0, ['elev'])
-    d1 = dataContainer.fromTimeSeries('model Eins', ta1, m1, ['elev'])
-    d2 = dataContainer.fromTimeSeries('model Zwei', ta2, m2, ['elev'])
-    d3 = dataContainer.fromTimeSeries('model Drei', ta3, m3, ['elev'])
+    d0 = dataContainer.fromTimeSeries(ta0, m0, ['elev'])
+    d1 = dataContainer.fromTimeSeries(ta1, m1, ['elev'])
+    d2 = dataContainer.fromTimeSeries(ta2, m2, ['elev'])
+    d3 = dataContainer.fromTimeSeries(ta3, m3, ['elev'])
 
     dia = errorHistogramDC(
         d0, unit='m', shadedLim=[-0.3, 0.3],

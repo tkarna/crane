@@ -246,10 +246,10 @@ if __name__ == '__main__':
 
     # example with dataContainer objects
     # generate data
-    d0 = dataContainer.fromTimeSeries('Observation', ta, ref, ['elev'])
-    d1 = dataContainer.fromTimeSeries('model Eins', ta, m1, ['elev'])
-    d2 = dataContainer.fromTimeSeries('model Zwei', ta, m2, ['elev'])
-    d3 = dataContainer.fromTimeSeries('model Drei', ta, m3, ['elev'])
+    d0 = dataContainer.fromTimeSeries(ta, ref, ['elev'])
+    d1 = dataContainer.fromTimeSeries(ta, m1, ['elev'])
+    d2 = dataContainer.fromTimeSeries(ta, m2, ['elev'])
+    d3 = dataContainer.fromTimeSeries(ta, m3, ['elev'])
 
     dia = stationExtremaPlotDC('Elevation', stationCoords, unit='m')
     dataset = dict()

@@ -365,13 +365,13 @@ if __name__ == '__main__':
     # examples with dataContainers
     from crane.data import dataContainer
     d0 = dataContainer.dataContainer.fromTimeSeries(
-        'model Eins', ta, ref, ['elev'])
+        ta, ref, ['elev'])
     d1 = dataContainer.dataContainer.fromTimeSeries(
-        'model Eins', ta, m1, ['elev'])
+        ta, m1, ['elev'])
     d2 = dataContainer.dataContainer.fromTimeSeries(
-        'model Eins', ta, m2, ['elev'])
+        ta, m2, ['elev'])
     d3 = dataContainer.dataContainer.fromTimeSeries(
-        'model Eins', ta, m3, ['elev'])
+        ta, m3, ['elev'])
 
     dia = spectralPlotDC(xunit='hours')
     dia.addSample(d1, label='model 1')

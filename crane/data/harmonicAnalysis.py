@@ -249,7 +249,6 @@ if __name__ == '__main__':
     T = 44714
     ref = np.sin(2 * np.pi * t / T) + 0.95 * np.sin(0.95 * t / T)
 
-    #d0 = dataContainer.dataContainer.fromTimeSeries( 'Observation', ta, ref, ['elev'] )
     dataDir = '/home/tuomas/workspace/cmop/projects/cathlamet_circulation/db22/process/'
     d1 = dataContainer.dataContainer.loadFromDisk(
         dataDir + 'db22_cbnc3_elev_650_2002.npz')
