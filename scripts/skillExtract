@@ -70,7 +70,8 @@ sedVars = ['turbidity']
 def skillExtract(startTime, endTime, getObs, runTag, modelDir, hindcastTag,
                  hindcastBaseDir, stationFile, extractMode='obs',
                  onlineObs=False, readNetcdf=False, noProfiles=False,
-                 tracerModel=None, nTracers=None, customVarNames={}):
+                 tracerModel=None, nTracers=None, customVarNames={},
+                 quality='best'):
     global profVars
     global sedVars
 
@@ -110,7 +111,7 @@ def skillExtract(startTime, endTime, getObs, runTag, modelDir, hindcastTag,
             print e
     if not obsColl or len(obsColl) == 0:
         obsColl = stationCollection.fetchAvailableObservations(
-            startTime, endTime, obsTag, variables=variables)
+            startTime, endTime, obsTag, variables=variables, quality=quality)
 
         # fetch additional products
         obsColl.fetchDischargeData()
@@ -305,6 +306,14 @@ if __name__ == '__main__':
         dest='customVars',
         help='Use custom output files for extracting data, e.g. hvel:hvel.67,temp:temp70',
         default=None)
+    parser.add_option(
+        '-q',
+        '--quality',
+        action='store',
+        type='string',
+        dest='quality',
+        help='Specify quality level for observation (best, PD0, PD1, PD2)',
+        default='best')
 
     (options, args) = parser.parse_args()
 
@@ -323,6 +332,7 @@ if __name__ == '__main__':
     tracerModel = options.tracerModel
     numTracers = options.numTracers
     customVars = options.customVars
+    quality = options.quality
 
     if tracerModel:
         if not numTracers and tracerModel.split('.')[0] in ['sed', 'generic']:
@@ -366,7 +376,7 @@ if __name__ == '__main__':
     print ' - extract mode:', extractMode
     print ' - time range:', str(startTime), '->', str(endTime)
     if getObs:
-        print ' - get observations from database'
+        print ' - get observations from database using quality level %s' % quality
     if runTag and modelDir:
         print ' - extract model output from', modelDir
         print ' - SELFE output format:', 'netCDF' if readNetcdf else 'binary'
@@ -404,4 +414,5 @@ if __name__ == '__main__':
         noProfiles,
         tracerModel,
         numTracers,
-        customVarNames)
+        customVarNames,
+        quality)

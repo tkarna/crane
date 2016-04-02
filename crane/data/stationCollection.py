@@ -111,7 +111,8 @@ def tupleMatches(tup, query):
 
 
 def fetchAvailableObservations(startTime, endTime, obsTag='obs',
-                               variables=['elev', 'temp', 'salt']):
+                               variables=['elev', 'temp', 'salt'],
+                               quality='best'):
     """Fetches all available observations from CMOP's netCDF cache.
     Returns a StationCollection object.
     """
@@ -122,7 +123,7 @@ def fetchAvailableObservations(startTime, endTime, obsTag='obs',
     conv = unitConversion(obsTag)
     for off in offerings:
         try:
-            dc = netcdfDB.getDataContainerFromOffering(off, startTime, endTime)
+            dc = netcdfDB.getDataContainerFromOffering(off, startTime, endTime, quality)
             dc = conv.convertToModelUnits(dc)
             sc.addSample(dc)
         except Exception as e:
