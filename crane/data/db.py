@@ -248,13 +248,11 @@ class DB:
         if reset:
             #logger.info("Establishing connection to %s:%s using %s" % (hostname, dbname, user))
 
-            self.dbconn = pg.DB(dbname,
-                                hostname,
-                                -1,
-                                None,
-                                None,
-                                user,
-                                password)
+            self.dbconn = pg.DB(dbname=dbname,
+                                host=hostname,
+                                port=-1,
+                                user=user,
+                                passwd=password)
 
     def CachedPrimaryKey(self, table):
         if table in self.schema:

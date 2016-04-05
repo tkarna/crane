@@ -48,16 +48,25 @@ class unitConversion(object):
     Converts units from observation unit to model units and vice versa.
     """
 
+    def __convertOxygen(data):
+        """Convert ml/l to mmol/m3."""
+        return data*44.661
+
+    def __convertTurbidity(data):
+        """Convert NTU to kg/m3 based on USGS + CMOP data."""
+        return 5.155*data**0.8037
+
     def __init__(self, obsTag='obs'):
         """Initialize convert object. obsTag defines the tag used to identify
         observation data. Data with all other tags are assumed to be in model
         units (for now).
         """
         self.obsTag = obsTag
-        # TODO generalize with unit conversion tool
-        self.scalarToModelUnits = {'oxy': 44.661,  # from 1 ml/l to mmol/m3
-                                   }
+        self.obsToModelUnits = {'oxy': __convertOxygen,
+                                'turbidity', __convertTurbidity,
+                                }
         self.modelUnits = {'oxy': 'mmol/m3',
+                           'sediment': 'kg/m3',
                            }
 
     def convertToModelUnits(self, dc):
@@ -66,13 +75,13 @@ class unitConversion(object):
             return dc
         var = dc.getMetaData('variable')
         dc2 = dc.copy()
-        dc2.data *= self.scalarToModelUnits.get(var, 1.0)
-        if var in self.modelUnits:
-            dc2.setMetaData('unit', self.modelUnits[var])
-        if self.scalarToModelUnits.get(var, 1.0) != 1.0:
+        if var in self.obsToModelUnits:
+            dc2.data = self.obsToModelUnits[var](dc.data)
             print '*** Converted'
             print dc
             print dc2
+        if var in self.modelUnits:
+            dc2.setMetaData('unit', self.modelUnits[var])
         return dc2
 
 

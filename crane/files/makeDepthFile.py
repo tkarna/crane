@@ -74,9 +74,9 @@ def createDerivedNCFile(old, old_var, new_path, new_var, data, verbose=False):
                                              var.dimensions)
             # 2D
             else:
-                if old.dimensions['node'].size == data.shape[-1]:
+                if len(old.dimensions['node']) == data.shape[-1]:
                     new_dims = (u'time', u'node')
-                elif old.dimensions['face'].size == data.shape[-1]:
+                elif len(old.dimensions['face']) == data.shape[-1]:
                     new_dims = (u'time', u'face')
                 else:
                     new_dims = (u'time', u'edge')
@@ -227,13 +227,13 @@ def process3DFiles(data_dir, var, first_stack, last_stack, method='avg'):
                               os.path.abspath(data_dir)))
 
     for s in np.arange(first_stack, last_stack + 1):
-        for f in glob.glob('%s_%s.*' % (s, var)):
+        g = os.path.join(data_dir, '%s_%s.*' % (s, var))
+        for f in glob.glob(g):
             ftype = f.split('.')[1]
             if ftype in FILES_2D or ftype in VECTOR_FILES:
                 print('Cannot operate on 2D or vector files: {0}'.format(f))
                 continue
-            data_file_path = os.path.join(data_dir, f)
-            makeDepthFile(data_file_path, method)
+            makeDepthFile(f, method)
 
 
 # -----------------------------------------------------------------------------
