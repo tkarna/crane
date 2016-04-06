@@ -16,6 +16,8 @@ elif 'edison' in os.environ.get('HOSTNAME', []):
     matplotlib.use('Agg', warn=False)
 elif 'hopper' in os.environ.get('HOSTNAME', []):
     matplotlib.use('Agg', warn=False)
+elif os.environ.get('DISPLAY', []) == []:
+    matplotlib.use('Agg', warn=False)
 import matplotlib.pyplot as plt
 
 # bring useful functions/variables to highest level in namespace

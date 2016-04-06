@@ -63,7 +63,7 @@ class unitConversion(object):
         """
         self.obsTag = obsTag
         self.obsToModelUnits = {'oxy': __convertOxygen,
-                                'turbidity', __convertTurbidity,
+                                'turbidity': __convertTurbidity,
                                 }
         self.modelUnits = {'oxy': 'mmol/m3',
                            'sediment': 'kg/m3',
