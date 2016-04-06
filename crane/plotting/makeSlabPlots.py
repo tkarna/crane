@@ -13,6 +13,7 @@ import datetime
 import sys
 from optparse import OptionParser
 
+from crane.data import dataContainer
 from crane.data import meshContainer
 from crane.data import timeArray
 from crane.data import collection
@@ -72,7 +73,8 @@ def _runTasksInQueue(num_threads, tasks):
 
 def processFrame(dcs, time, logScaleVars, aspect, clim, diffClim,
                  cmap, bBox, transectFile, stationFileObj, bathMC, isobaths,
-                 diff, imgDir, fPrefix, filetype, maxPlotSize=6.0):
+                 quiverDC, qkwargs, diff, imgDir, fPrefix, filetype,
+                 maxPlotSize=6.0):
     """Plots only the first time step of the meshContainers."""
     it = 0
 
@@ -98,7 +100,7 @@ def processFrame(dcs, time, logScaleVars, aspect, clim, diffClim,
             pairs.append((dcs[2 * i], dcs[2 * i + 1]))
         for joe, amy in pairs:
             var = joe.getMetaData('variable')
-            assert var ==  amy.getMetaData('variable'), \
+            assert var == amy.getMetaData('variable'), \
                 'Cannot compute difference between different variables'
             diffDC = joe.copy()
             diffDC.data = joe.data - amy.data
@@ -142,6 +144,9 @@ def processFrame(dcs, time, logScaleVars, aspect, clim, diffClim,
         dia.addSample(pltTag, dc, it, clim=_clim.get(var, None), cmap=cmap,
                       logScale=logScale, climIsLog=climIsLog, zorder=0)
 
+        if quiverDC:
+            dia.addSample(pltTag, quiverDC, it, plotType='quiver', **qkwargs)
+
         dia.addTitle(titleStr, tag=pltTag)
 
         varList.append(var)
@@ -173,6 +178,7 @@ def processFrame(dcs, time, logScaleVars, aspect, clim, diffClim,
     dateStr = dateStr.replace(' ', '_').replace(':', '-')
     varStr = '-'.join(collection.uniqueList(varList))
     file = '_'.join([fPrefix, name, varStr, dateStr])
+    print imgDir, file, filetype
     saveFigure(imgDir, file, filetype, verbose=True, dpi=200, bbox_tight=True)
     plt.close(dia.fig)
 
@@ -192,6 +198,8 @@ def makeSlabPlots(
         transectFilePath=None,
         bathFilePath=None,
         isobaths=[],
+        quiverFilePath=None,
+        qkwargs=None,
         userClim={},
         cmapStr=None,
         bBox=None,
@@ -259,6 +267,16 @@ def makeSlabPlots(
     else:
         bathMC = None
 
+    if quiverFilePath:
+        if startTime and endTime and startTime != endTime:
+            quiverDC = dataContainer.dataContainer.loadFromNetCDF(
+                      quiverFilePath, startTime, endTime)
+        else:
+            quiverDC = dataContainer.dataContainer.loadFromNetCDF(
+                      quiverFilePath)
+        if bBox:
+            quiverDC = quiverDC.cropGrid(bBox)
+
     if startTime or endTime:
         if startTime == endTime:
             # interpolate to given time stamp
@@ -294,7 +312,7 @@ def makeSlabPlots(
     # check that all time arrays match
     time = dcs[0].time.asEpoch().array
     for dc in dcs[1:]:
-        if not np.array_equal(dcs[0].time.asEpoch().array, time):
+        if not np.array_equal(dc.time.asEpoch().array, time):
             raise Exception('time steps must match')
 
     # add all plotting tasks in queue and excecute with threads
@@ -305,6 +323,8 @@ def makeSlabPlots(
         dcs_single = []
         for dc in dcs:
             dcs_single.append(dc.subsample([it]))
+        if quiverDC:
+            quiver_single = quiverDC.subsample([it])
         function = processFrame
         args = [
             dcs_single,
@@ -319,6 +339,8 @@ def makeSlabPlots(
             stationFileObj,
             bathMC,
             isobaths,
+            quiver_single,
+            qkwargs,
             diff,
             imgDir,
             fPrefix,
@@ -461,6 +483,20 @@ def parseCommandLine():
         type='string',
         dest='isobathStr',
         help='list of isobaths to plot, e.g. \"50,80,100,400\". Units meters below datum.')
+    parser.add_option(
+        '-q',
+        '--quivers',
+        action='store',
+        type='string',
+        dest='quiverSlabFile',
+        help='A slabFile with vector that can be plotted with quivers')
+    parser.add_option(
+        '',
+        '--qkwargs',
+        action='store',
+        type='string',
+        dest='quiverKwargsStr',
+        help='comma seperated kwargs for quivers, e.g. nquiverpoints=50,maxmagnitude=5,scale=0.01,color=\'w\'')
 
     (options, args) = parser.parse_args()
 
@@ -481,6 +517,8 @@ def parseCommandLine():
     matplotlib.rcParams['font.size'] = options.fontSize
     bathMeshFile = options.bathMeshFile
     isobathStr = options.isobathStr
+    quiverSlabFile = options.quiverSlabFile
+    quiverKwargsStr = options.quiverKwargsStr
 
     if imgDir is None:
         parser.print_help()
@@ -522,6 +560,10 @@ def parseCommandLine():
     if isobathStr:
         isobaths = [float(s) for s in isobathStr.split(',')]
 
+    qkwargsStr = []
+    if quiverKwargsStr:
+        qkwargs = {s.split('=')[0]: s.split('=')[1] for s in quiverKwargsStr.split(',')}
+
     print 'Parsed options:'
     if runTag:
         print ' - runID ', runTag
@@ -536,7 +578,7 @@ def parseCommandLine():
     if clim:
         print ' - using color limits', clim
     if trFiles:
-        print ' - plotting trasects', trFiles
+        print ' - plotting transects', trFiles
     if cmapStr:
         print ' - using color map', cmapStr
     if bBox:
@@ -545,6 +587,8 @@ def parseCommandLine():
         print ' - plotting difference of transects'
     if diffClim:
         print ' - using difference color limits', diffClim
+    if quiverSlabFile:
+        print ' - plotting quivers', quiverSlabFile
     print ' - number of parallel threads', num_threads
     print ' - max plot size (in)', maxPlotSize
     print ' - font size (pt)', options.fontSize
@@ -560,6 +604,8 @@ def parseCommandLine():
         trFiles,
         bathMeshFile,
         isobaths,
+        quiverSlabFile,
+        qkwargs,
         clim,
         cmapStr,
         bBox,

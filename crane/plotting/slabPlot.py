@@ -287,8 +287,8 @@ class slabSnapshot(plotBase.colorPlotBase):
                 convertedBBox = transformBBox(bbox, self.coordTransformer)
 
         kwargs.pop('plotType')
-        npoints = kwargs.pop('nquiverpoints', 120)
-        maxmag = kwargs.pop('maxmagnitude', 100.0)
+        npoints = int(kwargs.pop('nquiverpoints', 120))
+        maxmag = float(kwargs.pop('maxmagnitude', 100.0))
         kwargs.setdefault('units', 'dots')
         kwargs.setdefault('width', 1.7)
         kwargs.setdefault('headlength', 6)
