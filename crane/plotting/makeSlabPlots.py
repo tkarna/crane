@@ -86,14 +86,13 @@ def processFrame(dcs, time, logScaleVars, aspect, clim, diffClim,
     width += 1.3  # make room for colorbar & labels
     dia = slabPlot.stackSlabPlotDC(figwidth=width, plotheight=height)
 
-    dcs_to_plot = []
-    dcs_to_plot += dcs
+    dcs_to_plot = dcs
 
     _clim = {}
     _clim.update(clim)
 
-    # append difference data sets
     if diff:
+        dcs_to_plot = []
         nPairs = int(np.floor(len(dcs) / 2))
         pairs = []
         for i in range(nPairs):
@@ -104,6 +103,7 @@ def processFrame(dcs, time, logScaleVars, aspect, clim, diffClim,
                 'Cannot compute difference between different variables'
             diffDC = joe.copy()
             diffDC.data = joe.data - amy.data
+            dcs_to_plot += [joe, amy, diffDC]
 
             diffvar = DIFFPREFIX + var
             if var in diffClim:
@@ -115,7 +115,7 @@ def processFrame(dcs, time, logScaleVars, aspect, clim, diffClim,
                 if old_fn in diffClim:
                     _clim[new_fn] = diffClim[old_fn]
 
-            tag = '({:}-{:})'.format(str(joe.getMetaData('tag', suppressError=True)),
+            tag = 'Diff. ({:}-{:})'.format(str(joe.getMetaData('tag', suppressError=True)),
                                      str(amy.getMetaData('tag', suppressError=True)))
             diffDC.setMetaData('variable', diffvar)
             diffDC.setMetaData('tag', tag)
@@ -131,16 +131,16 @@ def processFrame(dcs, time, logScaleVars, aspect, clim, diffClim,
         climIsLog = logScale
         tag = str(dc.getMetaData('tag', suppressError=True))
         pltTag = tag + name + dc.getMetaData('variable') + '-' + str(i)
-        titleStr = tag + ' ' + dateStr + ' (PST)'
 
         if DIFFPREFIX in var:
-            origvar = var.replace(DIFFPREFIX, '')
-            clabel = 'Diff. ' + VARS.get(origvar, origvar)
-            unit = UNITS.get(origvar, '-')
+            basevar = var.replace(DIFFPREFIX, '')
+            title_prefix = 'Diff. '
         else:
-            clabel = VARS.get(var, var)
-            unit = UNITS.get(var, '-')
-        dia.addPlot(pltTag, clabel=clabel, unit=unit, bbox=bBox)
+            basevar = var
+            title_prefix = ''
+
+        titleStr = title_prefix + tag + ' ' + dateStr + ' (PST)'
+        dia.addPlot(pltTag, clabel=VARS.get(basevar, basevar), unit=UNITS.get(basevar, '-'), bbox=bBox)
         dia.addSample(pltTag, dc, it, clim=_clim.get(var, None), cmap=cmap,
                       logScale=logScale, climIsLog=climIsLog, zorder=0)
 
@@ -316,9 +316,7 @@ def makeSlabPlots(
             raise Exception('time steps must match')
 
     # add all plotting tasks in queue and excecute with threads
-    #import time as timeMod
     tasks = []
-    #t0 = timeMod.time()
     for it in range(0, len(time), skip):
         dcs_single = []
         for dc in dcs:
@@ -348,7 +346,6 @@ def makeSlabPlots(
             maxPlotSize]
         tasks.append((function, args))
     _runTasksInQueue(num_threads, tasks)
-    # print 'duration', timeMod.time()-t0
 
 
 #-------------------------------------------------------------------------

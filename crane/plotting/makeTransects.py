@@ -17,6 +17,8 @@ from crane.utility import saveFigure
 from crane.utility import createDirectory
 from crane.plotting import transectPlot
 
+DIFFPREFIX = 'diff-'
+
 import multiprocessing
 # NOTE this must not be a local function in runTasksInQueue
 
@@ -69,77 +71,75 @@ def processFrame(
         # make empty plot
     dia = transectPlot.stackTransectPlotDC(figwidth=maxPlotSize,
                                            plotheight=2.0 / 10.0 * maxPlotSize)
+    dcs_to_plot = dcs
+
+    _clim = {}
+    _clim.update(clim)
+
+    if diff:
+        dcs_to_plot = []
+        nPairs = int(np.floor(len(dcs) / 2))
+        pairs = []
+        for i in range(nPairs):
+            pairs.append((dcs[2 * i], dcs[2 * i + 1]))
+        for joe, amy in pairs:
+            var = joe.getMetaData('variable')
+            assert var == amy.getMetaData('variable'), \
+                'Cannot compute difference between different variables'
+            diffDC = joe.copy()
+            diffDC.data = joe.data - amy.data
+            dcs_to_plot += [joe, amy, diffDC]
+
+            diffvar = DIFFPREFIX + var
+            if var in diffClim:
+                _clim[diffvar] = diffClim[var]
+            for i in range(len(diffDC.fieldNames)):
+                old_fn = diffDC.fieldNames[i]
+                new_fn = DIFFPREFIX + old_fn
+                diffDC.fieldNames[i] = new_fn
+                if old_fn in diffClim:
+                    _clim[new_fn] = diffClim[old_fn]
+
+            tag = '({:}-{:})'.format(str(joe.getMetaData('tag', suppressError=True)),
+                                     str(amy.getMetaData('tag', suppressError=True)))
+            diffDC.setMetaData('variable', diffvar)
+            diffDC.setMetaData('tag', tag)
+            dcs_to_plot.append(diffDC)
+
     it = 0
-    # round time to nearest minute
     varList = []
-    for dc in dcs:
+    for dc in dcs_to_plot:
         # add transect
         transectName = str(dc.getMetaData('location', suppressError=True))
         tag = str(dc.getMetaData('tag', suppressError=True))
-        var = dc.getMetaData('variable')
+        var = dc.fieldNames[0]
         logScale = var in logScaleVars
         climIsLog = logScale
-        pltTag = tag + transectName + dc.getMetaData('variable')
+        pltTag = tag + transectName + var
         if isinstance(cmapDict, dict):
             cmap = plt.get_cmap(cmapDict.get(var, 'Spectral_r'))
         else:
             cmap = plt.get_cmap(cmapDict)
+        # round time to nearest minute
         dateEpoch = round(dc.time.asEpoch()[it] / 60) * 60
         dateStr = timeArray.epochToDatetime(
             dateEpoch).strftime('%Y-%m-%d %H:%M:%S')
-        titleStr = tag + ' ' + transectName + ' ' + dateStr + ' (PST)'
-        if it == 0:
-            dia.addSample(pltTag, dc, it, N=nCLines.get(var, defaultNCLines),
-                          clim=clim.get(var, None),
-                          clabel=VARS.get(var, var), unit=UNITS.get(var, '-'),
-                          logScale=logScale, climIsLog=climIsLog, cmap=cmap,
-                          ylim=ylim, xlim=xlim)
-            dia.showColorBar(tag=pltTag)
-            dia.addTitle(titleStr, tag=pltTag)
-        else:
-            # the mesh changes in time, must render entire figure again
-            # remove all previous contours TODO is there a higher level
-            # version?
-            for p in dia.plots[pltTag].cax.collections:
-                p.remove()
-            dia.addSample(pltTag, dc, it, N=nCLines.get(var, defaultNCLines),
-                          clim=clim.get(var, None),
-                          clabel=VARS.get(var, var), unit=UNITS.get(var, '-'),
-                          logScale=logScale, climIsLog=climIsLog, cmap=cmap,
-                          ylim=ylim, xlim=xlim)
-            dia.updateColorBar(tag=pltTag)
-            dia.updateTitle(titleStr, tag=pltTag)
-        varList.append(var)
 
-    # plot difference of two transects
-    if diff:
-        diffDC = dcs[0].copy()
-        diffDC.data = dcs[0].data - dcs[1].data
-        tag = '(' + str(dcs[0].getMetaData('tag', suppressError=True)
-                        ) + '-' + str(dcs[1].getMetaData('tag', suppressError=True)) + ')'
-        pltTag = tag + transectName + var
-        titleStr = tag + ' ' + transectName + ' ' + dateStr + ' (PST)'
-        if it == 0:
-            dia.addSample(
-                pltTag, diffDC, it, N=nCLines.get(
-                    var, 20), clim=diffClim.get(
-                    var, None), clabel=VARS.get(
-                    var, var), unit=UNITS.get(
-                    var, '-'), cmap='RdBu_r', ylim=ylim, xlim=xlim)
-            dia.addTitle(titleStr, tag=pltTag)
-            dia.showColorBar(tag=pltTag)
+        if DIFFPREFIX in var:
+            basevar = var.replace(DIFFPREFIX, '')
+            title_prefix = 'Diff. '
         else:
-            for p in dia.plots[pltTag].cax.collections:
-                p.remove()
-            # remove all previous contours TODO is there a higher level
-            # version?
-            dia.addSample(pltTag, dc, it, N=nCLines.get(var, defaultNCLines),
-                          clim=clim.get(var, None),
-                          clabel=VARS.get(var, var), unit=UNITS.get(var, '-'),
-                          logScale=logScale, climIsLog=climIsLog, cmap=cmap,
-                          ylim=ylim, xlim=xlim)
-            dia.updateColorBar(tag=pltTag)
-            dia.updateTitle(titleStr, tag=pltTag)
+            basevar = var
+            title_prefix = ''
+
+        titleStr = title_prefix + tag + ' ' + transectName + ' ' + dateStr + ' (PST)'
+        dia.addSample(pltTag, dc, it, N=nCLines.get(basevar, defaultNCLines),
+                        clim=_clim.get(var, None),
+                        clabel=VARS.get(basevar, basevar), unit=UNITS.get(basevar, '-'),
+                        logScale=logScale, climIsLog=climIsLog, cmap=cmap,
+                        ylim=ylim, xlim=xlim)
+        dia.showColorBar(tag=pltTag)
+        dia.addTitle(titleStr, tag=pltTag)
         varList.append(var)
 
     # add station markers (if any)
@@ -188,6 +188,8 @@ def makeTransects(netCDFFiles, imgDir, startTime=None, endTime=None, skip=1,
             'vdff': [-6, -0.5],
             'tdff': [-6, -0.5],
             'hvel': [-3.0, 3.0],
+            'u': [-3.0, 3.0],
+            'v': [-3.0, 3.0],
             'sed': [0, 100],
             'sed_1': [0, 0.01],
             'sed_2': [0, 0.3],
@@ -241,9 +243,14 @@ def makeTransects(netCDFFiles, imgDir, startTime=None, endTime=None, skip=1,
     dcs = []
     for fn in netCDFFiles:
         dc = dataContainer.dataContainer.loadFromNetCDF(fn)
-        if ylim is None:
-            ylim = [np.nanmin(dc.z), np.nanmax(dc.z)]
         dcs.append(dc)
+
+    if ylim is None:
+        ylim = [np.inf, -np.inf]
+        for dc in dcs:
+            dc_ylim = [np.nanmin(dc.z), np.nanmax(dc.z)]
+            ylim[0] = min(ylim[0], dc_ylim[0])
+            ylim[1] = max(ylim[1], dc_ylim[1])
 
     if stationFilePath:
         stationFile = csvStationFile.csvStationFile()
@@ -267,6 +274,14 @@ def makeTransects(netCDFFiles, imgDir, startTime=None, endTime=None, skip=1,
             for i in range(len(dcs)):
                 dcs[i] = dcs[i].timeWindow(startTime, endTime, includeEnd=True)
 
+    # append each component separately (if more than one)
+    dcs_comp = []
+    for iComp in range(3):
+        for dc in dcs:
+            if iComp < dc.data.shape[1]:
+                dcs_comp.append(dc.extractFields(iComp))
+    dcs = dcs_comp
+
     # check that all time arrays match
     time = dcs[0].time.asEpoch().array
     for dc in dcs[1:]:
@@ -274,9 +289,7 @@ def makeTransects(netCDFFiles, imgDir, startTime=None, endTime=None, skip=1,
             raise Exception('time steps must match')
 
     # add all plotting tasks in queue and excecute with threads
-    #import time as timeMod
     tasks = []
-    #t0 = timeMod.time()
     for it in range(0, len(time), skip):
         dcs_single = []
         for dc in dcs:
@@ -300,7 +313,6 @@ def makeTransects(netCDFFiles, imgDir, startTime=None, endTime=None, skip=1,
             maxPlotSize]
         tasks.append((function, args))
     _runTasksInQueue(num_threads, tasks)
-    # print 'duration', timeMod.time()-t0
 
 #-------------------------------------------------------------------------
 # Parse commandline arguments
