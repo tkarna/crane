@@ -73,8 +73,8 @@ def _runTasksInQueue(num_threads, tasks):
 
 def processFrame(dcs, time, logScaleVars, aspect, clim, diffClim,
                  cmap, bBox, transectFile, stationFileObj, bathMC, isobaths,
-                 quiverDC, qkwargs, diff, imgDir, fPrefix, filetype,
-                 maxPlotSize=6.0):
+                 contourMC, contours, contourColors, quiverDC, qkwargs, diff,
+                 imgDir, fPrefix, filetype, maxPlotSize=6.0):
     """Plots only the first time step of the meshContainers."""
     it = 0
 
@@ -147,6 +147,15 @@ def processFrame(dcs, time, logScaleVars, aspect, clim, diffClim,
         if quiverDC:
             dia.addSample(pltTag, quiverDC, it, plotType='quiver', **qkwargs)
 
+        # add other contours (if any)
+        if contourMC is not None and len(contours) > 0:
+            if len(contourColors) == 0:
+                contourColors = 'k'
+            for pltTag in dia.plots:
+                dia.addSample(pltTag, contourMC, it, plotType='contour',
+                              levels=contours, colors=contourColors,
+                              zorder=1, draw_cbar=False)
+
         dia.addTitle(titleStr, tag=pltTag)
 
         varList.append(var)
@@ -178,7 +187,6 @@ def processFrame(dcs, time, logScaleVars, aspect, clim, diffClim,
     dateStr = dateStr.replace(' ', '_').replace(':', '-')
     varStr = '-'.join(collection.uniqueList(varList))
     file = '_'.join([fPrefix, name, varStr, dateStr])
-    print imgDir, file, filetype
     saveFigure(imgDir, file, filetype, verbose=True, dpi=200, bbox_tight=True)
     plt.close(dia.fig)
 
@@ -198,6 +206,9 @@ def makeSlabPlots(
         transectFilePath=None,
         bathFilePath=None,
         isobaths=[],
+        contourFilePath=None,
+        contours=[],
+        contourColors=[],
         quiverFilePath=None,
         qkwargs=None,
         userClim={},
@@ -267,6 +278,11 @@ def makeSlabPlots(
     else:
         bathMC = None
 
+    if contourFilePath:
+        contourMC = readAnyMeshFile(contourFilePath)
+    else:
+        contourMC = None
+
     if quiverFilePath:
         if startTime and endTime and startTime != endTime:
             quiverDC = dataContainer.dataContainer.loadFromNetCDF(
@@ -276,6 +292,8 @@ def makeSlabPlots(
                       quiverFilePath)
         if bBox:
             quiverDC = quiverDC.cropGrid(bBox)
+    else:
+        quiverDC = None
 
     if startTime or endTime:
         if startTime == endTime:
@@ -323,6 +341,12 @@ def makeSlabPlots(
             dcs_single.append(dc.subsample([it]))
         if quiverDC:
             quiver_single = quiverDC.subsample([it])
+        else:
+            quiver_single = None
+        if contourMC:
+            contour_single = contourMC.subsample([it])
+        else:
+            contour_single = None
         function = processFrame
         args = [
             dcs_single,
@@ -337,6 +361,9 @@ def makeSlabPlots(
             stationFileObj,
             bathMC,
             isobaths,
+            contour_single,
+            contours,
+            contourColors,
             quiver_single,
             qkwargs,
             diff,
@@ -494,6 +521,27 @@ def parseCommandLine():
         type='string',
         dest='quiverKwargsStr',
         help='comma seperated kwargs for quivers, e.g. nquiverpoints=50,maxmagnitude=5,scale=0.01,color=\'w\'')
+    parser.add_option(
+        '',
+        '--contour',
+        action='store',
+        type='string',
+        dest='contourMeshFile',
+        help='A mesh file to create contours')
+    parser.add_option(
+        '',
+        '--contourLevels',
+        action='store',
+        type='string',
+        dest='contourStr',
+        help='list of contour levels to plot, e.g. \"50,80,100,400\".')
+    parser.add_option(
+        '',
+        '--contourColors',
+        action='store',
+        type='string',
+        dest='contourColors',
+        help='list of colors, e.g. \"r,green,k,#afeee\".')
 
     (options, args) = parser.parse_args()
 
@@ -514,6 +562,9 @@ def parseCommandLine():
     matplotlib.rcParams['font.size'] = options.fontSize
     bathMeshFile = options.bathMeshFile
     isobathStr = options.isobathStr
+    contourMeshFile = options.contourMeshFile
+    contourStr = options.contourStr
+    contourColorsStr = options.contourColors
     quiverSlabFile = options.quiverSlabFile
     quiverKwargsStr = options.quiverKwargsStr
 
@@ -557,7 +608,15 @@ def parseCommandLine():
     if isobathStr:
         isobaths = [float(s) for s in isobathStr.split(',')]
 
-    qkwargsStr = []
+    contours = []
+    if contourStr:
+        contours = [float(s) for s in contourStr.split(',')]
+
+    contourColors = []
+    if contourColorsStr:
+        contourColors = tuple([s for s in contourColorsStr.split(',')])
+
+    qkwargs = {}
     if quiverKwargsStr:
         qkwargs = {s.split('=')[0]: s.split('=')[1] for s in quiverKwargsStr.split(',')}
 
@@ -586,6 +645,10 @@ def parseCommandLine():
         print ' - using difference color limits', diffClim
     if quiverSlabFile:
         print ' - plotting quivers', quiverSlabFile
+    if bathMeshFile:
+        print ' - plotting isobaths', bathMeshFile
+    if contourMeshFile:
+        print ' - plotting contours', contourMeshFile
     print ' - number of parallel threads', num_threads
     print ' - max plot size (in)', maxPlotSize
     print ' - font size (pt)', options.fontSize
@@ -601,6 +664,9 @@ def parseCommandLine():
         trFiles,
         bathMeshFile,
         isobaths,
+        contourMeshFile,
+        contours,
+        contourColors,
         quiverSlabFile,
         qkwargs,
         clim,
