@@ -10,7 +10,7 @@ import os
 import sys
 import datetime
 
-import data.netcdfCacheInterface as netcdfCacheInterface
+import crane.data.netcdfCacheInterface as netcdfCacheInterface
 from crane.data import dataContainer
 from crane.data import timeArray
 #-------------------------------------------------------------------------
