@@ -19,14 +19,14 @@ import sys
 from optparse import OptionParser
 
 import numpy as np
-from crane import plt
 
+from crane import plt
+from crane.utility import parseTimeStr, createDirectory, saveFigure
 from crane.data import dirTreeManager as dtm
 from crane.data import stationCollection
-from crane.files import csvStationFile
 from crane.data import dataContainer
 from crane.data import statistics
-
+from crane.files import csvStationFile
 from crane.plotting import plot
 from crane.plotting import plotBase
 from crane.plotting import timeSeriesPlot
@@ -104,7 +104,7 @@ def generateTSPlot(startTime, endTime, dcs, imgDir=None, ylim={},
         for modKey in modKeys:
             m = sc.getSample(**modKey)
             l = modKey['tag'].split('-')[0]
-            if doMurphyScore:
+            if doMurphyScore and obsKey:
                 o2, m2 = o.alignTimes(m)
                 murphy = statistics.murphySkillScore(
                     o2.data.ravel(), m2.data.ravel())
@@ -125,7 +125,7 @@ def generateTSPlot(startTime, endTime, dcs, imgDir=None, ylim={},
         # ----- Save file -----
         sT = str(sc.startTime.date())
         eT = str(sc.endTime.date())
-        imgDir = plotBase.createDirectory(imgDir)
+        imgDir = createDirectory(imgDir)
         varList = uniqueList([tup[0][1] for tup in comKeys])
         #depSet = list(depSet)
         tagStr = '-'.join(uniqueList([dc.getMetaData('tag') for dc in dcs]))
@@ -152,7 +152,7 @@ def generateTSPlot(startTime, endTime, dcs, imgDir=None, ylim={},
 
 
 def makeTSPlotForStationFile(runTags, stationFile, startTime, endTime,
-                             imgDir=None, ylim={}):
+                             imgDir=None, ylim={}, singleFile=None):
     # load data
     dcs = []
     stationsToExtract = csvStationFile.csvStationFileWithDepth()
@@ -185,13 +185,14 @@ def makeTSPlotForStationFile(runTags, stationFile, startTime, endTime,
                         location=loc,
                         variable=var,
                         msldepth=msldepth,
-                        startTime=startTime,
-                        endTime=endTime)
+                        startTime=startTime)
+#                        endTime=endTime)
                 dcs.append(dc)
             except Exception as e:
                 print 'reading failed'
                 print e
-
+    if singleFile:
+        dcs.append(dataContainer.dataContainer.loadFromNetCDF(singleFile))
     if dcs:
         generateTSPlot(startTime, endTime, dcs, imgDir, ylim)
 
@@ -206,17 +207,28 @@ def parseCommandLine():
         'Usage: %prog -s [start date YYYY-MM-DD] -e [end date YYYY-MM-DD] -o [path] -t [stationFile] runTag1 runTag2 ...\n')
 
     parser = OptionParser(usage=usage)
-    parser.add_option('-s', '--start', action='store', type='string',
-                      dest='startStr', help='Date to start processing')
-    parser.add_option('-e', '--end', action='store', type='string',
-                      dest='endStr', help='Date to end processing')
+    parser.add_option(
+        '-s',
+        '--start',
+        action='store',
+        type='string',
+        dest='startStr',
+        help='Date to start processing')
+    parser.add_option(
+        '-e',
+        '--end',
+        action='store',
+        type='string',
+        dest='endStr',
+        help='Date to end processing')
     parser.add_option(
         '-o',
         '--imageDirectory',
         action='store',
         type='string',
         dest='imgDir',
-        help='(optional) directory where generated images are stored. If not specified, shows the image instead.')
+        help='(optional) directory where generated images are stored.\
+              If not specified, shows the image instead.')
     parser.add_option(
         '-y',
         '--ylim',
@@ -224,10 +236,20 @@ def parseCommandLine():
         type='string',
         dest='ylimStr',
         help='Custom limits for y axis, a string like salt:0:30,temp:4:12')
-    parser.add_option('-t', '--csvStationFile', action='store', type='string',
-                      dest='csvStationFile',
-                      help='file that defines station coordinates and\
-                      variables for time series to plot')
+    parser.add_option(
+        '-t',
+        '--csvStationFile',
+        action='store', type='string',
+        dest='csvStationFile',
+        help='file that defines station coordinates and\
+              variables for time series to plot')
+    parser.add_option(
+        '-f',
+        '--file',
+        action='store',
+        type='string',
+        dest='singleFile',
+        help='plot a single file')
 
     (options, args) = parser.parse_args()
 
@@ -238,6 +260,7 @@ def parseCommandLine():
     imgDir = options.imgDir
     ylimStr = options.ylimStr
     csvStationFile = options.csvStationFile
+    singleFile = options.singleFile
 
     if not runTags:
         parser.print_help()
@@ -252,8 +275,8 @@ def parseCommandLine():
         parser.print_help()
         parser.error('End date undefined')
 
-    startTime = plotBase.parseTimeStr(startStr)
-    endTime = plotBase.parseTimeStr(endStr)
+    startTime = parseTimeStr(startStr)
+    endTime = parseTimeStr(endStr)
 
     ylim = {}
     if ylimStr:
@@ -273,7 +296,7 @@ def parseCommandLine():
         print ' - stations read from', csvStationFile
 
     makeTSPlotForStationFile(runTags, csvStationFile, startTime, endTime,
-                             imgDir, ylim)
+                             imgDir, ylim, singleFile)
 
 if __name__ == '__main__':
     parseCommandLine()
