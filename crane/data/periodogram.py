@@ -5,8 +5,9 @@ http://projects.scipy.org/scipy/browser/trunk/scipy/signal/spectral.pyx?rev=7141
 
 Tuomas Karna 2012-10-04
 """
-
-from numpy import *
+from crane import plt
+from crane.np import * 
+import matplotlib.mlab
 
 
 def lombscargle(x, y, freqs):
@@ -126,8 +127,6 @@ def test():
     pg_lossy = periodogram(x_lossy, y_lossy, f)
 
     # Now make a plot of the input data:
-    import matplotlib.pyplot as plt
-    import matplotlib.mlab
     pg_fft, f_fft = matplotlib.mlab.psd(
         y, NFFT=16 * 256, Fs=3. / 2 * 1. / w)  # only for evenly sampled data
     plt.subplot(2, 1, 1)

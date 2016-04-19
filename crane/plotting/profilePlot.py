@@ -146,7 +146,7 @@ class profileTimeSeries(plotBase.colorPlotBase):
         self.logScale = defaultArgs.pop('logScale', False)
         self.invert_yaxis = defaultArgs.pop('invert_yaxis', False)
         defaultArgs.setdefault('plotType', 'contourf')
-        defaultArgs.setdefault('extend', 'both')
+        defaultArgs.setdefault('extend', 'max')
         defaultArgs.setdefault('N', 20)
         if self.logScale and self.unit:
             self.unit = r'$\log10($' + self.unit + '$)$'

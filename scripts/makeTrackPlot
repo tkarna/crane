@@ -13,8 +13,6 @@ import datetime
 import sys
 from optparse import OptionParser
 
-import matplotlib.pyplot as plt
-
 from crane.data import dataContainer
 from crane.physicalVariableDefs import VARS
 from crane.physicalVariableDefs import UNITS
@@ -22,6 +20,7 @@ from crane.utility import createDirectory
 from crane.utility import saveFigure
 from crane.utility import parseTimeStr
 from crane.plotting import trackPlot
+from crane import plt
 import crane.plotting.colormap
 
 #-------------------------------------------------------------------------

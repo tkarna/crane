@@ -9,26 +9,21 @@ makeProfilePlot -o run29/images/prof/ run29/data/track/AUV46_salt_trck_2012-05-0
 Tuomas Karna 2012-11-28
 """
 import datetime
-import sys
 from optparse import OptionParser
 
-import numpy as np
-import matplotlib.pyplot as plt
-
 from crane.data import dataContainer
-
 from crane.physicalVariableDefs import VARS
 from crane.physicalVariableDefs import UNITS
 from crane.utility import createDirectory
 from crane.utility import saveFigure
 from crane.utility import parseTimeStr
 from crane.plotting import profilePlot
+from crane import plt
+
 
 #-------------------------------------------------------------------------
 # Main routine
 #-------------------------------------------------------------------------
-
-
 def plotProfile(
         userRunTag,
         ncfiles,
@@ -39,6 +34,7 @@ def plotProfile(
         endTime=None,
         userClim={},
         cmapDict={},
+        titleStr=None,
         **kwargs):
 
     imgDir = createDirectory(imgDir)
@@ -85,18 +81,20 @@ def plotProfile(
                         clim=clim.get(var, None), unit=UNITS.get(var, '-'))
             dia.addSample(plotID, dci, cmap=cmap)
             trackTitle = dci.getMetaData('location')
-            runTag = userRunTag if userRunTag else dci.getMetaData('tag')
-            titleStr = ' '.join([trackTitle, runTag])
+            if titleStr is None:
+                runTag = userRunTag if userRunTag else dci.getMetaData('tag')
+                titleStr = ' '.join([trackTitle, runTag])
             dia.addTitle(titleStr, tag=plotID)
     dia.showColorBar()
 
     # save to disk
     varStr = '-'.join(list(set(dc.getMetaData('variable') for dc in dcs)))
     tagStr = '-'.join(list(set(dc.getMetaData('tag') for dc in dcs)))
+    locStr = '-'.join(list(set(dc.getMetaData('location') for dc in dcs)))
     dateStr = dcs[0].time.getDatetime(0).strftime('%Y-%m-%d')
     dateStr += '_' + dcs[0].time.getDatetime(-1).strftime('%Y-%m-%d')
-    file = '_'.join([fPrefix, trackTitle, tagStr, varStr, dateStr])
-    saveFigure(imgDir, file, filetype, verbose=True, dpi=100)
+    file = '_'.join([fPrefix, locStr, tagStr, varStr, dateStr])
+    saveFigure(imgDir, file, filetype, verbose=True, bbox_tight=True)
     plt.close()
 
 
@@ -148,8 +146,22 @@ def parseCommandLine():
         dest='cmapStr',
         help='name of matplotlib colormap to use. Can be specified for each variable: hvel:RdBu_r,salt:Spectral_r',
         default='Spectral_r')
-    parser.add_option('-n', '--nbins', action='store', type='int', default=13,
-                      dest='nbins', help='number of bins in colormap')
+    parser.add_option(
+        '-t',
+        '--title',
+        action='store',
+        type='string',
+        dest='titleStr',
+        help='Plot title string.',
+        default=None)
+    parser.add_option(
+        '-n',
+        '--nbins',
+        action='store',
+        type='int',
+        default=13,
+        dest='nbins',
+        help='number of bins in colormap')
     (options, args) = parser.parse_args()
 
     startTime = options.startTime
@@ -158,6 +170,7 @@ def parseCommandLine():
     runTag = options.runTag
     climStr = options.climStr
     cmapStr = options.cmapStr
+    titleStr = options.titleStr
     N = options.nbins
 
     if imgDir is None:
@@ -188,10 +201,10 @@ def parseCommandLine():
                 cmap[var] = mapname
         else:
             cmap = str(cmapStr)
-
+    
     plotProfile(runTag, netCDFFiles, imgDir, fPrefix='prof', filetype='png',
                 startTime=startTime, endTime=endTime, userClim=clim,
-                cmapDict=cmap, N=N)
+                cmapDict=cmap, N=N, titleStr=titleStr)
 
 if __name__ == '__main__':
     parseCommandLine()

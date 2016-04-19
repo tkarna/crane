@@ -67,7 +67,8 @@ def processFrame(
         imgDir,
         fPrefix,
         filetype,
-        maxPlotSize=10.0):
+        maxPlotSize=10.0,
+        titleStr=None):
         # make empty plot
     dia = transectPlot.stackTransectPlotDC(figwidth=maxPlotSize,
                                            plotheight=2.0 / 10.0 * maxPlotSize)
@@ -132,13 +133,18 @@ def processFrame(
             basevar = var
             title_prefix = ''
 
-        titleStr = title_prefix + tag + ' ' + transectName + ' ' + dateStr + ' (PST)'
-        dia.addSample(pltTag, dc, it, N=nCLines.get(basevar, defaultNCLines),
+        if type(nCLines) is int:
+            N = nCLines 
+        else:
+            N = nCLines.get(basevar, defaultNCLines)
+        dia.addSample(pltTag, dc, it, N=N,
                         clim=_clim.get(var, None),
                         clabel=VARS.get(basevar, basevar), unit=UNITS.get(basevar, '-'),
                         logScale=logScale, climIsLog=climIsLog, cmap=cmap,
                         ylim=ylim, xlim=xlim)
         dia.showColorBar(tag=pltTag)
+        if titleStr is None:
+            titleStr = title_prefix + tag + ' ' + transectName + ' ' + dateStr + ' (PST)'
         dia.addTitle(titleStr, tag=pltTag)
         varList.append(var)
 
@@ -171,10 +177,9 @@ def processFrame(
 
 
 def makeTransects(netCDFFiles, imgDir, startTime=None, endTime=None, skip=1,
-                  stationFilePath=None, userClim={}, cmapDict=None, ylim=None,
-                  xlim=None, diff=False, userDiffClim={}, num_threads=1,
-                  maxPlotSize=10.0):
-
+                  stationFilePath=None, userClim={}, cmapDict=None, N=None,
+                  ylim=None, xlim=None, diff=False, userDiffClim={},
+                  num_threads=1, maxPlotSize=10.0, titleStr=None):
     imgDir = createDirectory(imgDir)
     fPrefix = 'trans'
     filetype = 'png'
@@ -227,17 +232,20 @@ def makeTransects(netCDFFiles, imgDir, startTime=None, endTime=None, skip=1,
     diffClim.update(userDiffClim)
 
     # number of contour lines
-    nCLines = {'salt': 25,  # 71,
-               'temp': 16,
-               'kine': 23,
-               'vdff': 23,
-               'hvel': 31,
-               'sed': 11,
-               'sed_1': 11,
-               'sed_2': 11,
-               'sed_3': 11,
-               'sed_4': 11,
-               }
+    if N:
+        nCLines = N
+    else:
+        nCLines = {'salt': 25,  # 71,
+                   'temp': 16,
+                   'kine': 23,
+                   'vdff': 23,
+                   'hvel': 31,
+                   'sed': 11,
+                   'sed_1': 11,
+                   'sed_2': 11,
+                   'sed_3': 11,
+                   'sed_4': 11,
+                   }
     defaultNCLines = 30
 
     dcs = []
@@ -310,7 +318,8 @@ def makeTransects(netCDFFiles, imgDir, startTime=None, endTime=None, skip=1,
             imgDir,
             fPrefix,
             filetype,
-            maxPlotSize]
+            maxPlotSize,
+            titleStr]
         tasks.append((function, args))
     _runTasksInQueue(num_threads, tasks)
 
@@ -427,6 +436,22 @@ def parseCommandLine():
         dest='fontSize',
         help='Set the font size for all labels (default %default).',
         default=12)
+    parser.add_option(
+        '-n',
+        '--nbins',
+        action='store',
+        type='int',
+        default=13,
+        dest='nbins',
+        help='number of bins in colormap')
+    parser.add_option(
+        '--title',
+        action='store',
+        type='string',
+        dest='titleStr',
+        help='Plot title string.',
+        default=None)
+
 
     (options, args) = parser.parse_args()
 
@@ -444,6 +469,8 @@ def parseCommandLine():
     num_threads = options.num_threads
     maxPlotSize = options.maxPlotSize
     matplotlib.rcParams['font.size'] = options.fontSize
+    N = options.nbins
+    titleStr = options.titleStr
 
     if imgDir is None:
         parser.print_help()
@@ -516,8 +543,8 @@ def parseCommandLine():
     print ' - font size (pt)', options.fontSize
 
     makeTransects(netCDFFiles, imgDir, startTime, endTime, skip, stationFile,
-                  clim, cmap, ylim, xlim, diff, diffClim, num_threads,
-                  maxPlotSize)
+                  clim, cmap, N, ylim, xlim, diff, diffClim, num_threads,
+                  maxPlotSize, titleStr=titleStr)
 
 if __name__ == '__main__':
     parseCommandLine()
