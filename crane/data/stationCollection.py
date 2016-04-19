@@ -48,13 +48,13 @@ class unitConversion(object):
     Converts units from observation unit to model units and vice versa.
     """
 
-    def __convertOxygen(data):
+    def __convertOxygen(self, data):
         """Convert ml/l to mmol/m3."""
         return data*44.661
 
-    def __convertTurbidity(data):
+    def __convertTurbidity(self, data):
         """Convert NTU to kg/m3 based on USGS + CMOP data."""
-        return 5.155*data**0.8037
+        return 5.155*data**0.8037/1000.0
 
     def __init__(self, obsTag='obs'):
         """Initialize convert object. obsTag defines the tag used to identify
@@ -62,8 +62,8 @@ class unitConversion(object):
         units (for now).
         """
         self.obsTag = obsTag
-        self.obsToModelUnits = {'oxy': __convertOxygen,
-                                'turbidity': __convertTurbidity,
+        self.obsToModelUnits = {'oxy': self.__convertOxygen,
+                                'turbidity': self.__convertTurbidity,
                                 }
         self.modelUnits = {'oxy': 'mmol/m3',
                            'sediment': 'kg/m3',

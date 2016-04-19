@@ -392,9 +392,9 @@ if __name__ == '__main__':
     if not noProfiles:
         print ' - extraction of profiles enabled'
     if tracerModel:
-        print ' - using tracer model ', tracerModel
+        print ' - using tracer model', tracerModel
     if tracerModel and numTracers:
-        print ' - with tracers n=', numTracers
+        print ' - with %d tracers' % numTracers
     if customVarNames:
         print ' - with custom variables', customVarNames
     sys.stdout.flush()

@@ -8,10 +8,12 @@ makeProfilePlot -o run29/images/prof/ run29/data/track/AUV46_salt_trck_2012-05-0
 
 Tuomas Karna 2012-11-28
 """
-import numpy as np
 import datetime
 import sys
 from optparse import OptionParser
+
+import numpy as np
+import matplotlib.pyplot as plt
 
 from crane.data import dataContainer
 
@@ -36,11 +38,10 @@ def plotProfile(
         startTime=None,
         endTime=None,
         userClim={},
-        cmapStr=None,
+        cmapDict={},
         **kwargs):
 
     imgDir = createDirectory(imgDir)
-    cmap = plt.get_cmap(cmapStr)
 
     # logScale flag
     logScaleVars = ['kine', 'vdff']
@@ -68,16 +69,21 @@ def plotProfile(
             dcs[i] = dcs[i].timeWindow(startTime, endTime, includeEnd=True)
 
     dia = profilePlot.stackProfileTimeSeriesDC(
-        ylabel='depth', xlabel='', cmap=cmap, plotheight=3.2, **kwargs)
+        ylabel='depth', xlabel='', plotheight=3.2, **kwargs)
 
     for j, dc in enumerate(dcs):
         for i in range(dc.data.shape[1]):
-            dci = dc.extractField(i)
+            dci = dc.extractFields(i)
             var = dci.fieldNames[0]
             plotID = str(j) + '-' + str(i)
+            if isinstance(cmapDict, dict):
+                cmap = plt.get_cmap(cmapDict.get(var, 'Spectral_r'))
+            else:
+                cmap = plt.get_cmap(cmapDict)
+
             dia.addPlot(plotID, clabel=VARS.get(var, var),
                         clim=clim.get(var, None), unit=UNITS.get(var, '-'))
-            dia.addSample(plotID, dci, )
+            dia.addSample(plotID, dci, cmap=cmap)
             trackTitle = dci.getMetaData('location')
             runTag = userRunTag if userRunTag else dci.getMetaData('tag')
             titleStr = ' '.join([trackTitle, runTag])
@@ -140,7 +146,8 @@ def parseCommandLine():
         action='store',
         type='string',
         dest='cmapStr',
-        help='name of matplotlib colormap to use')
+        help='name of matplotlib colormap to use. Can be specified for each variable: hvel:RdBu_r,salt:Spectral_r',
+        default='Spectral_r')
     parser.add_option('-n', '--nbins', action='store', type='int', default=13,
                       dest='nbins', help='number of bins in colormap')
     (options, args) = parser.parse_args()
@@ -173,9 +180,18 @@ def parseCommandLine():
 
     netCDFFiles = args
 
+    if cmapStr:
+        if len(cmapStr.split(',')) > 1:
+            cmap = {}
+            for entry in cmapStr.split(','):
+                var, mapname = entry.split(':')
+                cmap[var] = mapname
+        else:
+            cmap = str(cmapStr)
+
     plotProfile(runTag, netCDFFiles, imgDir, fPrefix='prof', filetype='png',
                 startTime=startTime, endTime=endTime, userClim=clim,
-                cmapStr=cmapStr, N=N)
+                cmapDict=cmap, N=N)
 
 if __name__ == '__main__':
     parseCommandLine()
