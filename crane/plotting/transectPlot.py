@@ -146,7 +146,7 @@ def dcToTransect(dc2, iComp=0):
     if np.isnan(dc2.x).any() or np.isnan(dc2.x).any():
         raise Exception('This method cannot handle nans in x or y')
     # find unique x,y pairs
-    xyHashed = x + 1e6 * y
+    xyHashed = x.astype(np.float64) + 1.0e6 * y.astype(np.float64)
     uniqueXYHash, uniqueIx = np.unique(xyHashed, return_index=True)
     uniqueIx.sort()  # keep ordering
     uniqueXYHash = xyHashed[uniqueIx]
