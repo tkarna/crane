@@ -327,14 +327,14 @@ def removeTides(dc, dt=None, gapFactor=20, T=T_M2):
 
             if j == 0:
                 newvals = np.concatenate(tuple(newvals), axis=0)
-                data = np.empty((npoints, nfields, len(newvals)))
-                time = np.concatenate(tuple(newtime), axis=0)
+                data_out = np.empty((npoints, nfields, len(newvals)))
+                time_out = np.concatenate(tuple(newtime), axis=0)
             else:
                 newvals = np.concatenate(tuple(newvals), axis=0)
-            data[j, k, :] = newvals
-    dc2 = dc.copy()
-    dc2.data = data
-    dc2.time.array = time
+            data_out[j, k, :] = newvals
+    ta = timeArray.timeArray(time_out, 'epoch')
+    dc2 = dc.interpolateInTime(ta)
+    dc2.data = data_out
     return dc2
 
 
