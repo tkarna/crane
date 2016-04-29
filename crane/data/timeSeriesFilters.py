@@ -4,17 +4,24 @@ NOTE could possibly be replaced by pandas or other library.
 
 Tuomas Karna 2013-11-07
 """
-import numpy as np
 from collections import deque
+import datetime
+
+import numpy as np
+
 from crane.data import dataContainer
 from crane.data import timeArray
 
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Low level routines with numpy arrays
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 # period of M2 cycle in seconds
 T_M2 = 44714.0
+# period of lunar month
+T_LUNAR_MONTH = datetime.timedelta(days=29, hours=12, minutes=44, seconds=3).total_seconds()
+# period of tidal month
+T_TIDAL_MONTH = T_LUNAR_MONTH / 2.0
 
 
 def computeRunningMean(t, x, T):
@@ -153,9 +160,9 @@ def computeRunningRange(t, x, T):
     xRes = np.array(xRes)
     return tRes, xRes
 
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Routines with dataContainer as input/output
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 
 def runningX(dc, T=T_M2, operator=computeRunningMean, gap_dt=None):
@@ -503,3 +510,38 @@ def computeTidalRange(dc, T=T_M2):
         '', ta, dc.x, dc.y, dc.z, data, ['tidal_range'],
         coordSys='', metaData=meta)
     return dc2
+
+
+def seperateEbbFlood(elev, dc):
+    """Seperate and return ebb and flood dataContainers."""
+    high, low = timeSeriesFilters.detectHighLowWater(elev)
+
+    floods = []
+    ebbs = []
+    for ix in range(max(len(high.time.array), len(low.time.array))):
+        if high.time.array[0] < low.time.array[0]:
+            try:
+                h = timeArray.epochToDatetime(high.time.array[ix])
+                l = timeArray.epochToDatetime(low.time.array[ix])
+                h2 = timeArray.epochToDatetime(high.time.array[ix + 1])
+                ebbs.append(dc.timeWindow(h, l))
+                floods.append(dc.timeWindow(l, h2))
+            except:
+                continue
+        else:
+            try:
+                l = timeArray.epochToDatetime(low.time.array[ix])
+                h = timeArray.epochToDatetime(high.time.array[ix])
+                l2 = timeArray.epochToDatetime(high.time.array[ix + 1])
+                floods.append(dc.timeWindow(l, h))
+                ebbs.append(dc.timeWindow(h, l2))
+            except:
+                continue
+
+    flood = floods.pop(0)
+    ebb = ebbs.pop(0)
+    for f, e in zip(floods, ebbs):
+        flood.mergeTemporal(f)
+        ebb.mergeTemporal(e)
+
+    return ebb, flood
