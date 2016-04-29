@@ -156,6 +156,8 @@ VARS = {'salt': 'Salinity',
         'tavvort': 'Time av. Vorticity',
         'davvort': 'Depth av. Vorticity',
         'tavdavvort': 'Vorticity',
+        'wist': 'Wind Stress',
+        'drhodx': 'Density gradient'
         }
 
 # Units for variables
@@ -308,6 +310,8 @@ UNITS = {'salt': 'psu',
          'tavvort': 's-1',
          'davvort': 's-1',
          'tavdavvort': 's-1',
+         'wist': 'Pa',
+         'drhodx': 'kg m-2'
          }
 
 # Associates each variable to a SELFE output file

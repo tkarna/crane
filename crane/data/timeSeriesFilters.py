@@ -292,10 +292,9 @@ def removeTides(dc, dt=None, gapFactor=20, T=T_M2):
             str(dt))
     b, a = signal.butter(o, Wn, 'low')
     # filter each contiquous data range separately
-    npoints = len(vals[:, 0, 0])
-    nfields = len(vals[0, :, 0])
-    for j in range(npoints):
-        for k in range(nfields):
+    npoints, nfields, ntime = vals.shape
+    for k in range(nfields):
+        for j in range(npoints):
             newvals = []
             newtime = []
             for i in range(ranges.shape[0]):
@@ -306,7 +305,7 @@ def removeTides(dc, dt=None, gapFactor=20, T=T_M2):
                         # default forward-backward filter
                         # filtered = signal.filtfilt(b, a, vwin, padtype='constant')
                         # forward-backward filter with custom boundary conditions
-                        # pad with mean of 1/2 pass window lenght
+                        # pad with mean of 1/2 pass window length
                         N_init = int(np.ceil(Tpass/dt/2))
                         # forward filter
                         x_init = vwin[:N_init]
@@ -325,12 +324,10 @@ def removeTides(dc, dt=None, gapFactor=20, T=T_M2):
                         print a.shape, vwin.shape
                         raise e
 
-            if j == 0:
-                newvals = np.concatenate(tuple(newvals), axis=0)
-                data_out = np.empty((npoints, nfields, len(newvals)))
+            newvals = np.concatenate(tuple(newvals), axis=0)
+            if j == 0 and k == 0:
+                data_out = np.zeros((npoints, nfields, len(newvals)))
                 time_out = np.concatenate(tuple(newtime), axis=0)
-            else:
-                newvals = np.concatenate(tuple(newvals), axis=0)
             data_out[j, k, :] = newvals
     ta = timeArray.timeArray(time_out, 'epoch')
     dc2 = dc.interpolateInTime(ta)
