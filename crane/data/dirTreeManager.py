@@ -604,6 +604,8 @@ class monthlyFileTree(fileTree):
                         print 'Error while reading file: {0:s}'.format(f)
                         print e
                         traceback.print_exc(file=sys.stdout)
+                        print dc.metaData, outputDC.metaData
+                        print dc.data.shape, outputDC.data.shape
             if outputDC is not None:
                 dcList.append(outputDC)
         return dcList
