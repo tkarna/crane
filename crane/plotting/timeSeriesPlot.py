@@ -124,6 +124,21 @@ class stackTimeSeriesPlot(plotBase.stackPlotBase):
         #xlim[1] = max( self.plots[k].ax.dataLim.xmax, xlim[1] )
         # self.plots[tag].ax.set_xlim(xlim)
 
+    def addShadedRange(self, tag, start, end, **kwargs):
+        """Adds a shaded time range in the background.
+
+        start,end can be a datetime object or float representing epoch time.
+        kwargs are passed to matplotlib axvspan routine."""
+        if isinstance(start, datetime.datetime):
+            start = timeArray.datetimeToEpochTime(start)
+        if isinstance(end, datetime.datetime):
+            end = timeArray.datetimeToEpochTime(end)
+        start = plotBase.convertEpochToPlotTime(start)
+        end = plotBase.convertEpochToPlotTime(end)
+        kwargs.setdefault('facecolor', [0.8, 1.0, 0.85])
+        kwargs.setdefault('edgecolor', 'none')
+        self.plots[tag].ax.axvspan(start, end, **kwargs)
+
 
 class stackTimeSeriesPlotDC(stackTimeSeriesPlot):
     """stackTimeSeriesPlot class that uses dataContainer as an input"""
