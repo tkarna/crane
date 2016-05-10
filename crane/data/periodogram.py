@@ -6,7 +6,7 @@ http://projects.scipy.org/scipy/browser/trunk/scipy/signal/spectral.pyx?rev=7141
 Tuomas Karna 2012-10-04
 """
 from crane import plt
-from crane.np import * 
+import numpy as np
 import matplotlib.mlab
 
 

@@ -168,72 +168,74 @@ def computeRunningRange(t, x, T):
 def runningX(dc, T=T_M2, operator=computeRunningMean, gap_dt=None):
     """Generic routine that applies given operator function for each window.
     T is window length."""
+    # filter each contiguous data range separately
     nPoints, nFields, nTime = dc.data.shape
-    # TODO extend to more points and fields
-    if nPoints > 1:
-        raise NotImplementedError('Case with nPoints>1 not implemented')
-    #if nFields>1:raise NotImplementedError('Case with nFields>1 not implemented')
-    if nFields > 1:  # process each component recursively
-        components = []
-        for i in range(nFields):
-            dc_comp = dc.extractField(i)
-            dc_comp_new = runningX(dc_comp, T, operator)
-            components.append(dc_comp_new)
-        dc_new = components[0]
-        for i in range(1, nFields):
-            dc_new.mergeFields(components[i])
-        return dc_new
     gaps, ranges, t = dc.detectGaps(dt=gap_dt)
-    v = dc.data[0, 0, :]
-    x = dc.x[0, :] if dc.xDependsOnTime else dc.x
-    y = dc.y[0, :] if dc.yDependsOnTime else dc.y
-    z = dc.z[0, :] if dc.zDependsOnTime else dc.z
-    tRes = np.array([])
-    vRes = np.array([])
-    if dc.xDependsOnTime:
-        xRes = np.array([])
-    if dc.yDependsOnTime:
-        yRes = np.array([])
-    if dc.zDependsOnTime:
-        zRes = np.array([])
-    for i in range(ranges.shape[0]):
-        twin = t[ranges[i, 0]:ranges[i, 1]]
-        vwin = v[ranges[i, 0]:ranges[i, 1]]
+    for k in range(nFields):
         if dc.xDependsOnTime:
-            xwin = x[ranges[i, 0]:ranges[i, 1]]
+            xRes = np.array([])
         if dc.yDependsOnTime:
-            ywin = y[ranges[i, 0]:ranges[i, 1]]
+            yRes = np.array([])
         if dc.zDependsOnTime:
-            zwin = z[ranges[i, 0]:ranges[i, 1]]
-        if len(twin) == 0:
-            continue
-        t_op, v_op = operator(twin, vwin, T)
-        tRes = np.append(tRes, t_op)
-        vRes = np.append(vRes, v_op)
-        if dc.xDependsOnTime:
-            tmean, xmean = computeRunningMean(twin, xwin, T)
-            xRes = np.append(xRes, xmean)
-        if dc.yDependsOnTime:
-            tmean, ymean = computeRunningMean(twin, ywin, T)
-            yRes = np.append(yRes, ymean)
-        if dc.zDependsOnTime:
-            tmean, zmean = computeRunningMean(twin, zwin, T)
-            zRes = np.append(zRes, zmean)
-    if len(tRes) == 0:
-        print 'Running mean could not be computed, skipping (time series too short?)'
-        return
-    ta = timeArray.timeArray(tRes, 'epoch')
-    data = vRes.reshape((1, 1, -1))
-    if dc.xDependsOnTime:
-        x = xRes[None, :]
-    if dc.yDependsOnTime:
-        y = yRes[None, :]
-    if dc.zDependsOnTime:
-        z = zRes[None, :]
+            zRes = np.array([])
+
+        for j in range(nPoints):
+            v = dc.data[j, k, :]
+            tRes = np.array([])
+            vRes = np.array([])
+
+            for i in range(ranges.shape[0]):
+                twin = t[ranges[i, 0]:ranges[i, 1]]
+                vwin = v[ranges[i, 0]:ranges[i, 1]]
+                if len(twin) == 0:
+                    continue
+                t_op, v_op = operator(twin, vwin, T)
+                tRes = np.append(tRes, t_op)
+                vRes = np.append(vRes, v_op)
+                if len(tRes) == 0:
+                    print 'Running mean could not be computed, skipping (time series too short?)'
+                    return
+
+                # only calculate time varying fields once
+                if k == 0 and j == 0:
+                    if dc.xDependsOnTime:
+                        nLevels = dc.x.shape[0]
+                        xtmp = np.zeros((nLevels, len(tRes)))
+                        for l in range(nLevels):
+                            xwin = dc.x[l, ranges[i, 0]:ranges[i, 1]]
+                            tmean, xmean = computeRunningMean(twin, xwin, T)
+                            xtmp[l, :] = xmean
+                        xRes = np.append(xRes, xtmp).reshape(levels, -1)
+                    if dc.yDependsOnTime:
+                        nLevels = dc.y.shape[0]
+                        ytmp = np.zeros((nLevels, len(tRes)))
+                        for l in range(nLevels):
+                            ywin = y[l, ranges[i, 0]:ranges[i, 1]]
+                            tmean, ymean = computeRunningMean(twin, ywin, T)
+                            ytmp[l, :] = ymean
+                        yRes = np.append(yRes, ytmp).reshape(levels, -1)
+                    if dc.zDependsOnTime:
+                        nLevels = dc.z.shape[0]
+                        ztmp = np.zeros((nLevels, len(tRes)))
+                        for l in range(nLevels):
+                            zwin = dc.z[l, ranges[i, 0]:ranges[i, 1]]
+                            tmean, zmean = computeRunningMean(twin, zwin, T)
+                            ztmp[l, :] = zmean
+                        zRes = np.append(zRes, ztmp).reshape(nLevels, -1)
+
+            # create output arrays and location once
+            if j == 0 and k == 0:
+                data = np.zeros((nPoints, nFields, len(vRes)))
+                ta = timeArray.timeArray(tRes, 'epoch')
+                x = xRes if dc.xDependsOnTime else dc.x
+                y = yRes if dc.yDependsOnTime else dc.y
+                z = zRes if dc.zDependsOnTime else dc.z
+
+            data[j, k, :] = vRes
     meta = dc.getMetaData()
     dc2 = dataContainer.dataContainer(
         '', ta, x, y, z, data, dc.fieldNames[
-            :1], coordSys=dc.coordSys, metaData=meta)
+            :1], coordSys=dc.coordSys, metaData=meta, checkDataXDim=False)
     return dc2
 
 
