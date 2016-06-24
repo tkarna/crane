@@ -46,6 +46,7 @@ def doPCAprof(dc, fraction=0.9):
     """Computes PCA directions for the given uv dataContainer"""
     A = np.swapaxes(dc.data[:, :2, :], 1, 2)
     A = np.reshape(A, (-1, dc.data.shape[1]))
+    p = pca.PCA(A, fraction=0.9)
     # print "PCA:", p.npc
     # print "% variance:", p.sumvariance * 100
     # print 'dir:',p.Vt

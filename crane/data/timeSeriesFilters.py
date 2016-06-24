@@ -165,7 +165,7 @@ def computeRunningRange(t, x, T):
 # -----------------------------------------------------------------------------
 
 
-def runningX(dc, T=T_M2, operator=computeRunningMean, gap_dt=None):
+def runningX(dc, T=T_M2, operator=computeRunningMean, gap_dt=None, acceptNaNs=False):
     """Generic routine that applies given operator function for each window.
     T is window length."""
     # filter each contiguous data range separately
@@ -234,8 +234,9 @@ def runningX(dc, T=T_M2, operator=computeRunningMean, gap_dt=None):
             data[j, k, :] = vRes
     meta = dc.getMetaData()
     dc2 = dataContainer.dataContainer(
-        '', ta, x, y, z, data, dc.fieldNames[
-            :1], coordSys=dc.coordSys, metaData=meta, checkDataXDim=False)
+            '', ta, x, y, z, data, dc.fieldNames[:1],
+            coordSys=dc.coordSys, metaData=meta, checkDataXDim=False,
+            acceptNaNs=acceptNaNs)
     return dc2
 
 
