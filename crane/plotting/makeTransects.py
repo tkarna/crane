@@ -293,8 +293,10 @@ def makeTransects(netCDFFiles, imgDir, startTime=None, endTime=None, skip=1,
     # check that all time arrays match
     time = dcs[0].time.asEpoch().array
     for dc in dcs[1:]:
-        if not np.array_equal(dcs[0].time.asEpoch().array, time):
-            raise Exception('time steps must match')
+        if not np.array_equal(dc.time.asEpoch().array, time):
+            dcs[0], dcs[1:] = dcs[0].alignTimes(dcs[1:])
+            time = dcs[0].time.asEpoch().array
+            break
 
     # add all plotting tasks in queue and excecute with threads
     tasks = []

@@ -543,7 +543,7 @@ class dataContainer(object):
             acceptNaNs=True,
             checkDataXDim=False)
 
-    def alignTimes(self, other):
+    def alignTimes(self, other, acceptNaNs=False):
         """Aligns time stamps with the other dataContainer. In both dataContainers
         gaps are detected first and then mutually overlapping data ranges are
         computed. Data in other is restricted on the overlapping ranges. Data in
@@ -561,7 +561,7 @@ class dataContainer(object):
         alignedOther : dataContainer or list
             aligned version of other(s)
         """
-        if type(other) is dataContainer:
+        if isinstance(other, dataContainer): 
             # TODO get sampling rate from db and save in dataContainer
             selfDt = otherDt = None
             if (self.getMetaData('location', suppressError=True) == 'saturn03' and
@@ -576,7 +576,7 @@ class dataContainer(object):
             newTA.array = newTA.array[oTimeStamps]
             if len(newTA) < 3:
                 raise Exception('Aligned time series too short.')
-            newSelf = self.interpolateInTime(newTA)
+            newSelf = self.interpolateInTime(newTA, acceptNaNs=acceptNaNs)
             x = other.x[:, oTimeStamps] if other.xDependsOnTime else other.x
             y = other.y[:, oTimeStamps] if other.yDependsOnTime else other.y
             z = other.z[:, oTimeStamps] if other.zDependsOnTime else other.z
@@ -585,7 +585,7 @@ class dataContainer(object):
                 other.description, newTA, x, y, z, other.data
                 [:, :, oTimeStamps],
                 list(other.fieldNames),
-                other.coordSys, other.metaData)
+                other.coordSys, other.metaData, acceptNaNs=acceptNaNs)
         else:
             # limit times for all
             startTimes = [dc.time.getDatetime(0) for dc in other]
@@ -600,7 +600,7 @@ class dataContainer(object):
             # align
             othersAligned = []
             for o in newOthers:
-                r, o = r.alignTimes(o)
+                r, o = r.alignTimes(o, acceptNaNs=acceptNaNs)
                 othersAligned.append(o)
 
             # limit times again
@@ -613,7 +613,7 @@ class dataContainer(object):
 
             # align with new time
             newTime = r.time.window(st2, et2)
-            newSelf = r.interpolateInTime(newTime, True)
+            newSelf = r.interpolateInTime(newTime, acceptNaNs=acceptNaNs) 
 
             # interpolate
             newOther = []

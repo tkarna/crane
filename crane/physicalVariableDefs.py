@@ -439,7 +439,8 @@ fieldNameList = {'temp': ['temp'],
                  'bed_load_2': ['bed_load_2'],
                  'bed_load_3': ['bed_load_3'],
                  'bed_load_4': ['bed_load_4'],
-                 'bed_flux': ['bed_flux']}
+                 'bed_flux': ['bed_flux'],
+                 'sed_flux': ['u', 'v']}
 
 # File types
 SIDE_FILES = ['65', '67', '68', '71']

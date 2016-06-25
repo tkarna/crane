@@ -234,9 +234,9 @@ def runningX(dc, T=T_M2, operator=computeRunningMean, gap_dt=None, acceptNaNs=Fa
             data[j, k, :] = vRes
     meta = dc.getMetaData()
     dc2 = dataContainer.dataContainer(
-            '', ta, x, y, z, data, dc.fieldNames[:1],
-            coordSys=dc.coordSys, metaData=meta, checkDataXDim=False,
-            acceptNaNs=acceptNaNs)
+        '', ta, x, y, z, data, dc.fieldNames[:1],
+        coordSys=dc.coordSys, metaData=meta, checkDataXDim=False,
+        acceptNaNs=acceptNaNs)
     return dc2
 
 

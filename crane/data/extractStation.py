@@ -42,7 +42,7 @@ from crane.data import dataContainer
 from crane.data import timeArray
 from crane.data import loadHindcastStations
 from crane.files import csvStationFile
-from crane.physicalVariableDefs import addTracers
+from crane.physicalVariableDefs import addTracers, fieldNameToFilename
 
 # TODO extracting legacy selfe format is now obsolete?
 #import extract_mod
