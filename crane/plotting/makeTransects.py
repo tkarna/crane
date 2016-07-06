@@ -138,14 +138,15 @@ def processFrame(
         else:
             N = nCLines.get(basevar, defaultNCLines)
         dia.addSample(pltTag, dc, it, N=N,
-                        clim=_clim.get(var, None),
-                        clabel=VARS.get(basevar, basevar), unit=UNITS.get(basevar, '-'),
-                        logScale=logScale, climIsLog=climIsLog, cmap=cmap,
-                        ylim=ylim, xlim=xlim)
+                      clim=_clim.get(var, None),
+                      clabel=VARS.get(basevar, basevar), unit=UNITS.get(basevar, '-'),
+                      logScale=logScale, climIsLog=climIsLog, cmap=cmap,
+                      ylim=ylim, xlim=xlim)
         dia.showColorBar(tag=pltTag)
-        if titleStr is None:
-            titleStr = title_prefix + tag + ' ' + transectName + ' ' + dateStr + ' (PST)'
-        dia.addTitle(titleStr, tag=pltTag)
+        title = titleStr
+        if title is None:
+            title = title_prefix + tag + ' ' + transectName + ' ' + dateStr + ' (PST)'
+        dia.addTitle(title, tag=pltTag)
         varList.append(var)
 
     # add station markers (if any)
