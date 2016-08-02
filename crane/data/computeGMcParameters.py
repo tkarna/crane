@@ -130,7 +130,7 @@ def generateGMcData(hvelDC, saltDC):
 
     The parameters are:
 
-    M = sqrt( Cd*U_T**2 / (omega*N_0*H**2 ) )
+    M = sqrt( u_bf**2 / (omega*N_0*H**2 ) )
     Fr_f = U_R / sqrt( Beta*g*s_ocean*H )
 
     where
@@ -139,11 +139,13 @@ def generateGMcData(hvelDC, saltDC):
     Beta ~ 7.7e-4 : haline contraction coefficient, rho = rho_0*(1+ Beta*salt)
     g ~ 9.81 : gravitation acceleration
     s_ocean ~34.0 : ocean salinity; max salt value in system
-    Cd ~ 2.5e-3? : botton friction coefficient
-    U_T : amplitude of depth averaged tidal currents
+    u_bf : bottom friction velocity
     omega = 2*pi*1/T_M2: tidal frequency
     N_0 = sqrt(Beta*g*s_ocean/H): maximal buoyancy frequency
     H : datum depth
+
+    If saltDC is not provided, assumes constant stratification, i.e.
+    stratification = s_ocean
     """
 
     # constants
@@ -154,13 +156,10 @@ def generateGMcData(hvelDC, saltDC):
     T_M2 = 44714.
     omega = 2*np.pi*1/T_M2
 
-    T, X, Y, Z, S, _, Xdelta, Ydelta, sectLen = reshapeTransect(saltDC)
     T, X, Y, Z, U, V, Xdelta, Ydelta, sectLen = reshapeTransect(hvelDC)
 
     # compute normal velocity (nVert, nPoint, nTime)
     Xm, Ym, Zm, Un, Vn = computeNormalVelocity(X, Y, Z, U, V, Xdelta, Ydelta)
-
-    strat = computeStratification(S)
 
     depth, dZ = computeDepth(Zm)
     # compute sectionally averaged velocity
@@ -174,8 +173,8 @@ def generateGMcData(hvelDC, saltDC):
                                    hvelDC.getMetaData('location'), 'sectMaxU')
     sectMaxUbfDC = makeDataContainer(T, sectMaxUbf, hvelDC.getMetaData('tag'),
                                      hvelDC.getMetaData('location'), 'sectMaxUbf')
-    stratDC = makeDataContainer(T, strat, saltDC.getMetaData('tag'),
-                                saltDC.getMetaData('location'), 'strat')
+
+
 
     # bottom friction velocity (max over tidal day)
     ubf = runningMax(sectMaxUbfDC, T=2*44714.)
@@ -192,8 +191,15 @@ def generateGMcData(hvelDC, saltDC):
     ur.setMetaData('variable', 'ur')
     ur.fieldNames=['ur']
 
-    stratDC = removeTides(stratDC).interpolateInTime(new_time)
-    deltaS = stratDC.data
+    if saltDC is not None:
+        T, X, Y, Z, S, _, Xdelta, Ydelta, sectLen = reshapeTransect(saltDC)
+        strat = computeStratification(S)
+        stratDC = makeDataContainer(T, strat, saltDC.getMetaData('tag'),
+                                    saltDC.getMetaData('location'), 'strat')
+        stratDC = removeTides(stratDC).interpolateInTime(new_time)
+        deltaS = stratDC.data
+    else:
+        deltaS = np.ones_like(ubf.data)*s_ocean
 
     # compute H (constant in time)
     transectLen = np.sum(sectLen)
@@ -253,13 +259,24 @@ def parse_commandline():
 
     parser.add_argument('-v', required=True, dest='hvelfile',
                         help='Horizontal velocity (hvel) transect file to process')
-    parser.add_argument('-s', required=True, dest='saltfile',
+    parser.add_argument('-s', dest='saltfile',
                         help='Salinity (salt) transect file to process')
+    parser.add_argument('--constant-strat', action='store_true',
+                        help='Use a constant stratification (s_ocean - 0.0), '
+                        'instead of computing instantaneous stratification '
+                        'from the salinity transect. '
+                        'NOTE: This is default use in many applications.')
+
 
     args = parser.parse_args()
 
+
+    if args.constant_strat:
+        salt_dc = None
+    else:
+        assert args.saltfile is not None, 'salt transect file must be provided'
+        salt_dc = dataContainer.dataContainer.loadFromNetCDF(args.saltfile)
     hvel_dc = dataContainer.dataContainer.loadFromNetCDF(args.hvelfile)
-    salt_dc = dataContainer.dataContainer.loadFromNetCDF(args.saltfile)
 
     dc_list = generateGMcData(hvel_dc, salt_dc)
 
