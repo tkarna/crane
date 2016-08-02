@@ -1,0 +1,12 @@
+#!/usr/bin/env python
+"""
+Computes Geyer-MacCready estuary classification parameters from a cross-section
+transect.
+
+Tuomas Karna 2016-08-01
+"""
+
+from crane.data import computeGMcParameters
+
+if __name__ == '__main__':
+    computeGMcParameters.parse_commandline()
