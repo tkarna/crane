@@ -208,6 +208,12 @@ def generateGMcData(hvelDC, saltDC):
     # datum depth (does not necessarily correspond to actual datum!)
     H = np.mean(np.sum(D*sectLen[0,:,:],axis=0)/transectLen)
 
+    # depth time series
+    depth_dc = ur.copy()
+    depth_dc.data[:] = H
+    depth_dc.setMetaData('variable', 'depth')
+    depth_dc.fieldNames=['depth']
+
     # denominator of Fr, wave celecity
     uc = ur.copy()
     uc.data[:] = np.sqrt(Beta*g*deltaS*H)
@@ -222,6 +228,18 @@ def generateGMcData(hvelDC, saltDC):
 
     # max buoyancy frequency
     N_0 = np.sqrt(Beta*g*deltaS/H)
+
+    # stratification
+    strat_dc = ubf.copy()
+    strat_dc.data[:] = deltaS
+    strat_dc.setMetaData('variable', 'strat')
+    strat_dc.fieldNames=['strat']
+
+    # buoyancy frequency
+    buoy_dc = ubf.copy()
+    buoy_dc.data[:] = N_0
+    buoy_dc.setMetaData('variable', 'buoy')
+    buoy_dc.fieldNames=['buoy']
 
     # denominator of M
     um = ubf.copy()
@@ -245,7 +263,7 @@ def generateGMcData(hvelDC, saltDC):
     print M
     print Fr_f
 
-    return M, Fr_f, ubf, um, ur, uc
+    return M, Fr_f, ubf, um, ur, uc, depth_dc, strat_dc, buoy_dc
 
 
 # -----------------
