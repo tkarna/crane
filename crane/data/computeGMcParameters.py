@@ -28,10 +28,10 @@ def computeNormalVelocity(X, Y, Z, U, V, Xdelta, Ydelta):
     Zmean = 0.5*(Z[:, :-1, :]+Z[:, 1:, :])
     nZ, nX, nTime = Umean.shape
     Unormal = Umean*Ydelta - Vmean*Xdelta
-    Vnormal = Umean*Xdelta + Vmean*Ydelta # tangential
+    Vnormal = Umean*Xdelta + Vmean*Ydelta  # tangential
     UNormalMean = Unormal.mean()
     print 'Mean normal velocity', UNormalMean
-    if UNormalMean > 0 :
+    if UNormalMean > 0:
         # ensure that mean (residual) is negative, i.e. seaward
         Unormal *= -1
     return Xmean, Ymean, Zmean, Unormal, Vnormal
@@ -51,8 +51,8 @@ def computeDepth(Zm):
     dZ[1:, :, :] = 0.5*Zdelta
     dZ[:-1, :, :] = 0.5*Zdelta
     depth = Zm[-1, :, :]-Zm[0, :, :]
-    dZ[ ~np.isfinite(dZ) ] = 0.0
-    depth[ ~np.isfinite(depth) ] = 0.0
+    dZ[~np.isfinite(dZ)] = 0.0
+    depth[~np.isfinite(depth)] = 0.0
     return depth, dZ
 
 
@@ -80,16 +80,16 @@ def computeSectionalMaxUbf(U, V, depth, dZ, sectLen):
     botU = np.abs(Umag[1, :, :])
     h = dZ[0, :, :]*2
     roughArr = np.zeros_like(h)*1e-4
-    roughArr[np.mean(depth, axis=1)>12.0,:] = 1e-6
+    roughArr[np.mean(depth, axis=1) > 12.0, :] = 1e-6
     Cd = 1/(2.5*np.log(h/roughArr))**2
     botU = np.sqrt(Cd*botU**2)
-    botU = np.nanmax(botU,axis=0)
+    botU = np.nanmax(botU, axis=0)
     return botU
 
 
 def makeDataContainer(t, d, runTag, location, variable):
-    ta = timeArray.timeArray(t,'epoch').asEpoch()
-    data = d[None,None,:]
+    ta = timeArray.timeArray(t, 'epoch').asEpoch()
+    data = d[None, None, :]
     meta = {}
     meta['location'] = location
     meta['instrument'] = 'model'
@@ -109,8 +109,8 @@ def reshapeTransect(dc):
         T, X, Y, Z, V = dcToTransect(dc, iComp=1)
     else:
         V = None
-    x = X[0,:]
-    y = Y[0,:]
+    x = X[0, :]
+    y = Y[0, :]
     Xdiff = np.diff(x)
     Ydiff = np.diff(y)
     Xdelta = Xdiff
@@ -118,13 +118,13 @@ def reshapeTransect(dc):
     sectLen = np.sqrt(Xdelta**2+Ydelta**2)
     Xdelta /= sectLen
     Ydelta /= sectLen
-    Xdelta = Xdelta[None,:,None]
-    Ydelta = Ydelta[None,:,None]
-    sectLen = sectLen[None,:,None]
+    Xdelta = Xdelta[None, :, None]
+    Ydelta = Ydelta[None, :, None]
+    sectLen = sectLen[None, :, None]
     return T, X, Y, Z, U, V, Xdelta, Ydelta, sectLen
 
 
-def generateGMcData(hvelDC, saltDC):
+def generateGMcData(hvelDC, saltDC, varying_depth=False):
     """
     Computes Geyer-MacCready parameters from the given transects
 
@@ -180,7 +180,7 @@ def generateGMcData(hvelDC, saltDC):
     ubf = runningMax(sectMaxUbfDC, T=2*44714.)
     ubf = removeTides(ubf)
     ubf.setMetaData('variable', 'ubf')
-    ubf.fieldNames=['ubf']
+    ubf.fieldNames = ['ubf']
 
     # generate common time stamps
     new_time = ubf.time  # this is the shortest
@@ -189,7 +189,7 @@ def generateGMcData(hvelDC, saltDC):
     ur = removeTides(sectAvUDC).interpolateInTime(new_time)
     ur.data *= -1  # flip sign
     ur.setMetaData('variable', 'ur')
-    ur.fieldNames=['ur']
+    ur.fieldNames = ['ur']
 
     if saltDC is not None:
         T, X, Y, Z, S, _, Xdelta, Ydelta, sectLen = reshapeTransect(saltDC)
@@ -204,27 +204,29 @@ def generateGMcData(hvelDC, saltDC):
     # compute H (constant in time)
     transectLen = np.sum(sectLen)
     D = depth.copy()
-    D[~np.isfinite(D)]=0
-    # datum depth (does not necessarily correspond to actual datum!)
-    H = np.mean(np.sum(D*sectLen[0,:,:],axis=0)/transectLen)
-
-    # depth time series
-    depth_dc = ur.copy()
-    depth_dc.data[:] = H
-    depth_dc.setMetaData('variable', 'depth')
-    depth_dc.fieldNames=['depth']
+    D[~np.isfinite(D)] = 0
+    H = np.sum(D*sectLen[0, :, :], axis=0)/transectLen
+    depth_dc = makeDataContainer(T, H, hvelDC.getMetaData('tag'),
+                                 hvelDC.getMetaData('location'), 'depth')
+    depth_dc = removeTides(depth_dc)
+    depth_dc = depth_dc.interpolateInTime(new_time)
+    if not varying_depth:
+        # datum depth (does not necessarily correspond to actual datum!)
+        mean_h = np.mean(np.sum(D*sectLen[0, :, :], axis=0)/transectLen)
+        depth_dc.data[:] = mean_h
+    H = depth_dc.data
 
     # denominator of Fr, wave celecity
     uc = ur.copy()
     uc.data[:] = np.sqrt(Beta*g*deltaS*H)
     uc.setMetaData('variable', 'uc')
-    uc.fieldNames=['uc']
+    uc.fieldNames = ['uc']
 
     # Fr_f
     Fr_f = ur.copy()
     Fr_f.data /= uc.data[:]
     Fr_f.setMetaData('variable', 'froude')
-    Fr_f.fieldNames=['froude']
+    Fr_f.fieldNames = ['froude']
 
     # max buoyancy frequency
     N_0 = np.sqrt(Beta*g*deltaS/H)
@@ -233,25 +235,25 @@ def generateGMcData(hvelDC, saltDC):
     strat_dc = ubf.copy()
     strat_dc.data[:] = deltaS
     strat_dc.setMetaData('variable', 'strat')
-    strat_dc.fieldNames=['strat']
+    strat_dc.fieldNames = ['strat']
 
     # buoyancy frequency
     buoy_dc = ubf.copy()
     buoy_dc.data[:] = N_0
     buoy_dc.setMetaData('variable', 'buoy')
-    buoy_dc.fieldNames=['buoy']
+    buoy_dc.fieldNames = ['buoy']
 
     # denominator of M
     um = ubf.copy()
     um.data[:] = np.sqrt(omega*N_0*H**2)
     um.setMetaData('variable', 'um')
-    um.fieldNames=['um']
+    um.fieldNames = ['um']
 
     # M
     M = ubf.copy()
     M.data /= um.data[:]
     M.setMetaData('variable', 'mixing')
-    M.fieldNames=['mixing']
+    M.fieldNames = ['mixing']
 
     def printMinMax(dc, name):
         if isinstance(dc, dataContainer.dataContainer):
@@ -277,28 +279,31 @@ def parse_commandline():
 
     parser.add_argument('-v', required=True, dest='hvelfile',
                         help='Horizontal velocity (hvel) transect file to process')
-    parser.add_argument('-s', dest='saltfile',
-                        help='Salinity (salt) transect file to process')
-    parser.add_argument('--constant-strat', action='store_true',
-                        help='Use a constant stratification (s_ocean - 0.0), '
-                        'instead of computing instantaneous stratification '
-                        'from the salinity transect. '
-                        'NOTE: This is default use in many applications.')
-
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('-s', dest='saltfile',
+                       help='Salinity (salt) transect file to process')
+    group.add_argument('--constant-strat', action='store_true',
+                       help='Use a constant stratification (s_ocean - 0.0), '
+                       'instead of computing instantaneous stratification '
+                       'from the salinity transect. '
+                       'NOTE: This is default use in many applications.')
+    parser.add_argument('--varying-depth', action='store_true',
+                        help='Computes depth as the instantaneous mean depth '
+                        'of the transect, instead of using a constant (time '
+                        'and transect averaged) depth.')
 
     args = parser.parse_args()
-
 
     if args.constant_strat:
         salt_dc = None
     else:
-        assert args.saltfile is not None, 'salt transect file must be provided'
         salt_dc = dataContainer.dataContainer.loadFromNetCDF(args.saltfile)
     hvel_dc = dataContainer.dataContainer.loadFromNetCDF(args.hvelfile)
 
-    dc_list = generateGMcData(hvel_dc, salt_dc)
+    dc_list = generateGMcData(hvel_dc, salt_dc,
+                              varying_depth=args.varying_depth)
 
-    rule='singleFile'
+    rule = 'singleFile'
     dtm.saveDataContainerInTree(list(dc_list), rule=rule, overwrite=True)
 
 if __name__ == '__main__':
