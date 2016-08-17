@@ -321,10 +321,8 @@ def process(runtag, datadir, varlist, starttime=None, endtime=None,
             raise NotImplementedError('Temporal lowpass filter has not been implemented yet')
         elif time_average == 'mean':
             # apply box car filter that handles NaNs correctly
-            if starttime is None:
-                starttime = dcs[0].time.getDatetime(0)
-            if endtime is None:
-                endtime = dcs[0].time.getDatetime(-1)
+            starttime = dcs[0].time.getDatetime(0)
+            endtime = dcs[0].time.getDatetime(-1)
             print('Computing time average over period:\n  {:} -> {:}'.format(starttime, endtime))
             for dc in dcs:
                 # ix = dc.time.getRangeIndices(st, et)
