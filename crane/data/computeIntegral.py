@@ -320,7 +320,7 @@ def process(runtag, datadir, varlist, starttime=None, endtime=None,
         if time_average == 'lowpass':
             # apply removeTides filter
             pass
-        else:
+        elif time_average == 'mean':
             # apply box car filter that handles NaNs correctly
             if starttime is None:
                 starttime = dcs[0].time.getDatetime(0)
@@ -378,7 +378,7 @@ def parse_commandline():
     parser.add_argument('--region-name', help='Human readable name for the subregion',
                         dest='regionname')
     parser.add_argument('--time-average', help='Compute temporal average as well',
-                        dest='time_average', choices=['lowpass'])
+                        dest='time_average', choices=['lowpass', 'mean'])
 
 
     args = parser.parse_args()
