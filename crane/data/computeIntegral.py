@@ -316,10 +316,9 @@ def process(runtag, datadir, varlist, starttime=None, endtime=None,
     # Optionally compute time average
     # --------------------------------------------------------------------------
     if time_average is not None:
-        raise NotImplementedError('Time averaging has not been implemented yet')
         if time_average == 'lowpass':
             # apply removeTides filter
-            pass
+            raise NotImplementedError('Temporal lowpass filter has not been implemented yet')
         elif time_average == 'mean':
             # apply box car filter that handles NaNs correctly
             if starttime is None:
