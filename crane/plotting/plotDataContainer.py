@@ -11,7 +11,7 @@ import crane.data.dataContainer as dataContainer
 # TODO add support for all plot types
 # TODO must be able to plot multiple dcs at once
 
-TIMESERIES_TYPES = ['timeseries', 'sil']
+TIMESERIES_TYPES = ['timeseries', 'sil', 'volintegral']
 
 def plotDataContainer(dclist0, ax=None, show=False, dia=None, **kwargs):
     """
@@ -21,7 +21,7 @@ def plotDataContainer(dclist0, ax=None, show=False, dia=None, **kwargs):
         dclist = [dclist0]
     else:
         dclist = dclist0
-        
+
     # create axes if necessary
     create_new_axes = ax is None
     if create_new_axes:
@@ -63,7 +63,7 @@ def plotDataContainer(dclist0, ax=None, show=False, dia=None, **kwargs):
         label = kwargs.pop('label', None)
         showLegend = kwargs.pop('showLegend', True)
 
-        # create a diagram        
+        # create a diagram
         if datatype in TIMESERIES_TYPES:
             if create_new_axes:
                 # default: each dc in its own subplot
@@ -95,8 +95,6 @@ def plotDataContainer(dclist0, ax=None, show=False, dia=None, **kwargs):
                     dia.showLegend()
         else:
             raise NotImplementedError('plotting dataType "{:}" is not currenlyt supported'.format(datatype))
-
-    
 
     if show:
         plt.show()
