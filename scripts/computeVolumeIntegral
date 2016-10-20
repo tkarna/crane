@@ -1,0 +1,11 @@
+#!/usr/bin/env python
+"""
+Integrates scalar fields over a domain that is defined by min/max values of another scalar field.
+
+Tuomas Karna 2016-10-11
+"""
+
+from crane.data import computeVolumeIntegral
+
+if __name__ == '__main__':
+    computeVolumeIntegral.parse_commandline()
