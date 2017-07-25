@@ -85,7 +85,8 @@ class interface(object):
         # find the edge that appears in both
         edgesAll = np.concatenate((edgesLo, edgesHi), axis=1)
         b = np.sort(edgesAll, axis=1)
-        edges = b[b[:, 1:] == b[:, :-1]]
+        btmp = b[:, :-1]
+        edges = btmp[b[:, 1:] == b[:, :-1]]
 
         node_x = meshSearchObj.node_x
         node_y = meshSearchObj.node_y
@@ -435,7 +436,7 @@ def computeSelfeFluxes(path, regionFile, location, runTag, stacks=None,
 
     vCoords = dihvReader.dataFile.vCoords
     bathymetry = dihvReader.dataFile.bath
-    bathMC = meshContainer('', timeArray.timeArray(np.array([0]), 'epoch'),
+    bathMC = meshContainer.meshContainer('', timeArray.timeArray(np.array([0]), 'epoch'),
                            dihvReader.dataFile.nodeX,
                            dihvReader.dataFile.nodeY,
                            np.zeros_like(dihvReader.dataFile.nodeX),
