@@ -46,6 +46,8 @@ ncTimeUnitsInv = dict((ncTimeUnits[k], k) for k in ncTimeUnits)
 
 
 def createDirectory(path):
+    if path == '':
+        return
     if os.path.exists(path):
         if not os.path.isdir(path):
             raise Exception('file with same name exists', path)
