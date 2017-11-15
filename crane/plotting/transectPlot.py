@@ -181,7 +181,8 @@ def dcToTransect(dc2, iComp=0):
     return T, X, Y, Z, C
 
 
-def generateTransectFromDataContainer(dc, timeStamp, flipDirection=False):
+def generateTransectFromDataContainer(dc, timeStamp, flipDirection=False,
+                                      normal_velocity=False):
     """Reshapes and massages dataContainer data into transect grids.
     """
     # TODO save transects as masked array in vector
@@ -241,7 +242,7 @@ def generateTransectFromDataContainer(dc, timeStamp, flipDirection=False):
     Xdelta = np.hstack((np.zeros((Xdiff.shape[0], 1)), Xdiff))
     Ydelta = np.hstack((np.zeros((Ydiff.shape[0], 1)), Ydiff))
     if nComp == 2:
-        # compute tangential velocity
+        # compute tangential/normal velocity
         # mean deltaX for each node
         Xdelta2 = np.hstack((Xdiff[:, 1, None], Xdiff)) / 2
         Ydelta2 = np.hstack((Ydiff[:, 1, None], Ydiff)) / 2
@@ -251,10 +252,16 @@ def generateTransectFromDataContainer(dc, timeStamp, flipDirection=False):
         XYmag = np.sqrt(Xdelta2**2 + Ydelta2**2)  # shape (maxNVert,nx )
         # shape (maxNVert,nx,2)
         XYunit = np.ma.zeros((maxNVert, nx, 2))
-        XYunit[:, :, 0] = Xdelta2 / XYmag  # preserves mask
-        XYunit[:, :, 1] = Ydelta2 / XYmag
-        # tangential velocity
-        C = np.sum(C * XYunit, axis=2)
+        if normal_velocity:
+            # normal velocity
+            XYunit[:, :, 0] = -Ydelta2 / XYmag
+            XYunit[:, :, 1] = Xdelta2 / XYmag
+            C = np.sum(C * XYunit, axis=2)
+        else:
+            # tangential velocity
+            XYunit[:, :, 0] = Xdelta2 / XYmag
+            XYunit[:, :, 1] = Ydelta2 / XYmag
+            C = np.sum(C * XYunit, axis=2)
     elif nComp == 1:
         C = C[:, :, 0]
     else:
@@ -304,10 +311,9 @@ class transectSnapshotDC(transectSnapshot):
            kwargs    -- (**) passed to transectSnapshot.addSample
         """
         flipDir = kwargs.get('flipDirection', False)
+        normal_vel = kwargs.get('normal_velocity', False)
         Xalong, Z, C, time, uniqueXYCoords = generateTransectFromDataContainer(
-            dc,
-            timeStamp,
-            flipDir)
+            dc, timeStamp, flipDir, normal_velocity=normal_vel)
         # replace mask with nans for plotting
         Z = Z.filled(-1e4)
         # for mapping coordinates on transect

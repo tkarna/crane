@@ -34,7 +34,7 @@ def convertTriCoords(tri, bbox=None, scalar=1, coordSys='spcs',
         bbox = [tri.x.min(), tri.x.max(), tri.y.min(), tri.y.max()]
 
     if coordSys.lower() == 'none':
-        return tri, unitTransform, bbox
+        trans = coordTransformer(0.0, 0.0, scalar)
     elif coordSys == 'latlon':
         trans = latlonTransformer(bbox[0], bbox[2], scalar, flipXCoord)
     elif coordSys == 'utm':
@@ -127,6 +127,13 @@ class slabSnapshot(plotBase.colorPlotBase):
             xlabel = 'x'
             ylabel = 'y'
             coordScalar = 1e-3
+            aspect = 1.0
+        elif self.coordSys == 'none':
+            xunit = u'm'
+            yunit = u'm'
+            xlabel = 'x'
+            ylabel = 'y'
+            coordScalar = 1.0
             aspect = 1.0
         self.coordScalar = defaultArgs.pop('coordscalar', coordScalar)
         self.aspect = defaultArgs.pop('aspect', aspect)
@@ -233,12 +240,9 @@ class slabSnapshot(plotBase.colorPlotBase):
         plotType = kw.pop('plotType', 'color')
         dataByElems = kw.pop('dataByElems', False)
         bbox = kw.pop('bbox', [])
-        if self.coordSys == 'none':
-            tri_trans, trans, convertedBBox = tri, unitTransform, bbox
-        else:
-            tri_trans, trans, convertedBBox = convertTriCoords(
-                tri, bbox, scalar=self.coordScalar, coordSys=self.coordSys,
-                flipXCoord=self.flipXCoord)
+        tri_trans, trans, convertedBBox = convertTriCoords(
+            tri, bbox, scalar=self.coordScalar, coordSys=self.coordSys,
+            flipXCoord=self.flipXCoord)
 
         self.coordTransformer = trans
 

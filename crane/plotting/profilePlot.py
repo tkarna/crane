@@ -39,7 +39,7 @@ class verticalProfilePlot(plotBase.plotBase):
         self.xlabel = defaultArgs.pop('xlabel', '')
         self.xunit = defaultArgs.pop('xunit', '')
         self.invert_yaxis = defaultArgs.pop('invert_yaxis', False)
-        super(verticalProfilePlot, self).__init__(defaultArgs)
+        super(verticalProfilePlot, self).__init__(**defaultArgs)
 
     def setAxes(self, ax):
         """Set axes for the diagram where data will be plotted.

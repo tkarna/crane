@@ -73,13 +73,12 @@ def plotDataContainer(dclist0, ax=None, show=False, dia=None, **kwargs):
                     var = dc.getMetaData('variable')
                     varstr = VARS.get(var, var)
                     unit = UNITS.get(var, '-')
-                    if label is None:
-                        label = tag
+                    _label = label if label is not None else tag
                     ylabel = varstr
                     if dia is None:
                         dia = timeSeriesPlotDC2(ylabel=ylabel, unit=unit)
                         dia.setAxes(ax)
-                    dia.addSample(dc, label=label, **kwargs)
+                    dia.addSample(dc, label=_label, **kwargs)
                     dia.addTitle(tag)
             else:
                 # default: plot all to same axes and diagram object
@@ -88,9 +87,8 @@ def plotDataContainer(dclist0, ax=None, show=False, dia=None, **kwargs):
                     dia.setAxes(ax)
                 for dc in dclist:
                     tag = dc.getMetaData('tag')
-                    if label is None:
-                        label = tag
-                    dia.addSample(dc, label=label, **kwargs)
+                    _label = label if label is not None else tag
+                    dia.addSample(dc, label=_label, **kwargs)
                 if showLegend:
                     dia.showLegend()
         else:
