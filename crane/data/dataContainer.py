@@ -1,7 +1,7 @@
 #!/usr/bin/python
 """
 Generic implementation for a data container.
-Can represent time series, 2D (transsect), vertical profile data.
+Can represent time series, 2D (transect), vertical profile data.
 Contains data, necessary information to interpret it, and some basic
 data manipulation methods.
 
@@ -543,7 +543,7 @@ class dataContainer(object):
             acceptNaNs=True,
             checkDataXDim=False)
 
-    def alignTimes(self, other):
+    def alignTimes(self, other, acceptNaNs=False):
         """Aligns time stamps with the other dataContainer. In both dataContainers
         gaps are detected first and then mutually overlapping data ranges are
         computed. Data in other is restricted on the overlapping ranges. Data in
@@ -552,39 +552,74 @@ class dataContainer(object):
         Raises an exception if overlapping time intervals are not found.
 
         Args:
-        other : dataContainer
-            other container to interpolate to
+        other : dataContainer or list
+            other(s) container to interpolate to
 
         Returns:
         alignedSelf : dataContainer
             aligned version of self, interpolated to other's time steps
-        alignedOther : dataContainer
-            aligned version of other
+        alignedOther : dataContainer or list
+            aligned version of other(s)
         """
-        # TODO get sampling rate from db and save in dataContainer
-        selfDt = otherDt = None
-        if (self.getMetaData('location', suppressError=True) == 'saturn03' and
-                self.getMetaData('tag', suppressError=True) == 'obs'):
-            selfDt = 360
-        if (other.getMetaData('location', suppressError=True) == 'saturn03' and
-                other.getMetaData('tag', suppressError=True) == 'obs'):
-            otherDt = 360
-        oTimeStamps = self.time.getAlignedTimeIndices(
-            other.time, selfDt, otherDt)
-        newTA = other.time.copy()
-        newTA.array = newTA.array[oTimeStamps]
-        if len(newTA) < 3:
-            raise Exception('Aligned time series too short.')
-        newSelf = self.interpolateInTime(newTA)
-        x = other.x[:, oTimeStamps] if other.xDependsOnTime else other.x
-        y = other.y[:, oTimeStamps] if other.yDependsOnTime else other.y
-        z = other.z[:, oTimeStamps] if other.zDependsOnTime else other.z
-        # TODO what to do with metadata ?
-        newOther = dataContainer(
-            other.description, newTA, x, y, z, other.data
-            [:, :, oTimeStamps],
-            list(other.fieldNames),
-            other.coordSys, other.metaData)
+        if isinstance(other, dataContainer): 
+            # TODO get sampling rate from db and save in dataContainer
+            selfDt = otherDt = None
+            if (self.getMetaData('location', suppressError=True) == 'saturn03' and
+                    self.getMetaData('tag', suppressError=True) == 'obs'):
+                selfDt = 360
+            if (other.getMetaData('location', suppressError=True) == 'saturn03' and
+                    other.getMetaData('tag', suppressError=True) == 'obs'):
+                otherDt = 360
+            oTimeStamps = self.time.getAlignedTimeIndices(
+                other.time, selfDt, otherDt)
+            newTA = other.time.copy()
+            newTA.array = newTA.array[oTimeStamps]
+            if len(newTA) < 3:
+                raise Exception('Aligned time series too short.')
+            newSelf = self.interpolateInTime(newTA, acceptNaNs=acceptNaNs)
+            x = other.x[:, oTimeStamps] if other.xDependsOnTime else other.x
+            y = other.y[:, oTimeStamps] if other.yDependsOnTime else other.y
+            z = other.z[:, oTimeStamps] if other.zDependsOnTime else other.z
+            # TODO what to do with metadata ?
+            newOther = dataContainer(
+                other.description, newTA, x, y, z, other.data
+                [:, :, oTimeStamps],
+                list(other.fieldNames),
+                other.coordSys, other.metaData, acceptNaNs=acceptNaNs)
+        else:
+            # limit times for all
+            startTimes = [dc.time.getDatetime(0) for dc in other]
+            startTimes.append(self.time.getDatetime(0))
+            endTimes = [dc.time.getDatetime(-1) for dc in other]
+            endTimes.append(self.time.getDatetime(-1))
+            st = max(startTimes)
+            et = max(endTimes)
+            newOthers = [o.timeWindow(st, et, includeEnd=True) for o in other]
+            r = self.timeWindow(st, et, includeEnd=True)
+
+            # align
+            othersAligned = []
+            for o in newOthers:
+                r, o = r.alignTimes(o, acceptNaNs=acceptNaNs)
+                othersAligned.append(o)
+
+            # limit times again
+            startTimes_2 = [dc.time.getDatetime(0) for dc in othersAligned]
+            startTimes_2.append(r.time.getDatetime(0))
+            endTimes_2 = [dc.time.getDatetime(-1) for dc in othersAligned]
+            endTimes_2.append(r.time.getDatetime(-1))
+            st2 = max(startTimes_2)
+            et2 = max(endTimes_2)
+
+            # align with new time
+            newTime = r.time.window(st2, et2)
+            newSelf = r.interpolateInTime(newTime, acceptNaNs=acceptNaNs) 
+
+            # interpolate
+            newOther = []
+            for o in othersAligned:
+                newOther.append(o.interpolateInTime(newTime, True))
+
         return newSelf, newOther
 
     def computeError(self, other):

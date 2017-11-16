@@ -32,7 +32,7 @@ class trackTimeSeriesPlot(plotBase.colorPlotBase):
             self.unit = 'log10(' + self.unit + ')'
         super(trackTimeSeriesPlot, self).__init__(**defaultArgs)
         if self.xlim and self.xIsTime:
-            self.xlim = [timeArray.convertEpochToPlotTime(
+            self.xlim = [plotBase.convertEpochToPlotTime(
                 timeArray.datetimeToEpochTime(dt))
                 for dt in self.xlim]
 
@@ -53,7 +53,7 @@ class trackTimeSeriesPlot(plotBase.colorPlotBase):
     def addSample(self, time, zCoord, variable, **kwargs):
         """Add signal to the diagram. Time is assumed to be in epoch format."""
         if self.xIsTime:
-            time = timeArray.convertEpochToPlotTime(time)
+            time = plotBase.convertEpochToPlotTime(time)
         kw = dict(self.defaultArgs)
         kw.update(kwargs)
 
@@ -103,7 +103,7 @@ class stackTrackPlot(plotBase.stackPlotBase):
         kw = self.defArgs
         kw.update(kwargs)
         plot = trackTimeSeriesPlot(**kw)
-        super(stackTrackPlot, self).addPlot(self, plot, tag)
+        super(stackTrackPlot, self).addPlot(plot, tag)
 
     def addSample(self, tag, *args, **kwargs):
         if tag not in self.tags:

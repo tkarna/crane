@@ -437,11 +437,11 @@ def computeSelfeFluxes(path, regionFile, location, runTag, stacks=None,
     vCoords = dihvReader.dataFile.vCoords
     bathymetry = dihvReader.dataFile.bath
     bathMC = meshContainer.meshContainer('', timeArray.timeArray(np.array([0]), 'epoch'),
-                           dihvReader.dataFile.nodeX,
-                           dihvReader.dataFile.nodeY,
-                           np.zeros_like(dihvReader.dataFile.nodeX),
-                           bathymetry[:, None, None],
-                           dihvReader.dataFile.faceNodes, ['bathymetry'])
+                                         dihvReader.dataFile.nodeX,
+                                         dihvReader.dataFile.nodeY,
+                                         np.zeros_like(dihvReader.dataFile.nodeX),
+                                         bathymetry[:, None, None],
+                                         dihvReader.dataFile.faceNodes, ['bathymetry'])
     tri_areas = bathMC.computeAreas()
     bathymetry_elem = (bathymetry[meshSearchObj.faceNodes[:, 0]] +
                        bathymetry[meshSearchObj.faceNodes[:, 1]] +

@@ -1,0 +1,11 @@
+#!/usr/bin/env python
+"""
+Computes spatial and temporal averages of SELFE scalar fields.
+
+Tuomas Karna 2016-06-15
+"""
+
+from crane.data import computeIntegral
+
+if __name__ == '__main__':
+    computeIntegral.parse_commandline()

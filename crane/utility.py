@@ -8,6 +8,37 @@ import os
 import string
 from crane import plt, matplotlib
 from crane.plotting.plotDataContainer import plotDataContainer
+from crane.data import meshContainer
+from crane.files import gmshInterface
+from crane.files import gr3Interface
+
+
+def readAnyMeshFile(inFile, dataFile=None):
+    """
+    Reads mesh data in a meshContainer.
+
+    Supported formats are GR3 (SELFE), MSH (GMSH) and meshContainer netCDF.
+
+    Examples:
+
+    mc = readAnyMeshFile('mymesh.gr3')
+    mc = readAnyMeshFile('myrun/data/slab/slab_salt_s0_2012-04-08_2012-04-18.nc')
+    mc = readAnyMeshFile('mymesh.msh', dataFile='001_salt.msh')
+    """
+    fname, ext = os.path.splitext(inFile)
+    if ext == '.gr3':
+        mc = gr3Interface.readGR3FileToMC(inFile)
+    elif ext == '.msh':
+        gmsh = gmshInterface.gmshMesh.fromFile(inFile)
+        if dataFile:
+            mc = gmsh.getMeshContainer(fromFile=dataFile)
+        else:
+            mc = gmsh.getMeshContainer(fromFile=inFile)
+    elif ext == '.nc':
+        mc = meshContainer.meshContainer.loadFromNetCDF(inFile)
+    else:
+        raise Exception('Unknown file extension: ' + ext + '\n' + inFile)
+    return mc
 
 
 def parseTimeStr(timeStr):
@@ -105,7 +136,7 @@ def add_colorbar(parent_ax, p, pos='left', label=None, pad=None, aspect=None, **
         y0 = parent_pos.y0
         dy = parent_dy
         if aspect is None:
-            aspect = 1.0/12.0
+            aspect = 1.0/6.0
         dx = aspect*dy*parent_dx
         if pos == 'right':
             if pad is None:
@@ -122,11 +153,11 @@ def add_colorbar(parent_ax, p, pos='left', label=None, pad=None, aspect=None, **
         x0 = parent_pos.x0
         dx = parent_dx
         if aspect is None:
-            aspect = 1.0/12.0
+            aspect = 1.0/7.0
         dy = aspect*dx*parent_dy
         if pos == 'bottom':
             if pad is None:
-                pad = -0.18
+                pad = -0.25
             offset = pad*parent_dy
             y0 = parent_pos.y0 + offset
         else:

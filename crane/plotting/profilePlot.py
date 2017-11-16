@@ -39,7 +39,7 @@ class verticalProfilePlot(plotBase.plotBase):
         self.xlabel = defaultArgs.pop('xlabel', '')
         self.xunit = defaultArgs.pop('xunit', '')
         self.invert_yaxis = defaultArgs.pop('invert_yaxis', False)
-        super(verticalProfilePlot, self).__init__(defaultArgs)
+        super(verticalProfilePlot, self).__init__(**defaultArgs)
 
     def setAxes(self, ax):
         """Set axes for the diagram where data will be plotted.
@@ -146,7 +146,7 @@ class profileTimeSeries(plotBase.colorPlotBase):
         self.logScale = defaultArgs.pop('logScale', False)
         self.invert_yaxis = defaultArgs.pop('invert_yaxis', False)
         defaultArgs.setdefault('plotType', 'contourf')
-        defaultArgs.setdefault('extend', 'both')
+        defaultArgs.setdefault('extend', 'max')
         defaultArgs.setdefault('N', 20)
         if self.logScale and self.unit:
             self.unit = r'$\log10($' + self.unit + '$)$'

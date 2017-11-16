@@ -13,6 +13,7 @@ import datetime
 import sys
 from optparse import OptionParser
 
+from crane.data import dataContainer
 from crane.data import meshContainer
 from crane.data import timeArray
 from crane.data import collection
@@ -72,7 +73,8 @@ def _runTasksInQueue(num_threads, tasks):
 
 def processFrame(dcs, time, logScaleVars, aspect, clim, diffClim,
                  cmap, bBox, transectFile, stationFileObj, bathMC, isobaths,
-                 diff, imgDir, fPrefix, filetype, maxPlotSize=6.0):
+                 contourMC, contours, contourColors, quiverDC, qkwargs, diff,
+                 imgDir, fPrefix, filetype, maxPlotSize=6.0):
     """Plots only the first time step of the meshContainers."""
     it = 0
 
@@ -84,24 +86,24 @@ def processFrame(dcs, time, logScaleVars, aspect, clim, diffClim,
     width += 1.3  # make room for colorbar & labels
     dia = slabPlot.stackSlabPlotDC(figwidth=width, plotheight=height)
 
-    dcs_to_plot = []
-    dcs_to_plot += dcs
+    dcs_to_plot = dcs
 
     _clim = {}
     _clim.update(clim)
 
-    # append difference data sets
     if diff:
+        dcs_to_plot = []
         nPairs = int(np.floor(len(dcs) / 2))
         pairs = []
         for i in range(nPairs):
             pairs.append((dcs[2 * i], dcs[2 * i + 1]))
         for joe, amy in pairs:
             var = joe.getMetaData('variable')
-            assert var ==  amy.getMetaData('variable'), \
+            assert var == amy.getMetaData('variable'), \
                 'Cannot compute difference between different variables'
             diffDC = joe.copy()
             diffDC.data = joe.data - amy.data
+            dcs_to_plot += [joe, amy, diffDC]
 
             diffvar = DIFFPREFIX + var
             if var in diffClim:
@@ -113,7 +115,7 @@ def processFrame(dcs, time, logScaleVars, aspect, clim, diffClim,
                 if old_fn in diffClim:
                     _clim[new_fn] = diffClim[old_fn]
 
-            tag = '({:}-{:})'.format(str(joe.getMetaData('tag', suppressError=True)),
+            tag = 'Diff. ({:}-{:})'.format(str(joe.getMetaData('tag', suppressError=True)),
                                      str(amy.getMetaData('tag', suppressError=True)))
             diffDC.setMetaData('variable', diffvar)
             diffDC.setMetaData('tag', tag)
@@ -129,18 +131,30 @@ def processFrame(dcs, time, logScaleVars, aspect, clim, diffClim,
         climIsLog = logScale
         tag = str(dc.getMetaData('tag', suppressError=True))
         pltTag = tag + name + dc.getMetaData('variable') + '-' + str(i)
-        titleStr = tag + ' ' + dateStr + ' (PST)'
 
         if DIFFPREFIX in var:
-            origvar = var.replace(DIFFPREFIX, '')
-            clabel = 'Diff. ' + VARS.get(origvar, origvar)
-            unit = UNITS.get(origvar, '-')
+            basevar = var.replace(DIFFPREFIX, '')
+            title_prefix = 'Diff. '
         else:
-            clabel = VARS.get(var, var)
-            unit = UNITS.get(var, '-')
-        dia.addPlot(pltTag, clabel=clabel, unit=unit, bbox=bBox)
+            basevar = var
+            title_prefix = ''
+
+        titleStr = title_prefix + tag + ' ' + dateStr + ' (PST)'
+        dia.addPlot(pltTag, clabel=VARS.get(basevar, basevar), unit=UNITS.get(basevar, '-'), bbox=bBox)
         dia.addSample(pltTag, dc, it, clim=_clim.get(var, None), cmap=cmap,
                       logScale=logScale, climIsLog=climIsLog, zorder=0)
+
+        if quiverDC:
+            dia.addSample(pltTag, quiverDC, it, plotType='quiver', **qkwargs)
+
+        # add other contours (if any)
+        if contourMC is not None and len(contours) > 0:
+            if len(contourColors) == 0:
+                contourColors = 'k'
+            for pltTag in dia.plots:
+                dia.addSample(pltTag, contourMC, it, plotType='contour',
+                              levels=contours, colors=contourColors,
+                              zorder=1, draw_cbar=False)
 
         dia.addTitle(titleStr, tag=pltTag)
 
@@ -192,6 +206,11 @@ def makeSlabPlots(
         transectFilePath=None,
         bathFilePath=None,
         isobaths=[],
+        contourFilePath=None,
+        contours=[],
+        contourColors=[],
+        quiverFilePath=None,
+        qkwargs=None,
         userClim={},
         cmapStr=None,
         bBox=None,
@@ -259,6 +278,23 @@ def makeSlabPlots(
     else:
         bathMC = None
 
+    if contourFilePath:
+        contourMC = readAnyMeshFile(contourFilePath)
+    else:
+        contourMC = None
+
+    if quiverFilePath:
+        if startTime and endTime and startTime != endTime:
+            quiverDC = dataContainer.dataContainer.loadFromNetCDF(
+                      quiverFilePath, startTime, endTime)
+        else:
+            quiverDC = dataContainer.dataContainer.loadFromNetCDF(
+                      quiverFilePath)
+        if bBox:
+            quiverDC = quiverDC.cropGrid(bBox)
+    else:
+        quiverDC = None
+
     if startTime or endTime:
         if startTime == endTime:
             # interpolate to given time stamp
@@ -294,17 +330,23 @@ def makeSlabPlots(
     # check that all time arrays match
     time = dcs[0].time.asEpoch().array
     for dc in dcs[1:]:
-        if not np.array_equal(dcs[0].time.asEpoch().array, time):
+        if not np.array_equal(dc.time.asEpoch().array, time):
             raise Exception('time steps must match')
 
     # add all plotting tasks in queue and excecute with threads
-    #import time as timeMod
     tasks = []
-    #t0 = timeMod.time()
     for it in range(0, len(time), skip):
         dcs_single = []
         for dc in dcs:
             dcs_single.append(dc.subsample([it]))
+        if quiverDC:
+            quiver_single = quiverDC.subsample([it])
+        else:
+            quiver_single = None
+        if contourMC:
+            contour_single = contourMC.subsample([it])
+        else:
+            contour_single = None
         function = processFrame
         args = [
             dcs_single,
@@ -319,6 +361,11 @@ def makeSlabPlots(
             stationFileObj,
             bathMC,
             isobaths,
+            contour_single,
+            contours,
+            contourColors,
+            quiver_single,
+            qkwargs,
             diff,
             imgDir,
             fPrefix,
@@ -326,7 +373,6 @@ def makeSlabPlots(
             maxPlotSize]
         tasks.append((function, args))
     _runTasksInQueue(num_threads, tasks)
-    # print 'duration', timeMod.time()-t0
 
 
 #-------------------------------------------------------------------------
@@ -461,6 +507,41 @@ def parseCommandLine():
         type='string',
         dest='isobathStr',
         help='list of isobaths to plot, e.g. \"50,80,100,400\". Units meters below datum.')
+    parser.add_option(
+        '-q',
+        '--quivers',
+        action='store',
+        type='string',
+        dest='quiverSlabFile',
+        help='A slabFile with vector that can be plotted with quivers')
+    parser.add_option(
+        '',
+        '--qkwargs',
+        action='store',
+        type='string',
+        dest='quiverKwargsStr',
+        help='comma seperated kwargs for quivers, e.g. nquiverpoints=50,maxmagnitude=5,scale=0.01,color=\'w\'')
+    parser.add_option(
+        '',
+        '--contour',
+        action='store',
+        type='string',
+        dest='contourMeshFile',
+        help='A mesh file to create contours')
+    parser.add_option(
+        '',
+        '--contourLevels',
+        action='store',
+        type='string',
+        dest='contourStr',
+        help='list of contour levels to plot, e.g. \"50,80,100,400\".')
+    parser.add_option(
+        '',
+        '--contourColors',
+        action='store',
+        type='string',
+        dest='contourColors',
+        help='list of colors, e.g. \"r,green,k,#afeee\".')
 
     (options, args) = parser.parse_args()
 
@@ -481,6 +562,11 @@ def parseCommandLine():
     matplotlib.rcParams['font.size'] = options.fontSize
     bathMeshFile = options.bathMeshFile
     isobathStr = options.isobathStr
+    contourMeshFile = options.contourMeshFile
+    contourStr = options.contourStr
+    contourColorsStr = options.contourColors
+    quiverSlabFile = options.quiverSlabFile
+    quiverKwargsStr = options.quiverKwargsStr
 
     if imgDir is None:
         parser.print_help()
@@ -522,6 +608,18 @@ def parseCommandLine():
     if isobathStr:
         isobaths = [float(s) for s in isobathStr.split(',')]
 
+    contours = []
+    if contourStr:
+        contours = [float(s) for s in contourStr.split(',')]
+
+    contourColors = []
+    if contourColorsStr:
+        contourColors = tuple([s for s in contourColorsStr.split(',')])
+
+    qkwargs = {}
+    if quiverKwargsStr:
+        qkwargs = {s.split('=')[0]: s.split('=')[1] for s in quiverKwargsStr.split(',')}
+
     print 'Parsed options:'
     if runTag:
         print ' - runID ', runTag
@@ -536,7 +634,7 @@ def parseCommandLine():
     if clim:
         print ' - using color limits', clim
     if trFiles:
-        print ' - plotting trasects', trFiles
+        print ' - plotting transects', trFiles
     if cmapStr:
         print ' - using color map', cmapStr
     if bBox:
@@ -545,6 +643,12 @@ def parseCommandLine():
         print ' - plotting difference of transects'
     if diffClim:
         print ' - using difference color limits', diffClim
+    if quiverSlabFile:
+        print ' - plotting quivers', quiverSlabFile
+    if bathMeshFile:
+        print ' - plotting isobaths', bathMeshFile
+    if contourMeshFile:
+        print ' - plotting contours', contourMeshFile
     print ' - number of parallel threads', num_threads
     print ' - max plot size (in)', maxPlotSize
     print ' - font size (pt)', options.fontSize
@@ -560,6 +664,11 @@ def parseCommandLine():
         trFiles,
         bathMeshFile,
         isobaths,
+        contourMeshFile,
+        contours,
+        contourColors,
+        quiverSlabFile,
+        qkwargs,
         clim,
         cmapStr,
         bBox,

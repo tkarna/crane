@@ -11,7 +11,7 @@ import time as timeMod
 import numpy as np
 from scipy.spatial import KDTree, cKDTree
 
-from crane.data import meshContainer
+from crane.data.meshContainer import meshContainer
 from crane.files import gmshInterface
 from crane.files import gr3Interface
 from crane.files import gmshInterface

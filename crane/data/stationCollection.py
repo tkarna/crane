@@ -48,16 +48,25 @@ class unitConversion(object):
     Converts units from observation unit to model units and vice versa.
     """
 
+    def __convertOxygen(self, data):
+        """Convert ml/l to mmol/m3."""
+        return data*44.661
+
+    def __convertTurbidity(self, data):
+        """Convert NTU to kg/m3 based on USGS + CMOP data."""
+        return 5.155*data**0.8037/1000.0
+
     def __init__(self, obsTag='obs'):
         """Initialize convert object. obsTag defines the tag used to identify
         observation data. Data with all other tags are assumed to be in model
         units (for now).
         """
         self.obsTag = obsTag
-        # TODO generalize with unit conversion tool
-        self.scalarToModelUnits = {'oxy': 44.661,  # from 1 ml/l to mmol/m3
-                                   }
+        self.obsToModelUnits = {'oxy': self.__convertOxygen,
+                                'turbidity': self.__convertTurbidity,
+                                }
         self.modelUnits = {'oxy': 'mmol/m3',
+                           'sediment': 'kg/m3',
                            }
 
     def convertToModelUnits(self, dc):
@@ -66,13 +75,13 @@ class unitConversion(object):
             return dc
         var = dc.getMetaData('variable')
         dc2 = dc.copy()
-        dc2.data *= self.scalarToModelUnits.get(var, 1.0)
-        if var in self.modelUnits:
-            dc2.setMetaData('unit', self.modelUnits[var])
-        if self.scalarToModelUnits.get(var, 1.0) != 1.0:
+        if var in self.obsToModelUnits:
+            dc2.data = self.obsToModelUnits[var](dc.data)
             print '*** Converted'
             print dc
             print dc2
+        if var in self.modelUnits:
+            dc2.setMetaData('unit', self.modelUnits[var])
         return dc2
 
 
@@ -111,7 +120,8 @@ def tupleMatches(tup, query):
 
 
 def fetchAvailableObservations(startTime, endTime, obsTag='obs',
-                               variables=['elev', 'temp', 'salt']):
+                               variables=['elev', 'temp', 'salt'],
+                               quality='best'):
     """Fetches all available observations from CMOP's netCDF cache.
     Returns a StationCollection object.
     """
@@ -122,7 +132,7 @@ def fetchAvailableObservations(startTime, endTime, obsTag='obs',
     conv = unitConversion(obsTag)
     for off in offerings:
         try:
-            dc = netcdfDB.getDataContainerFromOffering(off, startTime, endTime)
+            dc = netcdfDB.getDataContainerFromOffering(off, startTime, endTime, quality)
             dc = conv.convertToModelUnits(dc)
             sc.addSample(dc)
         except Exception as e:

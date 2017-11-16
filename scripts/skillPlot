@@ -72,7 +72,8 @@ def skillPlots(
     haErr_ylim = [-0.2, 0.2]
     # color limits for vertical profiles
     vprof_clim = {'temp': [4, 20], 'salt': [0, 35], 'hvel': [-2.5, 2.5],
-                  'kine': [-6, -0.5], 'tdff': [-6, -0.5], 'vdff': [-6, -0.5]}
+                  'kine': [-6, -0.5], 'tdff': [-6, -0.5], 'vdff': [-6, -0.5],
+                  'turbidity': [0, 0.1]}
     sta01_dep_lim = [-23, 0]
 
     #-------------------------------------------------------------------------

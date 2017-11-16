@@ -4,17 +4,24 @@ NOTE could possibly be replaced by pandas or other library.
 
 Tuomas Karna 2013-11-07
 """
-import numpy as np
 from collections import deque
+import datetime
+
+import numpy as np
+
 from crane.data import dataContainer
 from crane.data import timeArray
 
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Low level routines with numpy arrays
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 # period of M2 cycle in seconds
 T_M2 = 44714.0
+# period of lunar month
+T_LUNAR_MONTH = datetime.timedelta(days=29, hours=12, minutes=44, seconds=3).total_seconds()
+# period of tidal month
+T_TIDAL_MONTH = T_LUNAR_MONTH / 2.0
 
 
 def computeRunningMean(t, x, T):
@@ -153,80 +160,83 @@ def computeRunningRange(t, x, T):
     xRes = np.array(xRes)
     return tRes, xRes
 
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Routines with dataContainer as input/output
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 
-def runningX(dc, T=T_M2, operator=computeRunningMean, gap_dt=None):
+def runningX(dc, T=T_M2, operator=computeRunningMean, gap_dt=None, acceptNaNs=False):
     """Generic routine that applies given operator function for each window.
     T is window length."""
+    # filter each contiguous data range separately
     nPoints, nFields, nTime = dc.data.shape
-    # TODO extend to more points and fields
-    if nPoints > 1:
-        raise NotImplementedError('Case with nPoints>1 not implemented')
-    #if nFields>1:raise NotImplementedError('Case with nFields>1 not implemented')
-    if nFields > 1:  # process each component recursively
-        components = []
-        for i in range(nFields):
-            dc_comp = dc.extractField(i)
-            dc_comp_new = runningX(dc_comp, T, operator)
-            components.append(dc_comp_new)
-        dc_new = components[0]
-        for i in range(1, nFields):
-            dc_new.mergeFields(components[i])
-        return dc_new
     gaps, ranges, t = dc.detectGaps(dt=gap_dt)
-    v = dc.data[0, 0, :]
-    x = dc.x[0, :] if dc.xDependsOnTime else dc.x
-    y = dc.y[0, :] if dc.yDependsOnTime else dc.y
-    z = dc.z[0, :] if dc.zDependsOnTime else dc.z
-    tRes = np.array([])
-    vRes = np.array([])
-    if dc.xDependsOnTime:
-        xRes = np.array([])
-    if dc.yDependsOnTime:
-        yRes = np.array([])
-    if dc.zDependsOnTime:
-        zRes = np.array([])
-    for i in range(ranges.shape[0]):
-        twin = t[ranges[i, 0]:ranges[i, 1]]
-        vwin = v[ranges[i, 0]:ranges[i, 1]]
+    for k in range(nFields):
         if dc.xDependsOnTime:
-            xwin = x[ranges[i, 0]:ranges[i, 1]]
+            xRes = np.array([])
         if dc.yDependsOnTime:
-            ywin = y[ranges[i, 0]:ranges[i, 1]]
+            yRes = np.array([])
         if dc.zDependsOnTime:
-            zwin = z[ranges[i, 0]:ranges[i, 1]]
-        if len(twin) == 0:
-            continue
-        t_op, v_op = operator(twin, vwin, T)
-        tRes = np.append(tRes, t_op)
-        vRes = np.append(vRes, v_op)
-        if dc.xDependsOnTime:
-            tmean, xmean = computeRunningMean(twin, xwin, T)
-            xRes = np.append(xRes, xmean)
-        if dc.yDependsOnTime:
-            tmean, ymean = computeRunningMean(twin, ywin, T)
-            yRes = np.append(yRes, ymean)
-        if dc.zDependsOnTime:
-            tmean, zmean = computeRunningMean(twin, zwin, T)
-            zRes = np.append(zRes, zmean)
-    if len(tRes) == 0:
-        print 'Running mean could not be computed, skipping (time series too short?)'
-        return
-    ta = timeArray.timeArray(tRes, 'epoch')
-    data = vRes.reshape((1, 1, -1))
-    if dc.xDependsOnTime:
-        x = xRes[None, :]
-    if dc.yDependsOnTime:
-        y = yRes[None, :]
-    if dc.zDependsOnTime:
-        z = zRes[None, :]
+            zRes = np.array([])
+
+        for j in range(nPoints):
+            v = dc.data[j, k, :]
+            tRes = np.array([])
+            vRes = np.array([])
+
+            for i in range(ranges.shape[0]):
+                twin = t[ranges[i, 0]:ranges[i, 1]]
+                vwin = v[ranges[i, 0]:ranges[i, 1]]
+                if len(twin) == 0:
+                    continue
+                t_op, v_op = operator(twin, vwin, T)
+                tRes = np.append(tRes, t_op)
+                vRes = np.append(vRes, v_op)
+                if len(tRes) == 0:
+                    print 'Running mean could not be computed, skipping (time series too short?)'
+                    return
+
+                # only calculate time varying fields once
+                if k == 0 and j == 0:
+                    if dc.xDependsOnTime:
+                        nLevels = dc.x.shape[0]
+                        xtmp = np.zeros((nLevels, len(tRes)))
+                        for l in range(nLevels):
+                            xwin = dc.x[l, ranges[i, 0]:ranges[i, 1]]
+                            tmean, xmean = computeRunningMean(twin, xwin, T)
+                            xtmp[l, :] = xmean
+                        xRes = np.append(xRes, xtmp).reshape(levels, -1)
+                    if dc.yDependsOnTime:
+                        nLevels = dc.y.shape[0]
+                        ytmp = np.zeros((nLevels, len(tRes)))
+                        for l in range(nLevels):
+                            ywin = y[l, ranges[i, 0]:ranges[i, 1]]
+                            tmean, ymean = computeRunningMean(twin, ywin, T)
+                            ytmp[l, :] = ymean
+                        yRes = np.append(yRes, ytmp).reshape(levels, -1)
+                    if dc.zDependsOnTime:
+                        nLevels = dc.z.shape[0]
+                        ztmp = np.zeros((nLevels, len(tRes)))
+                        for l in range(nLevels):
+                            zwin = dc.z[l, ranges[i, 0]:ranges[i, 1]]
+                            tmean, zmean = computeRunningMean(twin, zwin, T)
+                            ztmp[l, :] = zmean
+                        zRes = np.append(zRes, ztmp).reshape(nLevels, -1)
+
+            # create output arrays and location once
+            if j == 0 and k == 0:
+                data = np.zeros((nPoints, nFields, len(vRes)))
+                ta = timeArray.timeArray(tRes, 'epoch')
+                x = xRes if dc.xDependsOnTime else dc.x
+                y = yRes if dc.yDependsOnTime else dc.y
+                z = zRes if dc.zDependsOnTime else dc.z
+
+            data[j, k, :] = vRes
     meta = dc.getMetaData()
     dc2 = dataContainer.dataContainer(
-        '', ta, x, y, z, data, dc.fieldNames[
-            :1], coordSys=dc.coordSys, metaData=meta)
+        '', ta, x, y, z, data, dc.fieldNames[:1],
+        coordSys=dc.coordSys, metaData=meta, checkDataXDim=False,
+        acceptNaNs=acceptNaNs)
     return dc2
 
 
@@ -292,10 +302,9 @@ def removeTides(dc, dt=None, gapFactor=20, T=T_M2):
             str(dt))
     b, a = signal.butter(o, Wn, 'low')
     # filter each contiquous data range separately
-    npoints = len(vals[:, 0, 0])
-    nfields = len(vals[0, :, 0])
-    for j in range(npoints):
-        for k in range(nfields):
+    npoints, nfields, ntime = vals.shape
+    for k in range(nfields):
+        for j in range(npoints):
             newvals = []
             newtime = []
             for i in range(ranges.shape[0]):
@@ -306,7 +315,7 @@ def removeTides(dc, dt=None, gapFactor=20, T=T_M2):
                         # default forward-backward filter
                         # filtered = signal.filtfilt(b, a, vwin, padtype='constant')
                         # forward-backward filter with custom boundary conditions
-                        # pad with mean of 1/2 pass window lenght
+                        # pad with mean of 1/2 pass window length
                         N_init = int(np.ceil(Tpass/dt/2))
                         # forward filter
                         x_init = vwin[:N_init]
@@ -325,16 +334,14 @@ def removeTides(dc, dt=None, gapFactor=20, T=T_M2):
                         print a.shape, vwin.shape
                         raise e
 
-            if j == 0:
-                newvals = np.concatenate(tuple(newvals), axis=0)
-                data = np.empty((npoints, nfields, len(newvals)))
-                time = np.concatenate(tuple(newtime), axis=0)
-            else:
-                newvals = np.concatenate(tuple(newvals), axis=0)
-            data[j, k, :] = newvals
-    dc2 = dc.copy()
-    dc2.data = data
-    dc2.time.array = time
+            newvals = np.concatenate(tuple(newvals), axis=0)
+            if j == 0 and k == 0:
+                data_out = np.zeros((npoints, nfields, len(newvals)))
+                time_out = np.concatenate(tuple(newtime), axis=0)
+            data_out[j, k, :] = newvals
+    ta = timeArray.timeArray(time_out, 'epoch')
+    dc2 = dc.interpolateInTime(ta)
+    dc2.data = data_out
     return dc2
 
 
@@ -506,3 +513,38 @@ def computeTidalRange(dc, T=T_M2):
         '', ta, dc.x, dc.y, dc.z, data, ['tidal_range'],
         coordSys='', metaData=meta)
     return dc2
+
+
+def seperateEbbFlood(elev, dc):
+    """Seperate and return ebb and flood dataContainers."""
+    high, low = timeSeriesFilters.detectHighLowWater(elev)
+
+    floods = []
+    ebbs = []
+    for ix in range(max(len(high.time.array), len(low.time.array))):
+        if high.time.array[0] < low.time.array[0]:
+            try:
+                h = timeArray.epochToDatetime(high.time.array[ix])
+                l = timeArray.epochToDatetime(low.time.array[ix])
+                h2 = timeArray.epochToDatetime(high.time.array[ix + 1])
+                ebbs.append(dc.timeWindow(h, l))
+                floods.append(dc.timeWindow(l, h2))
+            except:
+                continue
+        else:
+            try:
+                l = timeArray.epochToDatetime(low.time.array[ix])
+                h = timeArray.epochToDatetime(high.time.array[ix])
+                l2 = timeArray.epochToDatetime(high.time.array[ix + 1])
+                floods.append(dc.timeWindow(l, h))
+                ebbs.append(dc.timeWindow(h, l2))
+            except:
+                continue
+
+    flood = floods.pop(0)
+    ebb = ebbs.pop(0)
+    for f, e in zip(floods, ebbs):
+        flood.mergeTemporal(f)
+        ebb.mergeTemporal(e)
+
+    return ebb, flood

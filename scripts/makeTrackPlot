@@ -14,13 +14,13 @@ import sys
 from optparse import OptionParser
 
 from crane.data import dataContainer
-
 from crane.physicalVariableDefs import VARS
 from crane.physicalVariableDefs import UNITS
 from crane.utility import createDirectory
 from crane.utility import saveFigure
 from crane.utility import parseTimeStr
 from crane.plotting import trackPlot
+from crane import plt
 import crane.plotting.colormap
 
 #-------------------------------------------------------------------------
@@ -29,11 +29,10 @@ import crane.plotting.colormap
 
 
 def plotTrack(userRunTag, ncfiles, imgDir, fPrefix='trck', filetype='png',
-              startTime=None, endTime=None, userClim={}, cmapStr=None,
+              startTime=None, endTime=None, userClim={}, cmapDict={},
               normalize=None, diff=False, userDiffClim={}):
 
     imgDir = createDirectory(imgDir)
-    cmap = plt.get_cmap(cmapStr)
 
     # logScale flag
     logScaleVars = ['kine', 'vdff']
@@ -47,7 +46,6 @@ def plotTrack(userRunTag, ncfiles, imgDir, fPrefix='trck', filetype='png',
             'NTU': [0, 1], }
     clim.update(userClim)
     nContours = 15
-    cmap = cmap_discretize(cmap, nContours)
 
     # color range for differences
     diffClim = {'salt': [-5, 5],
@@ -73,17 +71,21 @@ def plotTrack(userRunTag, ncfiles, imgDir, fPrefix='trck', filetype='png',
     dia = trackPlot.stackTrackPlotDC(
         ylabel='depth below surface',
         xlabel='',
-        cmap=cmap,
         plotheight=3.2)
 
     for j, dc in enumerate(dcs):
         for i in range(dc.data.shape[1]):
-            dci = dc.extractField(i)
+            dci = dc.extractFields(i)
             var = dci.fieldNames[0]
             plotID = str(j) + '-' + str(i)
+            if isinstance(cmapDict, dict):
+                cmap = plt.get_cmap(cmapDict.get(var, 'Spectral_r'))
+            else:
+                cmap = plt.get_cmap(cmapDict)
+
             dia.addPlot(plotID, clabel=VARS.get(var, var),
                         clim=clim.get(var, None), unit=UNITS.get(var, '-'))
-            dia.addSample(plotID, dci)
+            dia.addSample(plotID, dci, cmap=cmap)
             trackTitle = dci.getMetaData('location')
             runTag = userRunTag if userRunTag else dci.getMetaData('tag')
             titleStr = ' '.join([trackTitle, runTag])
@@ -157,7 +159,8 @@ def parseCommandLine():
         action='store',
         type='string',
         dest='cmapStr',
-        help='name of matplotlib colormap to use')
+        help='name of matplotlib colormap to use. Can be specified for each variable: hvel:RdBu_r,salt:Spectral_r',
+        default='Spectral_r')
     parser.add_option('-n', '--normalize', action='store', type='string',
                       dest='normalize', help='normalize data for plotting',
                       default=None)
@@ -222,6 +225,15 @@ def parseCommandLine():
 
     netCDFFiles = args
 
+    if cmapStr:
+        if len(cmapStr.split(',')) > 1:
+            cmap = {}
+            for entry in cmapStr.split(','):
+                var, mapname = entry.split(':')
+                cmap[var] = mapname
+        else:
+            cmap = str(cmapStr)
+
     if diff:
         print ' - plotting difference of transects'
     if diffClim:
@@ -236,7 +248,7 @@ def parseCommandLine():
         startTime=startTime,
         endTime=endTime,
         userClim=clim,
-        cmapStr=cmapStr,
+        cmapDict=cmap,
         normalize=normalize,
         diff=diff,
         userDiffClim=diffClim)

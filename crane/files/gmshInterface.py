@@ -337,42 +337,47 @@ class gmshMesh(object):
             self,
             nodalValues=None,
             fieldNames=None,
-            fromFile=None):
-        if nodalValues is None and fromFile is None:
-            raise Exception('either nodalValues or fromFile must be specified')
-        if nodalValues is not None and fieldNames is None:
-            raise Exception('fieldNames unspecified')
-        if nodalValues is None:
-            try:
-                nodalValues, fieldName, time, it, nScalars = self.readNodalValues(
-                    fromFile)
-            except Exception as e1:
+            fromFile=None,
+            fillWithZeros=False):
+        if fillWithZeros:
+            nodalValues = np.zeros((self.x.shape[0], 1))
+            fieldNames = ['field0']
+        else:
+            if nodalValues is None and fromFile is None:
+                raise Exception('either nodalValues or fromFile must be specified')
+            if nodalValues is not None and fieldNames is None:
+                raise Exception('fieldNames unspecified')
+            if nodalValues is None:
                 try:
-                    # discontinuous values in each element
-                    elemValues, fieldName, time, it, nScalars = self.readElemValues(
+                    nodalValues, fieldName, time, it, nScalars = self.readNodalValues(
                         fromFile)
-                    # convert to continuos by taking a node (by averaging
-                    # around nodes)
-                except Exception as e2:
-                    print self.connectivity.shape
-                    print e1
-                    print e2
-                    raise Exception('Could not read nodal values')
-            if fieldNames is None:
-                fieldNames = [fieldName]
-            # except Exception as e :
-                # print 'Warning: could not read nodal values, assigning zeros'
-                # print e
-                #nodalValues = np.zeros((len(self.x),1))
-                #fieldNames = ['zero']
-        if isinstance(fieldNames, str):
-            fieldNames = [fieldNames]
+                except Exception as e1:
+                    try:
+                        # discontinuous values in each element
+                        elemValues, fieldName, time, it, nScalars = self.readElemValues(
+                            fromFile)
+                        # convert to continuos by taking a node (by averaging
+                        # around nodes)
+                    except Exception as e2:
+                        print self.connectivity.shape
+                        print e1
+                        print e2
+                        raise Exception('Could not read nodal values')
+                if fieldNames is None:
+                    fieldNames = [fieldName]
+                # except Exception as e :
+                    # print 'Warning: could not read nodal values, assigning zeros'
+                    # print e
+                    #nodalValues = np.zeros((len(self.x),1))
+                    #fieldNames = ['zero']
+            if isinstance(fieldNames, str):
+                fieldNames = [fieldNames]
         description = ''
         ta = timeArray.timeArray(np.array([0]), 'epoch')
         if not isinstance(nodalValues, np.ndarray):
             nodalValues = nodalValues * np.zeros((self.x.shape[0], 1))
         data = nodalValues[:, :, None]
-        mc = meshContainer(
+        mc = meshContainer.meshContainer(
             description,
             ta,
             self.x,
@@ -830,7 +835,7 @@ def findBoundarySegments(lines, lineTags, physicalNames):
             #nodes = nodes[1:]
             # if nodes[-1] in processedNodes :
             #nodes = nodes[:-1]
-            boundaries.append(meshBoundary(bndType, tagStr, nodes))
+            boundaries.append(meshContainer.meshBoundary(bndType, tagStr, nodes))
             #processedNodes.update( nodes )
 
     return boundaries

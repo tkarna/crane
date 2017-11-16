@@ -11,7 +11,7 @@ import crane.data.dataContainer as dataContainer
 # TODO add support for all plot types
 # TODO must be able to plot multiple dcs at once
 
-TIMESERIES_TYPES = ['timeseries', 'sil']
+TIMESERIES_TYPES = ['timeseries', 'sil', 'volintegral']
 
 def plotDataContainer(dclist0, ax=None, show=False, dia=None, **kwargs):
     """
@@ -21,7 +21,7 @@ def plotDataContainer(dclist0, ax=None, show=False, dia=None, **kwargs):
         dclist = [dclist0]
     else:
         dclist = dclist0
-        
+
     # create axes if necessary
     create_new_axes = ax is None
     if create_new_axes:
@@ -63,7 +63,7 @@ def plotDataContainer(dclist0, ax=None, show=False, dia=None, **kwargs):
         label = kwargs.pop('label', None)
         showLegend = kwargs.pop('showLegend', True)
 
-        # create a diagram        
+        # create a diagram
         if datatype in TIMESERIES_TYPES:
             if create_new_axes:
                 # default: each dc in its own subplot
@@ -73,13 +73,12 @@ def plotDataContainer(dclist0, ax=None, show=False, dia=None, **kwargs):
                     var = dc.getMetaData('variable')
                     varstr = VARS.get(var, var)
                     unit = UNITS.get(var, '-')
-                    if label is None:
-                        label = tag
+                    _label = label if label is not None else tag
                     ylabel = varstr
                     if dia is None:
                         dia = timeSeriesPlotDC2(ylabel=ylabel, unit=unit)
                         dia.setAxes(ax)
-                    dia.addSample(dc, label=label, **kwargs)
+                    dia.addSample(dc, label=_label, **kwargs)
                     dia.addTitle(tag)
             else:
                 # default: plot all to same axes and diagram object
@@ -88,15 +87,12 @@ def plotDataContainer(dclist0, ax=None, show=False, dia=None, **kwargs):
                     dia.setAxes(ax)
                 for dc in dclist:
                     tag = dc.getMetaData('tag')
-                    if label is None:
-                        label = tag
-                    dia.addSample(dc, label=label, **kwargs)
+                    _label = label if label is not None else tag
+                    dia.addSample(dc, label=_label, **kwargs)
                 if showLegend:
                     dia.showLegend()
         else:
             raise NotImplementedError('plotting dataType "{:}" is not currenlyt supported'.format(datatype))
-
-    
 
     if show:
         plt.show()

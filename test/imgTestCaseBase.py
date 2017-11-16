@@ -8,7 +8,7 @@ import os
 import glob
 import shutil
 import unittest
-import matplotlib.pyplot as plt
+from crane import plt
 from matplotlib.testing.compare import compare_images
 
 

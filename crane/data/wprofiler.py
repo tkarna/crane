@@ -151,7 +151,10 @@ def generateSat01ProfilerObsData(depDC, varDC):
         zMax = zBin.max()
         zGrid = np.arange(zMin, zMax + zReso, zReso)
         tGrid = np.ones_like(zGrid) * tCenter
-        zBins = np.arange(zMin - zReso / 2, zMax + 3 / 2 * zReso, zReso)
+        # Catch cases where number of hist bins < zGrid points
+        zBins = np.arange(zMin - zReso / 2, zMax + 2 * zReso, zReso)
+        if zBins[-2] > zGrid[-1]:
+            zBins = np.arange(zMin - zReso / 2, zMax + 3 / 2 * zReso, zReso)
         histW, b = np.histogram(zBin, zBins, weights=varBin)
         hist, b = np.histogram(zBin, zBins)
         goodIx = hist > 0

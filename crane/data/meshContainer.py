@@ -159,14 +159,18 @@ class meshContainer(dataContainer.dataContainer):
         """If data is at elements, returns a new object with average value at each node."""
         if self.dataByElement:
             # compute mean aroung each element TODO weighted by elem size
+            nNodes = self.x.shape[0]
+            _, nFields, nTime = self.data.shape
             nodal_data = np.zeros((nNodes, nFields, nTime))
             nodal_data = np.zeros((nNodes, nFields, nTime))
             conn = self.connectivity
+            nodal_area = np.zeros((nNodes, 1, 1))
+            areas = self.computeAreas()
             for iElem in range(self.connectivity.shape[0]):
                 n = conn[iElem, :]
-                nodal_data[n, :, :] += self.data[iElem, :, :]
-                nodal_multiplicity[n] += 1
-            nodal_data = nodal_data / nodal_multiplicity
+                nodal_data[n, :, :] += self.data[iElem, :, :]*areas[iElem]
+                nodal_area[n] += areas[iElem]
+            nodal_data = nodal_data / nodal_area
 
             mc = meshContainer(
                 self.description,

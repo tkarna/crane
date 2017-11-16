@@ -1,0 +1,10 @@
+#!/usr/bin/env python
+"""
+Parse time history file to create dataContainer.
+
+Jesse Lopez 2016-04-18
+"""
+from crane.files import timeHistoryParser
+
+if __name__ == '__main__':
+    timeHistoryParser.parseCommandLine() 

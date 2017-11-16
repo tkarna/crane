@@ -9,24 +9,7 @@ import os
 from crane.data import meshContainer
 from crane.files import gmshInterface
 from crane.files import gr3Interface
-
-
-def readAnyMeshFile(inFile, dataFile=None):
-    """Reads mesh data in a meshContainer. Supported formats are GR3 (SELFE), MSH (GMSH) and meshContainer netCDF."""
-    fname, ext = os.path.splitext(inFile)
-    if ext == '.gr3':
-        mc = gr3Interface.readGR3FileToMC(inFile)
-    elif ext == '.msh':
-        gmsh = gmshInterface.gmshMesh.fromFile(inFile)
-        if dataFile:
-            mc = gmsh.getMeshContainer(fromFile=dataFile)
-        else:
-            mc = gmsh.getMeshContainer(fromFile=inFile)
-    elif ext == '.nc':
-        mc = meshContainer.meshContainer.loadFromNetCDF(inFile)
-    else:
-        raise Exception('Unknown file extension: ' + ext + '\n' + inFile)
-    return mc
+from crane.utility import readAnyMeshFile
 
 
 def reportMeshQuality(
